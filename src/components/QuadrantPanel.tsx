@@ -1,13 +1,13 @@
 import type { Quadrant, Task } from '../types'
-import { QUADRANT_LABELS, QUADRANT_DESCRIPTIONS } from '../types'
+import { importanceUrgencyToQuadrant, QUADRANT_LABELS, QUADRANT_DESCRIPTIONS } from '../types'
 import TaskCard from './TaskCard'
 
 interface Props {
   quadrant: Quadrant
   tasks: Task[]
-  onToggle: (id: string) => void
+  onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
-  onAdd: (quadrant: Quadrant, title: string) => void
+  onAdd: (title: string, importance: number, urgency: number) => void
 }
 
 const QUADRANT_COLORS: Record<Quadrant, string> = {
@@ -24,10 +24,20 @@ const QUADRANT_HEADER_COLORS: Record<Quadrant, string> = {
   4: 'text-emerald-400',
 }
 
-export default function QuadrantPanel({ quadrant, tasks, onToggle, onDelete, onAdd }: Props) {
+// Default importance/urgency for quick-add per quadrant
+const DEFAULT_VALUES: Record<Quadrant, { importance: number; urgency: number }> = {
+  1: { importance: 5, urgency: 5 },
+  2: { importance: 5, urgency: 2 },
+  3: { importance: 2, urgency: 5 },
+  4: { importance: 2, urgency: 2 },
+}
+
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd }: Props) {
+  const defaults = DEFAULT_VALUES[quadrant]
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-      onAdd(quadrant, e.currentTarget.value.trim())
+      onAdd(e.currentTarget.value.trim(), defaults.importance, defaults.urgency)
       e.currentTarget.value = ''
     }
   }
@@ -46,7 +56,7 @@ export default function QuadrantPanel({ quadrant, tasks, onToggle, onDelete, onA
           <TaskCard
             key={task.id}
             task={task}
-            onToggle={onToggle}
+            onStatusChange={onStatusChange}
             onDelete={onDelete}
           />
         ))}

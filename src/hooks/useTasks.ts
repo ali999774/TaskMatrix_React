@@ -1,23 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Task, Quadrant } from '../types'
+import type { Task } from '../types'
 
-export function useTasks() {
+export function useTasks(userId: string | null) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-
-  // Sign in anonymously — RLS requires auth.uid() to match user_id
-  useEffect(() => {
-    supabase.auth.signInAnonymously().then(({ data, error }) => {
-      if (data?.user) {
-        setUserId(data.user.id)
-      } else if (error) {
-        console.error('Auth failed:', error.message)
-        setLoading(false)
-      }
-    })
-  }, [])
 
   const loadTasks = useCallback(async () => {
     if (!userId) return
@@ -26,6 +13,7 @@ export function useTasks() {
       .select('*')
       .eq('user_id', userId)
       .is('deleted_at', null)
+      .order('position', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) setTasks(data as Task[])
     setLoading(false)
@@ -35,28 +23,30 @@ export function useTasks() {
     if (userId) loadTasks()
   }, [userId, loadTasks])
 
-  const addTask = useCallback(async (quadrant: Quadrant, title: string) => {
+  const addTask = useCallback(async (title: string, importance: number, urgency: number) => {
     if (!userId) return
     const newTask: Partial<Task> = {
       id: crypto.randomUUID(),
       user_id: userId,
       title,
-      quadrant,
-      completed: false,
+      importance,
+      urgency,
+      status: 'todo',
+      subtasks: [],
+      tags: [],
+      pinned: false,
+      recurring: false,
     }
     setTasks((prev) => [newTask as Task, ...prev])
     await supabase.from('tasks').upsert(newTask, { onConflict: 'id' })
   }, [userId])
 
-  const toggleTask = useCallback(async (id: string) => {
+  const updateStatus = useCallback(async (id: string, status: string) => {
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      prev.map((t) => (t.id === id ? { ...t, status } : t))
     )
-    const task = tasks.find((t) => t.id === id)
-    if (task) {
-      await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id)
-    }
-  }, [tasks])
+    await supabase.from('tasks').update({ status }).eq('id', id)
+  }, [])
 
   const deleteTask = useCallback(async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id))
@@ -66,5 +56,5 @@ export function useTasks() {
       .eq('id', id)
   }, [])
 
-  return { tasks, loading, addTask, toggleTask, deleteTask, reload: loadTasks }
+  return { tasks, loading, addTask, updateStatus, deleteTask, reload: loadTasks }
 }
