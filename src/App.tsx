@@ -10,31 +10,72 @@ import type { Quadrant } from './types'
 export default function App() {
   const [userId, setUserId] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Try existing session first (shared with original TaskMatrix via same origin localStorage)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUserId(session.user.id)
         setAuthLoading(false)
         return
       }
-      // No existing session — sign in anonymously
-      const { data, error } = await supabase.auth.signInAnonymously()
-      if (data?.user) setUserId(data.user.id)
-      else if (error) console.error('Auth failed:', error.message)
       setAuthLoading(false)
     })
+  }, [])
+
+  const signInWithGoogle = async () => {
+    setAuthError(null)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    })
+    if (error) setAuthError(error.message)
+  }
+
+  // Listen for OAuth callback
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUserId(session.user.id)
+        setAuthLoading(false)
+        setAuthError(null)
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, deleteTask } = useTasks(userId)
   const { notes, loading: notesLoading, addNote, deleteNote } = useStickyNotes(userId)
   const [noteInput, setNoteInput] = useState('')
 
-  if (authLoading || tasksLoading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen text-slate-400">
         Loading...
+      </div>
+    )
+  }
+
+  if (!userId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <h1 className="text-2xl font-bold text-white">TaskMatrix</h1>
+        <p className="text-slate-400 text-sm">Sign in to see your tasks</p>
+        <button
+          onClick={signInWithGoogle}
+          className="bg-white text-slate-800 px-6 py-3 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+        >
+          Sign in with Google
+        </button>
+        {authError && <p className="text-red-400 text-sm">{authError}</p>}
+      </div>
+    )
+  }
+
+  if (tasksLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-slate-400">
+        Loading tasks...
       </div>
     )
   }
