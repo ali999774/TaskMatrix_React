@@ -2,9 +2,22 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task, Quadrant } from '../types'
 
-export function useTasks(userId: string | null) {
+export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Sign in anonymously — RLS requires auth.uid() to match user_id
+  useEffect(() => {
+    supabase.auth.signInAnonymously().then(({ data, error }) => {
+      if (data?.user) {
+        setUserId(data.user.id)
+      } else if (error) {
+        console.error('Auth failed:', error.message)
+        setLoading(false)
+      }
+    })
+  }, [])
 
   const loadTasks = useCallback(async () => {
     if (!userId) return
@@ -19,8 +32,8 @@ export function useTasks(userId: string | null) {
   }, [userId])
 
   useEffect(() => {
-    loadTasks()
-  }, [loadTasks])
+    if (userId) loadTasks()
+  }, [userId, loadTasks])
 
   const addTask = useCallback(async (quadrant: Quadrant, title: string) => {
     if (!userId) return

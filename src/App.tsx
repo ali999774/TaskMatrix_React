@@ -1,18 +1,9 @@
-import { useState } from 'react'
 import { useTasks } from './hooks/useTasks'
 import QuadrantPanel from './components/QuadrantPanel'
 import type { Quadrant } from './types'
 
-// Shared user_id with vanilla TaskMatrix — both apps write to the same Supabase identity
-const SHARED_USER_ID = 'ea3bd12a-3b1d-4b51-acc6-fe9c3446140f'
-
-function getUserId(): string {
-  return SHARED_USER_ID
-}
-
 export default function App() {
-  const [userId] = useState(getUserId)
-  const { tasks, loading, addTask, toggleTask, deleteTask } = useTasks(userId)
+  const { tasks, loading, addTask, toggleTask, deleteTask } = useTasks()
 
   if (loading) {
     return (
