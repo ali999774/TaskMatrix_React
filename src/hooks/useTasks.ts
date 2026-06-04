@@ -13,6 +13,7 @@ export function useTasks(userId: string | null) {
       .select('*')
       .eq('user_id', userId)
       .is('deleted_at', null)
+      .neq('status', 'completed')
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) setTasks(data as Task[])
