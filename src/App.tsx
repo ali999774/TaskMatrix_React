@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
-import { useTasks } from '../hooks/useTasks'
-import QuadrantPanel from './QuadrantPanel'
-import type { Quadrant } from '../types'
+import { useState } from 'react'
+import { useTasks } from './hooks/useTasks'
+import QuadrantPanel from './components/QuadrantPanel'
+import type { Quadrant } from './types'
 
 function getUserId(): string | null {
   const stored = localStorage.getItem('tm_user_id')
