@@ -12,7 +12,15 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.signInAnonymously().then(({ data, error }) => {
+    // Try existing session first (shared with original TaskMatrix via same origin localStorage)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUserId(session.user.id)
+        setAuthLoading(false)
+        return
+      }
+      // No existing session — sign in anonymously
+      const { data, error } = await supabase.auth.signInAnonymously()
       if (data?.user) setUserId(data.user.id)
       else if (error) console.error('Auth failed:', error.message)
       setAuthLoading(false)
