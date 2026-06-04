@@ -1,5 +1,5 @@
 import type { Quadrant, Task } from '../types'
-import { importanceUrgencyToQuadrant, QUADRANT_LABELS, QUADRANT_DESCRIPTIONS } from '../types'
+import { QUADRANT_LABELS, QUADRANT_DESCRIPTIONS } from '../types'
 import TaskCard from './TaskCard'
 
 interface Props {
