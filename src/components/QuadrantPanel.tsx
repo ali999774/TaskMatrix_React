@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import type { Quadrant, Task } from '../types'
-import { QUADRANT_LABELS, QUADRANT_DESCRIPTIONS } from '../types'
+import { QUADRANT_LABELS, QUADRANT_DESCRIPTIONS, QUADRANT_DEFAULTS } from '../types'
 import TaskCard from './TaskCard'
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onAdd: (title: string, importance: number, urgency: number) => void
+  onMove: (id: string, toQuadrant: Quadrant) => void
 }
 
 const QUADRANT_COLORS: Record<Quadrant, string> = {
@@ -24,15 +26,9 @@ const QUADRANT_HEADER_COLORS: Record<Quadrant, string> = {
   4: 'text-emerald-600 dark:text-emerald-400',
 }
 
-const DEFAULT_VALUES: Record<Quadrant, { importance: number; urgency: number }> = {
-  1: { importance: 5, urgency: 5 },
-  2: { importance: 5, urgency: 2 },
-  3: { importance: 2, urgency: 5 },
-  4: { importance: 2, urgency: 2 },
-}
-
-export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd }: Props) {
-  const defaults = DEFAULT_VALUES[quadrant]
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove }: Props) {
+  const defaults = QUADRANT_DEFAULTS[quadrant]
+  const [dragOver, setDragOver] = useState(false)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -41,8 +37,39 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
     }
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only set false when leaving the panel itself, not its children
+    if ((e.currentTarget as HTMLElement).contains(e.relatedTarget as HTMLElement)) return
+    setDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const taskId = e.dataTransfer.getData('text/plain')
+    if (taskId) onMove(taskId, quadrant)
+  }
+
   return (
-    <div className={`rounded-xl border bg-white dark:bg-slate-950 ${QUADRANT_COLORS[quadrant]} p-4 flex flex-col min-h-[200px]`}>
+    <div
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`rounded-xl border bg-white dark:bg-slate-950 ${QUADRANT_COLORS[quadrant]} 
+        p-4 flex flex-col min-h-[200px] transition-all duration-150
+        ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
+    >
       <div className="mb-3">
         <h3 className={`text-sm font-semibold ${QUADRANT_HEADER_COLORS[quadrant]}`}>
           {QUADRANT_LABELS[quadrant]}
@@ -60,7 +87,9 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           />
         ))}
         {tasks.length === 0 && (
-          <p className="text-xs text-slate-300 dark:text-slate-600 italic text-center py-4">Drop tasks here</p>
+          <p className="text-xs text-slate-300 dark:text-slate-600 italic text-center py-4">
+            {dragOver ? 'Drop here' : 'Drop tasks here'}
+          </p>
         )}
       </div>
 

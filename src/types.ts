@@ -44,6 +44,13 @@ export function importanceUrgencyToQuadrant(importance: number, urgency: number)
   return 4
 }
 
+export const QUADRANT_DEFAULTS: Record<Quadrant, { importance: number; urgency: number }> = {
+  1: { importance: 5, urgency: 5 },
+  2: { importance: 5, urgency: 2 },
+  3: { importance: 2, urgency: 5 },
+  4: { importance: 2, urgency: 2 },
+}
+
 export const QUADRANT_LABELS: Record<Quadrant, string> = {
   1: 'Do First',
   2: 'Schedule',

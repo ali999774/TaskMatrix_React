@@ -18,11 +18,24 @@ export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
     onStatusChange(task.id, next[task.status] || 'todo')
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', task.id)
+    e.dataTransfer.effectAllowed = 'move'
+    ;(e.currentTarget as HTMLElement).classList.add('opacity-40')
+  }
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    ;(e.currentTarget as HTMLElement).classList.remove('opacity-40')
+  }
+
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className={`p-3 rounded-lg border border-slate-200 dark:border-slate-700 
         bg-slate-50 dark:bg-slate-800/60 transition-all 
-        hover:border-slate-400 dark:hover:border-slate-500 group
+        hover:border-slate-400 dark:hover:border-slate-500 group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start gap-2">

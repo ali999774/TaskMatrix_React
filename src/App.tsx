@@ -4,7 +4,7 @@ import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
-import { importanceUrgencyToQuadrant } from './types'
+import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant } from './types'
 
 function useTheme(): [boolean, () => void] {
@@ -59,7 +59,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, deleteTask } = useTasks(userId)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
   const { notes, loading: notesLoading, addNote, deleteNote } = useStickyNotes(userId)
   const [noteInput, setNoteInput] = useState('')
 
@@ -106,6 +106,11 @@ export default function App() {
     }
   }
 
+  const handleMove = (taskId: string, toQuadrant: Quadrant) => {
+    const defaults = QUADRANT_DEFAULTS[toQuadrant]
+    updateTask(taskId, { importance: defaults.importance, urgency: defaults.urgency })
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 min-h-screen bg-slate-50 dark:bg-slate-950">
       <header className="mb-6 flex items-end justify-between">
@@ -146,10 +151,12 @@ export default function App() {
             onStatusChange={updateStatus}
             onDelete={deleteTask}
             onAdd={addTask}
+            onMove={handleMove}
           />
         ))}
       </div>
 
       {!notesLoading && <StickyWall notes={notes} onDelete={deleteNote} />}
     </div>
-  )}
+  )
+}

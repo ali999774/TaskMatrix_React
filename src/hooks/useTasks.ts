@@ -96,6 +96,13 @@ export function useTasks(userId: string | null) {
     await supabase.from('tasks').update({ status }).eq('id', id)
   }, [])
 
+  const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
+    )
+    await supabase.from('tasks').update(updates).eq('id', id)
+  }, [])
+
   const deleteTask = useCallback(async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id))
     await supabase
@@ -104,5 +111,5 @@ export function useTasks(userId: string | null) {
       .eq('id', id)
   }, [])
 
-  return { tasks, loading, addTask, updateStatus, deleteTask, reload: loadTasks }
+  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, reload: loadTasks }
 }
