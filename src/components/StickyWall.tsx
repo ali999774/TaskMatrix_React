@@ -81,7 +81,10 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
                 key={note.id}
                 className={`relative p-3 rounded-lg border text-sm
                   ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
-                  transition-all hover:scale-[1.01] group shadow-sm`}
+                  transition-all hover:scale-[1.02] hover:z-10 group shadow-sm`}
+                style={{
+                  transform: `translate(${note.position_x || 0}px, ${note.position_y || 0}px) rotate(${(note.position_x || 0) * 0.03}deg)`,
+                }}
               >
                 <button
                   onClick={() => onDelete(note.id)}

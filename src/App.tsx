@@ -78,7 +78,10 @@ export default function App() {
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
   const { notes, addNote, deleteNote } = useStickyNotes(userId)
   const [quickAdd, setQuickAdd] = useState('')
+  const [context, setContext] = useState('all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+
+  const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
   // Keep selectedTask in sync with realtime updates
   useEffect(() => {
@@ -126,13 +129,13 @@ export default function App() {
 
   const quadrants: Quadrant[] = [1, 2, 3, 4]
   const quadrantTasks = (q: Quadrant) =>
-    tasks.filter((t) => importanceUrgencyToQuadrant(t.importance, t.urgency) === q)
+    filteredTasks.filter((t) => importanceUrgencyToQuadrant(t.importance, t.urgency) === q)
 
   const handleQuickAdd = (q: Quadrant) => {
     const title = quickAdd.trim()
     if (!title) return
     const defaults = QUADRANT_DEFAULTS[q]
-    addTask(title, defaults.importance, defaults.urgency)
+    addTask(title, defaults.importance, defaults.urgency, context !== 'all' ? context : undefined)
     setQuickAdd('')
   }
 
@@ -186,7 +189,7 @@ export default function App() {
             {/* Right actions */}
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
-                {tasks.length}t · {notes.length}n
+                {filteredTasks.length}t · {notes.length}n
               </span>
               <button
                 onClick={toggleTheme}
@@ -198,6 +201,25 @@ export default function App() {
             </div>
           </div>
         </header>
+
+      {/* Context switcher */}
+      <div className="px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
+        <div className="flex gap-1.5">
+          {['all', 'clinic', 'practice-launch', 'dev', 'personal'].map((ctx) => (
+            <button
+              key={ctx}
+              onClick={() => setContext(ctx)}
+              className={`text-xs px-3 py-1 rounded-full font-medium transition-colors
+                ${context === ctx
+                  ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+            >
+              {ctx === 'all' ? 'All' : ctx === 'practice-launch' ? '🏗 Launch' : ctx === 'clinic' ? '🏥 Clinic' : ctx === 'dev' ? '💻 Dev' : '👤 Personal'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Body: matrix + sticky notes side by side */}
       <div className="px-6 py-5">

@@ -71,7 +71,7 @@ export function useTasks(userId: string | null) {
     }
   }, [userId])
 
-  const addTask = useCallback(async (title: string, importance: number, urgency: number) => {
+  const addTask = useCallback(async (title: string, importance: number, urgency: number, category?: string) => {
     if (!userId) return
     const newTask: Partial<Task> = {
       id: crypto.randomUUID(),
@@ -79,6 +79,7 @@ export function useTasks(userId: string | null) {
       title,
       importance,
       urgency,
+      category: category || null,
       status: 'todo',
       subtasks: [],
       tags: [],

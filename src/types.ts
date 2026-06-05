@@ -58,6 +58,13 @@ export const QUADRANT_LABELS: Record<Quadrant, string> = {
   4: "Don't Do",
 }
 
+export const QUADRANT_ICONS: Record<Quadrant, string> = {
+  1: '🔥',
+  2: '📅',
+  3: '🤝',
+  4: '🗑️',
+}
+
 export const QUADRANT_DESCRIPTIONS: Record<Quadrant, string> = {
   1: 'Urgent & Important',
   2: 'Important, Not Urgent',
