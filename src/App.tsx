@@ -162,8 +162,8 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div className="px-6 py-3 flex items-center gap-3">
-            <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight whitespace-nowrap">
+        <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+            <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
             </h1>
 
@@ -224,8 +224,8 @@ export default function App() {
         </header>
 
       {/* Context switcher */}
-      <div className="px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
-        <div className="flex gap-1.5">
+      <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
+        <div className="flex gap-1.5 overflow-x-auto">
           {['all', 'clinic', 'practice-launch', 'dev', 'personal'].map((ctx) => (
             <button
               key={ctx}
@@ -243,7 +243,7 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-4 sm:px-6 py-4 sm:py-5">
+      <div className="px-3 sm:px-6 py-4 sm:py-5">
         <div className="flex flex-col lg:flex-row gap-5 items-start">
 
           {/* Matrix column */}
