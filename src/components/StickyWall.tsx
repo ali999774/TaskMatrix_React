@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { StickyNote } from '../types'
+import VoiceButton from './VoiceButton'
 
 interface Props {
   notes: StickyNote[]
@@ -46,6 +47,7 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
         {/* Add note input */}
         {onAdd && (
           <div className="flex gap-1.5 mb-3">
+            <VoiceButton onTranscript={setInput} />
             <input
               type="text"
               value={input}

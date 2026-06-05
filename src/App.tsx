@@ -5,6 +5,7 @@ import { useStickyNotes } from './hooks/useStickyNotes'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
 import TaskDetail from './components/TaskDetail'
+import VoiceButton from './components/VoiceButton'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task } from './types'
 
@@ -158,6 +159,7 @@ export default function App() {
 
             {/* Quick-add input */}
             <div className="flex-1 flex items-center gap-1.5">
+              <VoiceButton onTranscript={setQuickAdd} />
               <input
                 type="text"
                 value={quickAdd}
