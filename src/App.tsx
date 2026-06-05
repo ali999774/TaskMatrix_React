@@ -23,6 +23,20 @@ function useTheme(): [boolean, () => void] {
   return [dark, () => setDark((d) => !d)]
 }
 
+const QUADRANT_COLORS: Record<Quadrant, string> = {
+  1: 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20',
+  2: 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20',
+  3: 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20',
+  4: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20',
+}
+
+const QUADRANT_LABELS_SHORT: Record<Quadrant, string> = {
+  1: 'Do First',
+  2: 'Schedule',
+  3: 'Delegate',
+  4: "Don't Do",
+}
+
 export default function App() {
   const [dark, toggleTheme] = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
@@ -61,8 +75,8 @@ export default function App() {
   }, [])
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
-  const { notes, loading: notesLoading, addNote, deleteNote } = useStickyNotes(userId)
-  const [noteInput, setNoteInput] = useState('')
+  const { notes, addNote, deleteNote } = useStickyNotes(userId)
+  const [quickAdd, setQuickAdd] = useState('')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
 
   // Keep selectedTask in sync with realtime updates
@@ -72,7 +86,7 @@ export default function App() {
       if (updated) {
         setSelectedTask(updated)
       } else {
-        setSelectedTask(null) // task was deleted/completed
+        setSelectedTask(null)
       }
     }
   }, [tasks, selectedTask])
@@ -113,10 +127,17 @@ export default function App() {
   const quadrantTasks = (q: Quadrant) =>
     tasks.filter((t) => importanceUrgencyToQuadrant(t.importance, t.urgency) === q)
 
-  const handleAddNote = () => {
-    if (noteInput.trim()) {
-      addNote(noteInput.trim())
-      setNoteInput('')
+  const handleQuickAdd = (q: Quadrant) => {
+    const title = quickAdd.trim()
+    if (!title) return
+    const defaults = QUADRANT_DEFAULTS[q]
+    addTask(title, defaults.importance, defaults.urgency)
+    setQuickAdd('')
+  }
+
+  const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleQuickAdd(1) // default to Do First on Enter
     }
   }
 
@@ -126,52 +147,86 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 min-h-screen bg-slate-50 dark:bg-slate-950">
-      <header className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">TaskMatrix</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-            {tasks.length} tasks · {notes.length} notes
-          </p>
-        </div>
-        <div className="flex gap-2 items-center">
-          <input
-            type="text"
-            value={noteInput}
-            onChange={(e) => setNoteInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
-            placeholder="+ Sticky note..."
-            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 
-              rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 
-              placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
-              focus:border-slate-400 dark:focus:border-slate-500 w-40 transition-colors"
-          />
-          <button
-            onClick={toggleTheme}
-            className="text-lg p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-            title={dark ? 'Switch to light' : 'Switch to dark'}
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight whitespace-nowrap">
+              TaskMatrix
+            </h1>
+
+            {/* Quick-add input */}
+            <div className="flex-1 flex items-center gap-1.5">
+              <input
+                type="text"
+                value={quickAdd}
+                onChange={(e) => setQuickAdd(e.target.value)}
+                onKeyDown={handleQuickAddKeyDown}
+                placeholder="Quick add task..."
+                className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
+                  dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-700 
+                  dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
+                  outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+              />
+              {quadrants.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => handleQuickAdd(q)}
+                  className={`shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-lg border 
+                    transition-colors ${QUADRANT_COLORS[q]}`}
+                  title={QUADRANT_LABELS_SHORT[q]}
+                >
+                  {QUADRANT_LABELS_SHORT[q]}
+                </button>
+              ))}
+            </div>
+
+            {/* Right actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
+                {tasks.length}t · {notes.length}n
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="text-lg p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                title={dark ? 'Switch to light' : 'Switch to dark'}
+              >
+                {dark ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-4">
-        {quadrants.map((q) => (
-          <QuadrantPanel
-            key={q}
-            quadrant={q}
-            tasks={quadrantTasks(q)}
-            onStatusChange={updateStatus}
-            onDelete={deleteTask}
-            onAdd={addTask}
-            onMove={handleMove}
-            onTaskClick={setSelectedTask}
-          />
-        ))}
-      </div>
+      {/* Body: matrix + sticky notes side by side */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex flex-col lg:flex-row gap-4 items-start">
+          {/* Matrix column */}
+          <div className="flex-1 min-w-0 w-full">
+            <div className="grid grid-cols-2 gap-3">
+              {quadrants.map((q) => (
+                <QuadrantPanel
+                  key={q}
+                  quadrant={q}
+                  tasks={quadrantTasks(q)}
+                  onStatusChange={updateStatus}
+                  onDelete={deleteTask}
+                  onAdd={addTask}
+                  onMove={handleMove}
+                  onTaskClick={setSelectedTask}
+                  compact
+                />
+              ))}
+            </div>
+          </div>
 
-      {!notesLoading && <StickyWall notes={notes} onDelete={deleteNote} />}
+          {/* Sticky notes sidebar */}
+          <div className="w-full lg:w-72 shrink-0">
+            <StickyWall notes={notes} onDelete={deleteNote} onAdd={addNote} sidebar />
+          </div>
+        </div>
+      </div>
 
       {selectedTask && (
         <TaskDetail

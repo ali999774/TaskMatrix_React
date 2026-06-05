@@ -11,6 +11,7 @@ interface Props {
   onAdd: (title: string, importance: number, urgency: number) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
   onTaskClick: (task: Task) => void
+  compact?: boolean
 }
 
 const QUADRANT_COLORS: Record<Quadrant, string> = {
@@ -27,7 +28,7 @@ const QUADRANT_HEADER_COLORS: Record<Quadrant, string> = {
   4: 'text-emerald-600 dark:text-emerald-400',
 }
 
-export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove, onTaskClick }: Props) {
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove, onTaskClick, compact }: Props) {
   const defaults = QUADRANT_DEFAULTS[quadrant]
   const [dragOver, setDragOver] = useState(false)
 
@@ -66,18 +67,21 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`rounded-xl border bg-white dark:bg-slate-950 ${QUADRANT_COLORS[quadrant]} 
-        p-4 flex flex-col min-h-[200px] transition-all duration-150
+      className={`rounded-xl border bg-white dark:bg-slate-900/50 ${QUADRANT_COLORS[quadrant]} 
+        p-3 flex flex-col min-h-[160px] transition-all duration-150
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
     >
-      <div className="mb-3">
-        <h3 className={`text-sm font-semibold ${QUADRANT_HEADER_COLORS[quadrant]}`}>
-          {QUADRANT_LABELS[quadrant]}
-        </h3>
-        <p className="text-xs text-slate-400 dark:text-slate-500">{QUADRANT_DESCRIPTIONS[quadrant]}</p>
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <h3 className={`text-xs font-semibold ${QUADRANT_HEADER_COLORS[quadrant]}`}>
+            {QUADRANT_LABELS[quadrant]}
+          </h3>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">{QUADRANT_DESCRIPTIONS[quadrant]}</p>
+        </div>
+        <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{tasks.length}</span>
       </div>
 
-      <div className="flex-1 space-y-2 mb-3">
+      <div className="flex-1 space-y-1.5">
         {tasks.map((task) => (
           <TaskCard
             key={task.id}
@@ -88,21 +92,23 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           />
         ))}
         {tasks.length === 0 && (
-          <p className="text-xs text-slate-300 dark:text-slate-600 italic text-center py-4">
+          <p className="text-[11px] text-slate-300 dark:text-slate-600 italic text-center py-3">
             {dragOver ? 'Drop here' : 'Drop tasks here'}
           </p>
         )}
       </div>
 
-      <input
-        type="text"
-        placeholder="+ Add task..."
-        onKeyDown={handleKeyDown}
-        className="w-full bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-slate-700 
-          rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 
-          placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
-          focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
-      />
+      {!compact && (
+        <input
+          type="text"
+          placeholder="+ Add task..."
+          onKeyDown={handleKeyDown}
+          className="w-full bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-slate-700 
+            rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 
+            placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
+            focus:border-slate-400 dark:focus:border-slate-500 transition-colors mt-2"
+        />
+      )}
     </div>
   )
 }

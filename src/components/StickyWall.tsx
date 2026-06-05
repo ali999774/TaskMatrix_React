@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import type { StickyNote } from '../types'
 
 interface Props {
   notes: StickyNote[]
   onDelete: (id: string) => void
+  onAdd?: (content: string) => void
+  sidebar?: boolean
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -14,7 +17,90 @@ const COLOR_MAP: Record<string, string> = {
   orange: 'bg-orange-100 dark:bg-orange-400/20 border-orange-300 dark:border-orange-400/40 text-orange-800 dark:text-orange-100',
 }
 
-export default function StickyWall({ notes, onDelete }: Props) {
+export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
+  const [input, setInput] = useState('')
+
+  const handleAdd = () => {
+    if (input.trim() && onAdd) {
+      onAdd(input.trim())
+      setInput('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleAdd()
+  }
+
+  // Sidebar mode: always visible, has add input
+  if (sidebar) {
+    return (
+      <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 
+        dark:border-slate-700 p-3 w-full">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            📌 Notes
+          </h2>
+          <span className="text-xs text-slate-400">{notes.length}</span>
+        </div>
+
+        {/* Add note input */}
+        {onAdd && (
+          <div className="flex gap-1.5 mb-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="+ Add note..."
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 
+                dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 
+                dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
+                outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+            />
+            <button
+              onClick={handleAdd}
+              className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 
+                border border-slate-200 dark:border-slate-700 text-slate-500 
+                hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+            >
+              +
+            </button>
+          </div>
+        )}
+
+        {notes.length === 0 ? (
+          <p className="text-xs text-slate-300 dark:text-slate-600 italic text-center py-4">
+            No notes yet
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2 max-h-[calc(100vh-16rem)] overflow-y-auto">
+            {notes.map((note) => (
+              <div
+                key={note.id}
+                className={`relative p-2.5 rounded-lg border text-xs
+                  ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
+                  transition-all hover:scale-[1.01] group shadow-sm`}
+              >
+                <button
+                  onClick={() => onDelete(note.id)}
+                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 
+                    text-slate-400 hover:text-red-500 transition-all text-[10px]"
+                >
+                  ✕
+                </button>
+                {note.title && (
+                  <p className="font-semibold mb-0.5 opacity-80">{note.title}</p>
+                )}
+                <p className="whitespace-pre-wrap leading-relaxed">{note.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Original full-width mode (non-sidebar)
   if (notes.length === 0) return null
 
   return (
