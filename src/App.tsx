@@ -164,30 +164,36 @@ export default function App() {
             </h1>
 
             {/* Quick-add input */}
-            <div className="flex-1 flex items-center gap-1.5">
-              <VoiceButton onTranscript={setQuickAdd} />
-              <input
-                type="text"
-                value={quickAdd}
-                onChange={(e) => setQuickAdd(e.target.value)}
-                onKeyDown={handleQuickAddKeyDown}
-                placeholder="Quick add task..."
-                className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-700 
-                  dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
-                  outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
-              />
-              {quadrants.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => handleQuickAdd(q)}
-                  className={`shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-lg border 
-                    transition-colors ${QUADRANT_COLORS[q]}`}
-                  title={QUADRANT_LABELS_SHORT[q]}
-                >
-                  {QUADRANT_LABELS_SHORT[q]}
-                </button>
-              ))}
+            <div className="flex-1 relative">
+              <div className="flex items-center gap-1.5">
+                <VoiceButton onTranscript={setQuickAdd} />
+                <input
+                  type="text"
+                  value={quickAdd}
+                  onChange={(e) => setQuickAdd(e.target.value)}
+                  onKeyDown={handleQuickAddKeyDown}
+                  placeholder="Quick add task..."
+                  className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
+                    dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-700 
+                    dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
+                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+                />
+              </div>
+              {/* Dropdown: appears when input has text */}
+              {quickAdd.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-1 flex gap-1.5 z-50">
+                  {quadrants.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => handleQuickAdd(q)}
+                      className={`shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-lg border 
+                        transition-colors ${QUADRANT_COLORS[q]} shadow-sm`}
+                    >
+                      {QUADRANT_LABELS_SHORT[q]}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right actions */}
