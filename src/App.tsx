@@ -1,3 +1,5 @@
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
@@ -281,6 +283,7 @@ export default function App() {
               onAdd={addNote}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
+              onReorder={reorderNote}
               sidebar
             />
           </div>

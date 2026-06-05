@@ -14,6 +14,7 @@ export function useStickyNotes(userId: string | null) {
       .from('sticky_notes')
       .select('*')
       .eq('user_id', userId)
+      .order('position', { ascending: true, nullsFirst: true })
       .order('created_at', { ascending: false })
     if (data) setNotes(data as StickyNote[])
     setLoading(false)
@@ -50,9 +51,7 @@ export function useStickyNotes(userId: string | null) {
               prev.map((n) => (n.id === row.id ? row : n))
             )
           } else if (payload.eventType === 'DELETE') {
-            setNotes((prev) =>
-              prev.filter((n) => n.id !== payload.old.id)
-            )
+            setNotes((prev) => prev.filter((n) => n.id !== payload.old.id))
           }
         }
       )
@@ -73,10 +72,11 @@ export function useStickyNotes(userId: string | null) {
       position_x: Math.floor(Math.random() * 200),
       position_y: Math.floor(Math.random() * 200),
       pinned: false,
+      position: notes.length,
     }
     setNotes((prev) => [note as StickyNote, ...prev])
     await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
-  }, [userId])
+  }, [userId, notes.length])
 
   const updateNote = useCallback(async (id: string, updates: Partial<StickyNote>) => {
     setNotes((prev) =>
@@ -90,7 +90,24 @@ export function useStickyNotes(userId: string | null) {
     await supabase.from('sticky_notes').delete().eq('id', id)
   }, [])
 
+
+  const reorderNote = useCallback(async (id: string, newIndex: number) => {
+    setNotes((prev) => {
+      const updated = [...prev]
+      const currentIndex = updated.findIndex((n) => n.id === id)
+      if (currentIndex === -1) return prev
+      const [moved] = updated.splice(currentIndex, 1)
+      updated.splice(newIndex, 0, moved)
+      return updated.map((note, index) => ({ ...note, position: index }))
+    })
+
+    const { data } = await supabase.from('sticky_notes').select('id').eq('user_id', userId)
+    if (data) {
+      const updates = data.map((n, index) => ({ id: n.id, position: index }))
+      await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+    }
+  }, [userId])
   const pinnedNotes = notes.filter((n) => n.pinned)
 
-  return { notes, pinnedNotes, loading, addNote, updateNote, deleteNote, reload: loadNotes }
+  return { notes, pinnedNotes, loading, addNote, updateNote, deleteNote, reorderNote, reload: loadNotes }
 }

@@ -9,6 +9,7 @@ interface Props {
   onEdit?: (note: StickyNote) => void
   onShowAll?: () => void
   sidebar?: boolean
+  onReorder?: (id: string, newIndex: number) => void
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -20,8 +21,9 @@ const COLOR_MAP: Record<string, string> = {
   orange: 'bg-orange-100 dark:bg-orange-400/20 border-orange-300 dark:border-orange-400/40 text-orange-800 dark:text-orange-100',
 }
 
-export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar }: Props) {
+export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder }: Props) {
   const [input, setInput] = useState('')
+  const [draggedId, setDraggedId] = useState<string | null>(null)
 
   const handleAdd = () => {
     if (input.trim() && onAdd) {
@@ -34,19 +36,39 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     if (e.key === 'Enter') handleAdd()
   }
 
-  // Sidebar mode: show only pinned notes, with add input + All Notes button
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id)
+    e.dataTransfer.setData('text/plain', id)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault()
+    const dragged = e.dataTransfer.getData('text/plain')
+    if (!dragged || !onReorder || dragged === targetId) return
+
+    const from = notes.findIndex(n => n.id === dragged)
+    const to = notes.findIndex(n => n.id === targetId)
+    if (from === -1 || to === -1) return
+
+    onReorder(dragged, to)
+    setDraggedId(null)
+  }
+
+  const handleDragEnd = () => setDraggedId(null)
+
   if (sidebar) {
     return (
-      <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 
-        dark:border-slate-700 p-4 w-full">
+      <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 w-full">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-            📌 Pinned
-          </h2>
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
           <span className="text-sm text-slate-400">{notes.length}</span>
         </div>
 
-        {/* Add note input */}
         {onAdd && (
           <div className="flex gap-1.5 mb-3">
             <VoiceButton onTranscript={setInput} />
@@ -56,103 +78,50 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="+ Quick note..."
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
-                dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
-                outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
             />
-            <button
-              onClick={handleAdd}
-              className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 
-                border border-slate-200 dark:border-slate-700 text-slate-500 
-                hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-            >
-              +
-            </button>
+            <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">+</button>
           </div>
         )}
 
         {notes.length === 0 ? (
-          <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">
-            No pinned notes
-          </p>
+          <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
         ) : (
-          <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3">
+          <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3 scrollbar-hide">
             {notes.map((note) => (
               <div
                 key={note.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, note.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, note.id)}
+                onDragEnd={handleDragEnd}
                 onClick={() => onEdit?.(note)}
-                className={`relative p-3 rounded-lg border text-sm cursor-pointer
-                  ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
-                  transition-all hover:scale-[1.02] hover:z-10 group shadow-sm`}
-                style={{
-                  transform: `translate(${note.position_x || 0}px, ${note.position_y || 0}px) rotate(${(note.position_x || 0) * 0.03}deg)`,
-                }}
+                style={{ userSelect: 'none' }}
+                className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
               >
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
-                  className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 
-                    text-slate-400 hover:text-red-500 transition-all text-xs"
-                >
-                  ✕
-                </button>
-                {note.title && (
-                  <p className="font-semibold mb-0.5 opacity-80">{note.title}</p>
-                )}
-                <p className="whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 whitespace-pre-wrap break-words">{note.content}</div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
+                    className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* All Notes button */}
         {onShowAll && (
-          <button
-            onClick={onShowAll}
-            className="w-full text-sm py-2 rounded-lg border border-dashed border-slate-300 
-              dark:border-slate-600 text-slate-400 dark:text-slate-500 
-              hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-400 
-              dark:hover:border-slate-400 transition-colors"
-          >
-            📝 All Notes
+          <button onClick={onShowAll} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center">
+            View all notes →
           </button>
         )}
       </div>
     )
   }
 
-  // Original full-width mode (non-sidebar) — kept for potential standalone use
-  if (notes.length === 0) return null
-
-  return (
-    <div className="mt-6">
-      <h2 className="text-sm font-semibold text-slate-400 dark:text-slate-400 mb-3">📌 Pinned Notes</h2>
-      <div className="flex flex-wrap gap-3">
-        {notes.map((note) => (
-          <div
-            key={note.id}
-            onClick={() => onEdit?.(note)}
-            className={`relative w-48 min-h-[100px] p-3 rounded-lg border cursor-pointer
-              ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
-              transition-transform hover:scale-[1.02] group shadow-sm`}
-            style={{
-              transform: `translate(${note.position_x || 0}px, ${note.position_y || 0}px) rotate(${(note.position_x || 0) * 0.02}deg)`,
-            }}
-          >
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
-              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 
-                text-slate-400 hover:text-red-500 transition-all text-xs"
-            >
-              ✕
-            </button>
-            {note.title && (
-              <p className="text-xs font-semibold mb-1 opacity-80">{note.title}</p>
-            )}
-            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return null
 }
