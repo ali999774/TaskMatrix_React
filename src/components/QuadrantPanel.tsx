@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Quadrant, Task } from '../types'
-import { QUADRANT_LABELS, QUADRANT_DEFAULTS, QUADRANT_ICONS } from '../types'
+import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import TaskCard from './TaskCard'
 
 interface Props {
@@ -8,10 +8,8 @@ interface Props {
   tasks: Task[]
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
-  onAdd: (title: string, importance: number, urgency: number) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
   onTaskClick: (task: Task) => void
-  compact?: boolean
 }
 
 const QUADRANT_BG: Record<Quadrant, string> = {
@@ -28,16 +26,8 @@ const QUADRANT_HEADER_BG: Record<Quadrant, string> = {
   4: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
 }
 
-export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove, onTaskClick, compact }: Props) {
-  const defaults = QUADRANT_DEFAULTS[quadrant]
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onMove, onTaskClick }: Props) {
   const [dragOver, setDragOver] = useState(false)
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-      onAdd(e.currentTarget.value.trim(), defaults.importance, defaults.urgency)
-      e.currentTarget.value = ''
-    }
-  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -96,18 +86,6 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           </p>
         )}
       </div>
-
-      {!compact && (
-        <input
-          type="text"
-          placeholder="+ Add task..."
-          onKeyDown={handleKeyDown}
-          className="w-full bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 
-            rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 
-            placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
-            focus:border-slate-400 dark:focus:border-slate-500 transition-colors mt-3"
-        />
-      )}
     </div>
   )
 }

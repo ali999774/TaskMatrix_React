@@ -238,7 +238,6 @@ export default function App() {
                   tasks={quadrantTasks(q)}
                   onStatusChange={updateStatus}
                   onDelete={deleteTask}
-                  onAdd={addTask}
                   onMove={handleMove}
                   onTaskClick={setSelectedTask}
                 />
