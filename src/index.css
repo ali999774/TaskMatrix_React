@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --q1: #ef4444;
   --q2: #f59e0b;
@@ -9,9 +11,16 @@
 
 body {
   margin: 0;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.dark body,
+body.dark,
+.dark {
   background: #0f172a;
   color: #e2e8f0;
-  font-family: system-ui, -apple-system, sans-serif;
 }
 
 #root {

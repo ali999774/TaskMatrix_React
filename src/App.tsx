@@ -7,7 +7,23 @@ import StickyWall from './components/StickyWall'
 import { importanceUrgencyToQuadrant } from './types'
 import type { Quadrant } from './types'
 
+function useTheme(): [boolean, () => void] {
+  const [dark, setDark] = useState(() => {
+    const stored = localStorage.getItem('tm-theme')
+    if (stored) return stored === 'dark'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('tm-theme', dark ? 'dark' : 'light')
+  }, [dark])
+
+  return [dark, () => setDark((d) => !d)]
+}
+
 export default function App() {
+  const [dark, toggleTheme] = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
@@ -32,7 +48,6 @@ export default function App() {
     if (error) setAuthError(error.message)
   }
 
-  // Listen for OAuth callback
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
@@ -50,7 +65,7 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-slate-400">
+      <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
         Loading...
       </div>
     )
@@ -58,23 +73,23 @@ export default function App() {
 
   if (!userId) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <h1 className="text-2xl font-bold text-white">TaskMatrix</h1>
-        <p className="text-slate-400 text-sm">Sign in to see your tasks</p>
+      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">TaskMatrix</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to see your tasks</p>
         <button
           onClick={signInWithGoogle}
-          className="bg-white text-slate-800 px-6 py-3 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+          className="bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
         >
           Sign in with Google
         </button>
-        {authError && <p className="text-red-400 text-sm">{authError}</p>}
+        {authError && <p className="text-red-500 dark:text-red-400 text-sm">{authError}</p>}
       </div>
     )
   }
 
   if (tasksLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-slate-400">
+      <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
         Loading tasks...
       </div>
     )
@@ -92,25 +107,33 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 min-h-screen bg-slate-50 dark:bg-slate-950">
       <header className="mb-6 flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">TaskMatrix</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">TaskMatrix</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
             {tasks.length} tasks · {notes.length} notes
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <input
             type="text"
             value={noteInput}
             onChange={(e) => setNoteInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
             placeholder="+ Sticky note..."
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 
-              text-sm text-slate-300 placeholder-slate-600 focus:outline-none 
-              focus:border-slate-500 w-40 transition-colors"
+            className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 
+              rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 
+              placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
+              focus:border-slate-400 dark:focus:border-slate-500 w-40 transition-colors"
           />
+          <button
+            onClick={toggleTheme}
+            className="text-lg p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+            title={dark ? 'Switch to light' : 'Switch to dark'}
+          >
+            {dark ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 
@@ -129,5 +152,4 @@ export default function App() {
 
       {!notesLoading && <StickyWall notes={notes} onDelete={deleteNote} />}
     </div>
-  )
-}
+  )}
