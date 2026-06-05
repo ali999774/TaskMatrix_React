@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 
 export function useTasks(userId: string | null) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const loadTasks = useCallback(async () => {
     if (!userId) return
@@ -23,6 +24,52 @@ export function useTasks(userId: string | null) {
   useEffect(() => {
     if (userId) loadTasks()
   }, [userId, loadTasks])
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as Task
+            if (row.status !== 'completed' && !row.deleted_at) {
+              setTasks((prev) => {
+                if (prev.some((t) => t.id === row.id)) return prev
+                return [row, ...prev]
+              })
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new as Task
+            if (row.deleted_at || row.status === 'completed') {
+              setTasks((prev) => prev.filter((t) => t.id !== row.id))
+            } else {
+              setTasks((prev) =>
+                prev.map((t) => (t.id === row.id ? row : t))
+              )
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setTasks((prev) => prev.filter((t) => t.id !== payload.old.id))
+          }
+        }
+      )
+      .subscribe()
+
+    channelRef.current = channel
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
 
   const addTask = useCallback(async (title: string, importance: number, urgency: number) => {
     if (!userId) return

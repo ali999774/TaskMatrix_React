@@ -23,6 +23,46 @@ export function useStickyNotes(userId: string | null) {
     if (userId) loadNotes()
   }, [userId, loadNotes])
 
+  // Realtime subscription
+  useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel('sticky-notes-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sticky_notes',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as StickyNote
+            setNotes((prev) => {
+              if (prev.some((n) => n.id === row.id)) return prev
+              return [row, ...prev]
+            })
+          } else if (payload.eventType === 'UPDATE') {
+            const row = payload.new as StickyNote
+            setNotes((prev) =>
+              prev.map((n) => (n.id === row.id ? row : n))
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setNotes((prev) =>
+              prev.filter((n) => n.id !== payload.old.id)
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId])
+
   const addNote = useCallback(async (content: string) => {
     if (!userId) return
     const note: Partial<StickyNote> = {
