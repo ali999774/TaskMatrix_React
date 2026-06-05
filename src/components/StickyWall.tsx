@@ -6,6 +6,8 @@ interface Props {
   notes: StickyNote[]
   onDelete: (id: string) => void
   onAdd?: (content: string) => void
+  onEdit?: (note: StickyNote) => void
+  onShowAll?: () => void
   sidebar?: boolean
 }
 
@@ -18,7 +20,7 @@ const COLOR_MAP: Record<string, string> = {
   orange: 'bg-orange-100 dark:bg-orange-400/20 border-orange-300 dark:border-orange-400/40 text-orange-800 dark:text-orange-100',
 }
 
-export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
+export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar }: Props) {
   const [input, setInput] = useState('')
 
   const handleAdd = () => {
@@ -32,14 +34,14 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
     if (e.key === 'Enter') handleAdd()
   }
 
-  // Sidebar mode: always visible, has add input
+  // Sidebar mode: show only pinned notes, with add input + All Notes button
   if (sidebar) {
     return (
       <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 
         dark:border-slate-700 p-4 w-full">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-            📌 Notes
+            📌 Pinned
           </h2>
           <span className="text-sm text-slate-400">{notes.length}</span>
         </div>
@@ -53,7 +55,7 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="+ Add note..."
+              placeholder="+ Quick note..."
               className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 
                 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
                 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
@@ -71,15 +73,16 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
         )}
 
         {notes.length === 0 ? (
-          <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-6">
-            No notes yet
+          <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">
+            No pinned notes
           </p>
         ) : (
-          <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto">
+          <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3">
             {notes.map((note) => (
               <div
                 key={note.id}
-                className={`relative p-3 rounded-lg border text-sm
+                onClick={() => onEdit?.(note)}
+                className={`relative p-3 rounded-lg border text-sm cursor-pointer
                   ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
                   transition-all hover:scale-[1.02] hover:z-10 group shadow-sm`}
                 style={{
@@ -87,7 +90,7 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
                 }}
               >
                 <button
-                  onClick={() => onDelete(note.id)}
+                  onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
                   className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 
                     text-slate-400 hover:text-red-500 transition-all text-xs"
                 >
@@ -101,21 +104,35 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
             ))}
           </div>
         )}
+
+        {/* All Notes button */}
+        {onShowAll && (
+          <button
+            onClick={onShowAll}
+            className="w-full text-sm py-2 rounded-lg border border-dashed border-slate-300 
+              dark:border-slate-600 text-slate-400 dark:text-slate-500 
+              hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-400 
+              dark:hover:border-slate-400 transition-colors"
+          >
+            📝 All Notes
+          </button>
+        )}
       </div>
     )
   }
 
-  // Original full-width mode (non-sidebar)
+  // Original full-width mode (non-sidebar) — kept for potential standalone use
   if (notes.length === 0) return null
 
   return (
     <div className="mt-6">
-      <h2 className="text-sm font-semibold text-slate-400 dark:text-slate-400 mb-3">📌 Sticky Notes</h2>
+      <h2 className="text-sm font-semibold text-slate-400 dark:text-slate-400 mb-3">📌 Pinned Notes</h2>
       <div className="flex flex-wrap gap-3">
         {notes.map((note) => (
           <div
             key={note.id}
-            className={`relative w-48 min-h-[100px] p-3 rounded-lg border 
+            onClick={() => onEdit?.(note)}
+            className={`relative w-48 min-h-[100px] p-3 rounded-lg border cursor-pointer
               ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}
               transition-transform hover:scale-[1.02] group shadow-sm`}
             style={{
@@ -123,7 +140,7 @@ export default function StickyWall({ notes, onDelete, onAdd, sidebar }: Props) {
             }}
           >
             <button
-              onClick={() => onDelete(note.id)}
+              onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
               className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 
                 text-slate-400 hover:text-red-500 transition-all text-xs"
             >

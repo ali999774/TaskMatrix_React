@@ -4,10 +4,12 @@ import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
+import NotesModal from './components/NotesModal'
+import NoteEditModal from './components/NoteEditModal'
 import TaskDetail from './components/TaskDetail'
 import VoiceButton from './components/VoiceButton'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
-import type { Quadrant, Task } from './types'
+import type { Quadrant, Task, StickyNote } from './types'
 
 function useTheme(): [boolean, () => void] {
   const [dark, setDark] = useState(() => {
@@ -76,10 +78,12 @@ export default function App() {
   }, [])
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
-  const { notes, addNote, deleteNote } = useStickyNotes(userId)
+  const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState('all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [showNotesModal, setShowNotesModal] = useState(false)
+  const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
 
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
@@ -244,7 +248,14 @@ export default function App() {
 
           {/* Sticky notes sidebar */}
           <div className="w-full lg:w-80 shrink-0">
-            <StickyWall notes={notes} onDelete={deleteNote} onAdd={addNote} sidebar />
+            <StickyWall
+              notes={pinnedNotes}
+              onDelete={deleteNote}
+              onAdd={addNote}
+              onEdit={setEditingNote}
+              onShowAll={() => setShowNotesModal(true)}
+              sidebar
+            />
           </div>
         </div>
       </div>
@@ -254,6 +265,27 @@ export default function App() {
           task={selectedTask}
           onUpdate={updateTask}
           onClose={() => setSelectedTask(null)}
+        />
+      )}
+
+      {showNotesModal && (
+        <NotesModal
+          notes={notes}
+          onClose={() => setShowNotesModal(false)}
+          onAdd={addNote}
+          onEdit={(note) => {
+            setShowNotesModal(false)
+            setEditingNote(note)
+          }}
+        />
+      )}
+
+      {editingNote && (
+        <NoteEditModal
+          note={editingNote}
+          onSave={updateNote}
+          onDelete={deleteNote}
+          onClose={() => setEditingNote(null)}
         />
       )}
     </div>

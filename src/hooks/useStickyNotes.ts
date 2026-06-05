@@ -78,10 +78,19 @@ export function useStickyNotes(userId: string | null) {
     await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
   }, [userId])
 
+  const updateNote = useCallback(async (id: string, updates: Partial<StickyNote>) => {
+    setNotes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, ...updates } : n))
+    )
+    await supabase.from('sticky_notes').update(updates).eq('id', id)
+  }, [])
+
   const deleteNote = useCallback(async (id: string) => {
     setNotes((prev) => prev.filter((n) => n.id !== id))
     await supabase.from('sticky_notes').delete().eq('id', id)
   }, [])
 
-  return { notes, loading, addNote, deleteNote, reload: loadNotes }
+  const pinnedNotes = notes.filter((n) => n.pinned)
+
+  return { notes, pinnedNotes, loading, addNote, updateNote, deleteNote, reload: loadNotes }
 }
