@@ -151,8 +151,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="px-6 py-3 flex items-center gap-3">
             <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight whitespace-nowrap">
               TaskMatrix
             </h1>
@@ -198,15 +197,14 @@ export default function App() {
               </button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-start">
+      <div className="px-6 py-5">
+        <div className="flex flex-col lg:flex-row gap-5 items-start">
           {/* Matrix column */}
           <div className="flex-1 min-w-0 w-full">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {quadrants.map((q) => (
                 <QuadrantPanel
                   key={q}
@@ -217,14 +215,13 @@ export default function App() {
                   onAdd={addTask}
                   onMove={handleMove}
                   onTaskClick={setSelectedTask}
-                  compact
                 />
               ))}
             </div>
           </div>
 
           {/* Sticky notes sidebar */}
-          <div className="w-full lg:w-72 shrink-0">
+          <div className="w-full lg:w-80 shrink-0">
             <StickyWall notes={notes} onDelete={deleteNote} onAdd={addNote} sidebar />
           </div>
         </div>

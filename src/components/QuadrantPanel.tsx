@@ -68,20 +68,20 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`rounded-xl border bg-white dark:bg-slate-900/50 ${QUADRANT_COLORS[quadrant]} 
-        p-3 flex flex-col min-h-[160px] transition-all duration-150
+        p-4 flex flex-col min-h-[220px] transition-all duration-150
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
     >
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <div>
-          <h3 className={`text-xs font-semibold ${QUADRANT_HEADER_COLORS[quadrant]}`}>
+          <h3 className={`text-sm font-semibold ${QUADRANT_HEADER_COLORS[quadrant]}`}>
             {QUADRANT_LABELS[quadrant]}
           </h3>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500">{QUADRANT_DESCRIPTIONS[quadrant]}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{QUADRANT_DESCRIPTIONS[quadrant]}</p>
         </div>
         <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">{tasks.length}</span>
       </div>
 
-      <div className="flex-1 space-y-1.5">
+      <div className="flex-1 space-y-2">
         {tasks.map((task) => (
           <TaskCard
             key={task.id}
@@ -92,7 +92,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           />
         ))}
         {tasks.length === 0 && (
-          <p className="text-[11px] text-slate-300 dark:text-slate-600 italic text-center py-3">
+          <p className="text-xs text-slate-300 dark:text-slate-600 italic text-center py-4">
             {dragOver ? 'Drop here' : 'Drop tasks here'}
           </p>
         )}
@@ -104,7 +104,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           placeholder="+ Add task..."
           onKeyDown={handleKeyDown}
           className="w-full bg-slate-50 dark:bg-transparent border border-slate-200 dark:border-slate-700 
-            rounded-lg px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 
+            rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 
             placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none 
             focus:border-slate-400 dark:focus:border-slate-500 transition-colors mt-2"
         />
