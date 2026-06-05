@@ -15,6 +15,7 @@ export function useTasks(userId: string | null) {
       .eq('user_id', userId)
       .is('deleted_at', null)
       .neq('status', 'completed')
+      .neq('status', 'archived')
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) setTasks(data as Task[])
@@ -42,7 +43,7 @@ export function useTasks(userId: string | null) {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const row = payload.new as Task
-            if (row.status !== 'completed' && !row.deleted_at) {
+            if (row.status !== 'completed' && row.status !== 'archived' && !row.deleted_at) {
               setTasks((prev) => {
                 if (prev.some((t) => t.id === row.id)) return prev
                 return [row, ...prev]
@@ -50,7 +51,7 @@ export function useTasks(userId: string | null) {
             }
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as Task
-            if (row.deleted_at || row.status === 'completed') {
+            if (row.deleted_at || row.status === 'completed' || row.status === 'archived') {
               setTasks((prev) => prev.filter((t) => t.id !== row.id))
             } else {
               setTasks((prev) =>

@@ -7,6 +7,8 @@ import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
 import NoteEditModal from './components/NoteEditModal'
 import PomodoroPopup from './components/PomodoroPopup'
+import TodayStrip from './components/TodayStrip'
+import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import VoiceButton from './components/VoiceButton'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
@@ -241,11 +243,16 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-6 py-5">
+      <div className="px-4 sm:px-6 py-4 sm:py-5">
         <div className="flex flex-col lg:flex-row gap-5 items-start">
+
           {/* Matrix column */}
           <div className="flex-1 min-w-0 w-full">
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* Today strip */}
+            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {quadrants.map((q) => (
                 <QuadrantPanel
                   key={q}
@@ -258,6 +265,12 @@ export default function App() {
                 />
               ))}
             </div>
+
+            <CompletedSection
+              userId={userId}
+              context={context}
+              onTaskClick={setSelectedTask}
+            />
           </div>
 
           {/* Sticky notes sidebar */}
