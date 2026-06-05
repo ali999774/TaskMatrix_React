@@ -6,6 +6,7 @@ import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
 import NoteEditModal from './components/NoteEditModal'
+import PomodoroPopup from './components/PomodoroPopup'
 import TaskDetail from './components/TaskDetail'
 import VoiceButton from './components/VoiceButton'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
@@ -84,6 +85,7 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
+  const [showPomodoro, setShowPomodoro] = useState(false)
 
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
@@ -208,6 +210,13 @@ export default function App() {
               >
                 {dark ? '☀️' : '🌙'}
               </button>
+              <button
+                onClick={() => setShowPomodoro((v) => !v)}
+                className="text-lg p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                title="Pomodoro timer"
+              >
+                ⏱
+              </button>
             </div>
           </div>
         </header>
@@ -293,6 +302,8 @@ export default function App() {
           onClose={() => setEditingNote(null)}
         />
       )}
+
+      <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
     </div>
   )
 }
