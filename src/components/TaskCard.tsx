@@ -1,9 +1,11 @@
+import { useRef } from 'react'
 import type { Task } from '../types'
 
 interface Props {
   task: Task
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
+  onClick: (task: Task) => void
 }
 
 const STATUS_ICONS: Record<string, string> = {
@@ -12,13 +14,17 @@ const STATUS_ICONS: Record<string, string> = {
   done: '●',
 }
 
-export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
-  const cycleStatus = () => {
+export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Props) {
+  const dragged = useRef(false)
+
+  const cycleStatus = (e: React.MouseEvent) => {
+    e.stopPropagation()
     const next: Record<string, string> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
     onStatusChange(task.id, next[task.status] || 'todo')
   }
 
   const handleDragStart = (e: React.DragEvent) => {
+    dragged.current = true
     e.dataTransfer.setData('text/plain', task.id)
     e.dataTransfer.effectAllowed = 'move'
     ;(e.currentTarget as HTMLElement).classList.add('opacity-40')
@@ -26,6 +32,18 @@ export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
 
   const handleDragEnd = (e: React.DragEvent) => {
     ;(e.currentTarget as HTMLElement).classList.remove('opacity-40')
+    // Reset after a tick so click handler sees it
+    setTimeout(() => { dragged.current = false }, 0)
+  }
+
+  const handleClick = () => {
+    if (dragged.current) return
+    onClick(task)
+  }
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onDelete(task.id)
   }
 
   return (
@@ -33,6 +51,7 @@ export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onClick={handleClick}
       className={`p-3 rounded-lg border border-slate-200 dark:border-slate-700 
         bg-slate-50 dark:bg-slate-800/60 transition-all 
         hover:border-slate-400 dark:hover:border-slate-500 group cursor-grab active:cursor-grabbing
@@ -57,7 +76,7 @@ export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
             I{task.importance}U{task.urgency}
           </span>
           <button
-            onClick={() => onDelete(task.id)}
+            onClick={handleDelete}
             className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-xs px-1"
           >
             ✕
@@ -65,12 +84,22 @@ export default function TaskCard({ task, onStatusChange, onDelete }: Props) {
         </div>
       </div>
       {task.notes && (
-        <p className="mt-2 text-xs text-slate-400 dark:text-slate-400 ml-7">{task.notes}</p>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-400 ml-7 line-clamp-2">{task.notes}</p>
       )}
-      {task.due_date && (
-        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 ml-7">
-          Due: {new Date(task.due_date).toLocaleDateString()}
-        </p>
+      {(task.due_date || (task.subtasks && task.subtasks.length > 0)) && (
+        <div className="mt-2 ml-7 flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+          {task.due_date && (
+            <span>
+              📅 {new Date(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+              {task.due_time && ` ${task.due_time}`}
+            </span>
+          )}
+          {task.subtasks && task.subtasks.length > 0 && (
+            <span>
+              ✅ {task.subtasks.filter((s) => s.done).length}/{task.subtasks.length}
+            </span>
+          )}
+        </div>
       )}
     </div>
   )

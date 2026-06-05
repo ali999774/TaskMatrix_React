@@ -4,8 +4,9 @@ import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
+import TaskDetail from './components/TaskDetail'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
-import type { Quadrant } from './types'
+import type { Quadrant, Task } from './types'
 
 function useTheme(): [boolean, () => void] {
   const [dark, setDark] = useState(() => {
@@ -62,6 +63,19 @@ export default function App() {
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
   const { notes, loading: notesLoading, addNote, deleteNote } = useStickyNotes(userId)
   const [noteInput, setNoteInput] = useState('')
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+
+  // Keep selectedTask in sync with realtime updates
+  useEffect(() => {
+    if (selectedTask) {
+      const updated = tasks.find((t) => t.id === selectedTask.id)
+      if (updated) {
+        setSelectedTask(updated)
+      } else {
+        setSelectedTask(null) // task was deleted/completed
+      }
+    }
+  }, [tasks, selectedTask])
 
   if (authLoading) {
     return (
@@ -152,11 +166,20 @@ export default function App() {
             onDelete={deleteTask}
             onAdd={addTask}
             onMove={handleMove}
+            onTaskClick={setSelectedTask}
           />
         ))}
       </div>
 
       {!notesLoading && <StickyWall notes={notes} onDelete={deleteNote} />}
+
+      {selectedTask && (
+        <TaskDetail
+          task={selectedTask}
+          onUpdate={updateTask}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </div>
   )
 }

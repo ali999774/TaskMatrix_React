@@ -10,6 +10,7 @@ interface Props {
   onDelete: (id: string) => void
   onAdd: (title: string, importance: number, urgency: number) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
+  onTaskClick: (task: Task) => void
 }
 
 const QUADRANT_COLORS: Record<Quadrant, string> = {
@@ -26,7 +27,7 @@ const QUADRANT_HEADER_COLORS: Record<Quadrant, string> = {
   4: 'text-emerald-600 dark:text-emerald-400',
 }
 
-export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove }: Props) {
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onAdd, onMove, onTaskClick }: Props) {
   const defaults = QUADRANT_DEFAULTS[quadrant]
   const [dragOver, setDragOver] = useState(false)
 
@@ -48,7 +49,6 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only set false when leaving the panel itself, not its children
     if ((e.currentTarget as HTMLElement).contains(e.relatedTarget as HTMLElement)) return
     setDragOver(false)
   }
@@ -84,6 +84,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
             task={task}
             onStatusChange={onStatusChange}
             onDelete={onDelete}
+            onClick={onTaskClick}
           />
         ))}
         {tasks.length === 0 && (
