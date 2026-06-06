@@ -72,7 +72,6 @@ export function useStickyNotes(userId: string | null) {
       position_x: Math.floor(Math.random() * 200),
       position_y: Math.floor(Math.random() * 200),
       pinned: false,
-      position: notes.length,
     }
     setNotes((prev) => [note as StickyNote, ...prev])
     await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })

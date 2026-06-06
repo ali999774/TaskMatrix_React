@@ -98,7 +98,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                 onDragEnd={handleDragEnd}
                 onClick={() => onEdit?.(note)}
                 style={{ userSelect: 'none' }}
-                className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
+                className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
               >
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex-1 whitespace-pre-wrap break-words">{note.content}</div>

@@ -69,6 +69,11 @@ export default function App() {
     if (error) setAuthError(error.message)
   }
 
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setUserId(null)
+  }
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
@@ -236,6 +241,13 @@ export default function App() {
               >
                 {collapsed ? '⊞' : '⊟'}
               </button>
+              <button
+                onClick={signOut}
+                className="text-sm px-2 py-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-400 dark:text-slate-500"
+                title="Sign out"
+              >
+                🚪
+              </button>
             </div>
           </div>
         </header>
@@ -302,7 +314,6 @@ export default function App() {
               onAdd={addNote}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
-              onReorder={reorderNote}
               sidebar
             />
           </div>
