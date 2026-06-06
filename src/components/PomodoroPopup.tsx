@@ -105,6 +105,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
 
   // Drag handlers
   const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('button, select')) return
     dragging.current = true
     dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
