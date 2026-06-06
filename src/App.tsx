@@ -218,7 +218,7 @@ export default function App() {
                     <button
                       key={q}
                       onClick={() => handleQuickAdd(q)}
-                      className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border 
+                      className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border min-h-[44px]
                         transition-all active:scale-95 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
                     >
                       {QUADRANT_LABELS_SHORT[q]}
@@ -232,7 +232,7 @@ export default function App() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={toggleTheme}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90"
+                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                 title={dark ? 'Switch to light' : 'Switch to dark'}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
@@ -240,7 +240,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowPomodoro((v) => !v)}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90"
+                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                 title="Pomodoro timer"
                 aria-label="Pomodoro timer"
               >
@@ -248,7 +248,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-400 dark:text-slate-500"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
                 aria-label="Refresh"
               >
@@ -256,7 +256,7 @@ export default function App() {
               </button>
               <button
                 onClick={signOut}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-300 dark:text-slate-600"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-300 dark:text-slate-600"
                 title="Sign out"
                 aria-label="Sign out"
               >
@@ -282,7 +282,7 @@ export default function App() {
             <button
               key={ctx}
               onClick={() => setContext(ctx)}
-              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 active:opacity-80
+              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 active:opacity-80 min-h-[44px] inline-flex items-center
                 ${context === ctx
                   ? 'bg-blue-600 dark:bg-blue-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -375,35 +375,35 @@ export default function App() {
         <div className="flex items-center justify-around px-3 py-2">
           <button
             onClick={() => { const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Quick add task"
           >
             <span className="text-lg">＋</span>
-            <span className="text-[10px] font-medium">Add</span>
+            <span className="text-xs font-medium">Add</span>
           </button>
           <button
             onClick={() => setShowPomodoro(v => !v)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
             <span className="text-lg">⏱</span>
-            <span className="text-[10px] font-medium">Focus</span>
+            <span className="text-xs font-medium">Focus</span>
           </button>
           <button
             onClick={toggleTheme}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
-            <span className="text-[10px] font-medium">Theme</span>
+            <span className="text-xs font-medium">Theme</span>
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
             <span className="text-lg">📌</span>
-            <span className="text-[10px] font-medium">Notes</span>
+            <span className="text-xs font-medium">Notes</span>
           </button>
         </div>
       </nav>

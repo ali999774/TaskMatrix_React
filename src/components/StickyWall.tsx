@@ -132,7 +132,8 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
-                        className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition"
+                        className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                        aria-label="Delete note"
                       >
                         ×
                       </button>
