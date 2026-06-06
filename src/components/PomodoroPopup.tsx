@@ -24,6 +24,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0 })
+  const popupRef = useRef<HTMLDivElement>(null)
+  const posRef = useRef(pos)
+  posRef.current = pos
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -107,10 +110,17 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const target = e.target as HTMLElement
     if (target.closest('button, select')) return
+    // Seed actual screen position on first grab
+    if (posRef.current.x === 0 && posRef.current.y === 0 && popupRef.current) {
+      const rect = popupRef.current.getBoundingClientRect()
+      setPos({ x: rect.left, y: rect.top })
+      dragStart.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+    } else {
+      dragStart.current = { x: e.clientX - posRef.current.x, y: e.clientY - posRef.current.y }
+    }
     dragging.current = true
-    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-  }, [pos])
+  }, [])
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragging.current) return
@@ -132,6 +142,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div
+        ref={popupRef}
         className="absolute bg-white dark:bg-slate-900 rounded-2xl shadow-xl
           border border-slate-200 dark:border-slate-700 min-w-[280px] overflow-hidden
           animate-[slideUp_0.3s_ease] select-none"
