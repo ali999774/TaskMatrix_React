@@ -28,6 +28,17 @@ const QUADRANT_HEADER_BG: Record<Quadrant, string> = {
 
 export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onMove, onTaskClick }: Props) {
   const [dragOver, setDragOver] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem(`tm-q-${quadrant}`) === 'true'
+  })
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem(`tm-q-${quadrant}`, String(next))
+      return next
+    })
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -58,34 +69,46 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`rounded-xl border ${QUADRANT_BG[quadrant]} 
-        p-4 flex flex-col min-h-[220px] transition-all duration-150
+        p-4 flex flex-col transition-all duration-150
+        ${collapsed ? 'min-h-0' : 'min-h-[220px]'}
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
     >
-      {/* Quadrant header with icon + count */}
-      <div className={`-mx-4 -mt-4 px-4 py-2.5 rounded-t-xl ${QUADRANT_HEADER_BG[quadrant]} mb-3 flex items-center justify-between`}>
+      {/* Quadrant header with icon + count + collapse toggle */}
+      <div className={`-mx-4 -mt-4 px-4 py-2.5 rounded-t-xl ${QUADRANT_HEADER_BG[quadrant]} ${collapsed ? 'mb-0 rounded-b-xl' : 'mb-3'} flex items-center justify-between`}>
         <h3 className="text-sm font-semibold flex items-center gap-1.5">
           <span>{QUADRANT_ICONS[quadrant]}</span>
           {QUADRANT_LABELS[quadrant]}
         </h3>
-        <span className="text-xs font-medium opacity-60 tabular-nums">{tasks.length}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium opacity-60 tabular-nums">{tasks.length}</span>
+          <button
+            onClick={toggleCollapsed}
+            className="text-xs opacity-50 hover:opacity-100 transition-opacity ml-1"
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            {collapsed ? '▶' : '▼'}
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 space-y-2">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onStatusChange={onStatusChange}
-            onDelete={onDelete}
-            onClick={onTaskClick}
-          />
-        ))}
-        {tasks.length === 0 && (
-          <p className="text-xs text-slate-400 dark:text-slate-500 italic text-center py-6">
-            {dragOver ? 'Drop here' : 'Drag tasks here'}
-          </p>
-        )}
-      </div>
+      {!collapsed && (
+        <div className="flex-1 space-y-2">
+          {tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onStatusChange={onStatusChange}
+              onDelete={onDelete}
+              onClick={onTaskClick}
+            />
+          ))}
+          {tasks.length === 0 && (
+            <p className="text-xs text-slate-400 dark:text-slate-500 italic text-center py-6">
+              {dragOver ? 'Drop here' : 'Drag tasks here'}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
