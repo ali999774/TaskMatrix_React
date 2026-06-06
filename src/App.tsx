@@ -234,6 +234,14 @@ export default function App() {
                 ⏱
               </button>
               <button
+                onClick={() => window.location.reload()}
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-400 dark:text-slate-500"
+                title="Refresh"
+                aria-label="Refresh"
+              >
+                ↻
+              </button>
+              <button
                 onClick={toggleCollapsed}
                 className="text-sm px-2 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-500 dark:text-slate-400"
                 title={collapsed ? 'Expand matrix' : 'Collapse matrix'}
@@ -243,11 +251,11 @@ export default function App() {
               </button>
               <button
                 onClick={signOut}
-                className="text-sm px-2 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-400 dark:text-slate-500"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-300 dark:text-slate-600"
                 title="Sign out"
                 aria-label="Sign out"
               >
-                🚪
+                ⏻
               </button>
             </div>
           </div>
