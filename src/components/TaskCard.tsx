@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import type { Task } from '../types'
+import { useHaptics } from '../hooks/useHaptics'
 
 interface Props {
   task: Task
@@ -28,11 +29,15 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
 
 export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Props) {
   const dragged = useRef(false)
+  const haptics = useHaptics()
 
   const cycleStatus = (e: React.MouseEvent) => {
     e.stopPropagation()
     const next: Record<string, string> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
-    onStatusChange(task.id, next[task.status] || 'todo')
+    const newStatus = next[task.status] || 'todo'
+    onStatusChange(task.id, newStatus)
+    if (newStatus === 'done') haptics('success')
+    else haptics('light')
   }
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -54,6 +59,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Pr
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
+    haptics('medium')
     onDelete(task.id)
   }
 

@@ -93,6 +93,18 @@ export default function App() {
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
+  const [online, setOnline] = useState(navigator.onLine)
+
+  useEffect(() => {
+    const goOnline = () => setOnline(true)
+    const goOffline = () => setOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
@@ -134,8 +146,19 @@ export default function App() {
 
   if (tasksLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
-        Loading tasks...
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950 px-3 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-4xl">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse">
+              <div className="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -164,9 +187,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
         <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
@@ -244,6 +267,14 @@ export default function App() {
         </header>
 
       {/* Context switcher + body */}
+      {/* Offline banner */}
+      {!online && (
+        <div className="bg-amber-50 dark:bg-amber-950/50 border-b border-amber-200 dark:border-amber-800 px-3 sm:px-6 py-2 text-center">
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            You're offline. Changes will sync when you reconnect.
+          </span>
+        </div>
+      )}
       {/* Context switcher */}
       <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
         <div className="flex gap-1.5 overflow-x-auto">
@@ -338,6 +369,44 @@ export default function App() {
       )}
 
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
+
+      {/* Mobile bottom action bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around px-3 py-2">
+          <button
+            onClick={() => { const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            aria-label="Quick add task"
+          >
+            <span className="text-lg">＋</span>
+            <span className="text-[10px] font-medium">Add</span>
+          </button>
+          <button
+            onClick={() => setShowPomodoro(v => !v)}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            aria-label="Pomodoro timer"
+          >
+            <span className="text-lg">⏱</span>
+            <span className="text-[10px] font-medium">Focus</span>
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
+            <span className="text-[10px] font-medium">Theme</span>
+          </button>
+          <button
+            onClick={() => setShowNotesModal(true)}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all"
+            aria-label="View all notes"
+          >
+            <span className="text-lg">📌</span>
+            <span className="text-[10px] font-medium">Notes</span>
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }

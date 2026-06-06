@@ -97,7 +97,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
       ref={overlayRef}
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] 
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[max(15vh,env(safe-area-inset-top))]
         bg-black/50 backdrop-blur-sm p-4"
     >
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
