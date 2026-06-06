@@ -83,7 +83,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           <span className="text-xs font-medium opacity-60 tabular-nums">{tasks.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 ml-1 p-0.5"
+            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 ml-1 p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             title={collapsed ? 'Expand' : 'Collapse'}
             aria-label={collapsed ? 'Expand quadrant' : 'Collapse quadrant'}
           >

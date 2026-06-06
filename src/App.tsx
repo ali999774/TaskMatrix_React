@@ -93,6 +93,18 @@ export default function App() {
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
+  const [online, setOnline] = useState(navigator.onLine)
+
+  useEffect(() => {
+    const goOnline = () => setOnline(true)
+    const goOffline = () => setOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
@@ -134,8 +146,19 @@ export default function App() {
 
   if (tasksLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
-        Loading tasks...
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950 px-3 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-4xl">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse">
+              <div className="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
+                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -164,9 +187,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
         <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
@@ -195,7 +218,7 @@ export default function App() {
                     <button
                       key={q}
                       onClick={() => handleQuickAdd(q)}
-                      className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border 
+                      className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border min-h-[44px]
                         transition-all active:scale-95 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
                     >
                       {QUADRANT_LABELS_SHORT[q]}
@@ -209,7 +232,7 @@ export default function App() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={toggleTheme}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90"
+                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                 title={dark ? 'Switch to light' : 'Switch to dark'}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
@@ -217,7 +240,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => setShowPomodoro((v) => !v)}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90"
+                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                 title="Pomodoro timer"
                 aria-label="Pomodoro timer"
               >
@@ -225,7 +248,7 @@ export default function App() {
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-400 dark:text-slate-500"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
                 aria-label="Refresh"
               >
@@ -233,7 +256,7 @@ export default function App() {
               </button>
               <button
                 onClick={signOut}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 text-slate-300 dark:text-slate-600"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-300 dark:text-slate-600"
                 title="Sign out"
                 aria-label="Sign out"
               >
@@ -244,6 +267,14 @@ export default function App() {
         </header>
 
       {/* Context switcher + body */}
+      {/* Offline banner */}
+      {!online && (
+        <div className="bg-amber-50 dark:bg-amber-950/50 border-b border-amber-200 dark:border-amber-800 px-3 sm:px-6 py-2 text-center">
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+            You're offline. Changes will sync when you reconnect.
+          </span>
+        </div>
+      )}
       {/* Context switcher */}
       <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
         <div className="flex gap-1.5 overflow-x-auto">
@@ -251,7 +282,7 @@ export default function App() {
             <button
               key={ctx}
               onClick={() => setContext(ctx)}
-              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 active:opacity-80
+              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 active:opacity-80 min-h-[44px] inline-flex items-center
                 ${context === ctx
                   ? 'bg-blue-600 dark:bg-blue-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -338,6 +369,44 @@ export default function App() {
       )}
 
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
+
+      {/* Mobile bottom action bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around px-3 py-2">
+          <button
+            onClick={() => { const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            aria-label="Quick add task"
+          >
+            <span className="text-lg">＋</span>
+            <span className="text-xs font-medium">Add</span>
+          </button>
+          <button
+            onClick={() => setShowPomodoro(v => !v)}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            aria-label="Pomodoro timer"
+          >
+            <span className="text-lg">⏱</span>
+            <span className="text-xs font-medium">Focus</span>
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
+            <span className="text-xs font-medium">Theme</span>
+          </button>
+          <button
+            onClick={() => setShowNotesModal(true)}
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            aria-label="View all notes"
+          >
+            <span className="text-lg">📌</span>
+            <span className="text-xs font-medium">Notes</span>
+          </button>
+        </div>
+      </nav>
     </div>
   )
 }

@@ -177,7 +177,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             </select>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+              aria-label="Close pomodoro timer"
             >
               ×
             </button>
@@ -231,7 +232,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <button
             onClick={toggleTimer}
             className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide text-white
-              bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90 transition-opacity"
+              bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90 active:scale-95 active:opacity-80 transition-all min-h-[44px]"
+            aria-label={running ? 'Pause timer' : timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'}
           >
             {running ? 'PAUSE' : timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
           </button>
@@ -239,7 +241,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             onClick={resetTimer}
             className="px-4 py-2.5 rounded-lg text-sm text-slate-500 dark:text-slate-400
               bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-              hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+            aria-label="Reset timer"
           >
             ↺
           </button>
@@ -262,6 +265,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                     className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600
                       text-slate-500 dark:text-slate-400 text-sm hover:bg-slate-100 dark:hover:bg-slate-800
                       flex items-center justify-center transition-colors"
+                    aria-label={`Decrease ${type} duration`}
                   >
                     −
                   </button>
@@ -273,6 +277,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                     className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600
                       text-slate-500 dark:text-slate-400 text-sm hover:bg-slate-100 dark:hover:bg-slate-800
                       flex items-center justify-center transition-colors"
+                    aria-label={`Increase ${type} duration`}
                   >
                     +
                   </button>

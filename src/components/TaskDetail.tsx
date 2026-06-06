@@ -97,7 +97,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
       ref={overlayRef}
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] 
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[max(15vh,env(safe-area-inset-top))]
         bg-black/50 backdrop-blur-sm p-4"
     >
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
@@ -118,7 +118,8 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-              text-xl leading-none p-1"
+              text-xl leading-none p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            aria-label="Close task details"
           >
             ✕
           </button>
@@ -186,7 +187,8 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                     <button
                       onClick={() => deleteSubtask(i)}
                       className="opacity-0 group-hover:opacity-100 text-slate-400 
-                        hover:text-red-500 transition-all text-xs"
+                        hover:text-red-500 transition-all text-xs min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                      aria-label={`Delete subtask: ${st.title}`}
                     >
                       ✕
                     </button>

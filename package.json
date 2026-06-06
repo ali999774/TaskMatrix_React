@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/haptics": "^8.0.2",
     "@supabase/supabase-js": "^2.107.0",
     "@tailwindcss/vite": "^4.3.0",
     "react": "^19.2.6",
