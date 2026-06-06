@@ -218,7 +218,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <button
             onClick={toggleTimer}
             className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide text-white
-              bg-slate-800 dark:bg-white dark:text-slate-800 hover:opacity-90 transition-opacity"
+              bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90 transition-opacity"
           >
             {running ? 'PAUSE' : timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
           </button>
