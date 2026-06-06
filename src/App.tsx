@@ -168,7 +168,7 @@ export default function App() {
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
         <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white tracking-tight whitespace-nowrap shrink-0">
+            <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
             </h1>
 
