@@ -24,6 +24,17 @@ const COLOR_MAP: Record<string, string> = {
 export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder }: Props) {
   const [input, setInput] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem('tm-pinned-collapsed') === 'true'
+  })
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem('tm-pinned-collapsed', String(next))
+      return next
+    })
+  }
 
   const handleAdd = () => {
     if (input.trim() && onAdd) {
@@ -67,57 +78,68 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
           <span className="text-sm text-slate-400">{notes.length}</span>
+          <button
+            onClick={toggleCollapsed}
+            className="text-xs opacity-50 hover:opacity-100 transition-opacity ml-auto"
+            title={collapsed ? 'Expand' : 'Collapse'}
+          >
+            {collapsed ? '▶' : '▼'}
+          </button>
         </div>
 
-        {onAdd && (
-          <div className="flex gap-1.5 mb-3">
-            <VoiceButton onTranscript={setInput} />
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="+ Quick note..."
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
-            />
-            <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">+</button>
-          </div>
-        )}
-
-        {notes.length === 0 ? (
-          <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
-        ) : (
-          <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3 scrollbar-hide">
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, note.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, note.id)}
-                onDragEnd={handleDragEnd}
-                onClick={() => onEdit?.(note)}
-                style={{ userSelect: 'none' }}
-                className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
-              >
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1 whitespace-pre-wrap break-words">{note.content}</div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
-                    className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition"
-                  >
-                    ×
-                  </button>
-                </div>
+        {!collapsed && (
+          <>
+            {onAdd && (
+              <div className="flex gap-1.5 mb-3">
+                <VoiceButton onTranscript={setInput} />
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="+ Quick note..."
+                  className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+                />
+                <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">+</button>
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {onShowAll && (
-          <button onClick={onShowAll} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center">
-            View all notes →
-          </button>
+            {notes.length === 0 ? (
+              <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
+            ) : (
+              <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3 scrollbar-hide">
+                {notes.map((note) => (
+                  <div
+                    key={note.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, note.id)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, note.id)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => onEdit?.(note)}
+                    style={{ userSelect: 'none' }}
+                    className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 whitespace-pre-wrap break-words">{note.content}</div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
+                        className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {onShowAll && (
+              <button onClick={onShowAll} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center">
+                View all notes →
+              </button>
+            )}
+          </>
         )}
       </div>
     )
