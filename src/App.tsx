@@ -1,5 +1,3 @@
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
@@ -84,6 +82,16 @@ export default function App() {
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId)
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem('tm-collapsed') === 'true'
+  })
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev
+      localStorage.setItem('tm-collapsed', String(next))
+      return next
+    })
+  }
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState('all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -221,9 +229,20 @@ export default function App() {
               >
                 ⏱
               </button>
+              <button
+                onClick={toggleCollapsed}
+                className="text-sm px-2 py-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400"
+                title={collapsed ? 'Expand matrix' : 'Collapse matrix'}
+              >
+                {collapsed ? '⊞' : '⊟'}
+              </button>
             </div>
           </div>
         </header>
+
+      {/* Context switcher + body — hidden when collapsed */}
+      {!collapsed && (
+        <>
 
       {/* Context switcher */}
       <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
@@ -289,6 +308,9 @@ export default function App() {
           </div>
         </div>
       </div>
+
+        </>
+      )}
 
       {selectedTask && (
         <TaskDetail
