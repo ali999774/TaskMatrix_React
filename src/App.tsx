@@ -285,7 +285,7 @@ export default function App() {
             {/* Today strip */}
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start">
               {quadrants.map((q) => (
                 <QuadrantPanel
                   key={q}
