@@ -21,6 +21,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   const [timeLeft, setTimeLeft] = useState(25 * 60)
   const [running, setRunning] = useState(false)
   const [sessionCount, setSessionCount] = useState(0)
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const dragging = useRef(false)
+  const dragStart = useRef({ x: 0, y: 0 })
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -100,6 +103,22 @@ export default function PomodoroPopup({ show, onClose }: Props) {
     })
   }, [])
 
+  // Drag handlers
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    dragging.current = true
+    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [pos])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    setPos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y })
+  }, [])
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false
+  }, [])
+
   if (!show) return null
 
   const mins = Math.floor(timeLeft / 60)
@@ -111,13 +130,24 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div
-        className="absolute bottom-[100px] right-6 bg-white dark:bg-slate-900 rounded-2xl shadow-xl
+        className="absolute bg-white dark:bg-slate-900 rounded-2xl shadow-xl
           border border-slate-200 dark:border-slate-700 min-w-[280px] overflow-hidden
-          animate-[slideUp_0.3s_ease]"
+          animate-[slideUp_0.3s_ease] select-none"
+        style={{
+          right: pos.x ? undefined : '24px',
+          bottom: pos.y ? undefined : '100px',
+          left: pos.x ? `${pos.x}px` : undefined,
+          top: pos.y ? `${pos.y}px` : undefined,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="px-4 pt-4 flex justify-between items-center">
+        {/* Header — drag handle */}
+        <div
+          className="px-4 pt-4 pb-2 flex justify-between items-center cursor-grab active:cursor-grabbing"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+        >
           <div className="font-bold text-base text-slate-800 dark:text-white">
             ⏱ Pomodoro
           </div>
