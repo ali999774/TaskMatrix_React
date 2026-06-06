@@ -69,7 +69,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`rounded-xl border ${QUADRANT_BG[quadrant]} 
-        p-4 flex flex-col transition-all duration-150
+        p-4 flex flex-col transition-all duration-300
         ${collapsed ? 'min-h-0' : 'min-h-[220px]'}
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
     >
@@ -83,8 +83,9 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           <span className="text-xs font-medium opacity-60 tabular-nums">{tasks.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-opacity ml-1"
+            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 ml-1 p-0.5"
             title={collapsed ? 'Expand' : 'Collapse'}
+            aria-label={collapsed ? 'Expand quadrant' : 'Collapse quadrant'}
           >
             {collapsed ? '▶' : '▼'}
           </button>

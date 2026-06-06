@@ -74,12 +74,13 @@ export default function VoiceButton({ onTranscript, className = '' }: Props) {
   return (
     <button
       onClick={toggle}
-      className={`shrink-0 p-1.5 rounded-lg text-sm transition-all ${
+      className={`shrink-0 p-2 rounded-lg text-sm transition-all active:scale-90 ${
         listening
           ? 'bg-red-500 text-white animate-pulse'
           : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
       } ${className}`}
       title={listening ? 'Listening... tap to stop' : 'Voice input'}
+      aria-label={listening ? 'Stop voice input' : 'Start voice input'}
     >
       {listening ? '🔴' : '🎤'}
     </button>

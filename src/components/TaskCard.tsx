@@ -77,11 +77,12 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Pr
       <div className="flex items-start gap-2">
         <button
           onClick={cycleStatus}
-          className={`mt-0.5 text-lg flex-shrink-0 transition-colors
+          className={`mt-0.5 text-lg flex-shrink-0 transition-colors active:scale-90
             ${task.status === 'done' ? 'text-emerald-500 dark:text-emerald-400' 
               : task.status === 'in_progress' ? 'text-amber-500 dark:text-amber-400' 
               : 'text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300'}`}
           title={`Status: ${task.status}`}
+          aria-label={`Cycle status: ${task.status}`}
         >
           {STATUS_ICONS[task.status] || '○'}
         </button>
@@ -119,7 +120,8 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Pr
           </span>
           <button
             onClick={handleDelete}
-            className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-xs px-1"
+            className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-xs px-1.5 py-1 active:scale-90"
+            aria-label="Delete task"
           >
             ✕
           </button>

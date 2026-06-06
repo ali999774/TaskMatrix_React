@@ -80,8 +80,9 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
           <span className="text-sm text-slate-400">{notes.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-opacity ml-auto"
+            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 ml-auto p-0.5"
             title={collapsed ? 'Expand' : 'Collapse'}
+            aria-label={collapsed ? 'Expand pinned notes' : 'Collapse pinned notes'}
           >
             {collapsed ? '▶' : '▼'}
           </button>
@@ -100,7 +101,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                   placeholder="+ Quick note..."
                   className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
                 />
-                <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">+</button>
+                <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-90">+</button>
               </div>
             )}
 
