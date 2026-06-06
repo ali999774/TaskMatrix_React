@@ -217,9 +217,6 @@ export default function App() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
-                {filteredTasks.length}t · {notes.length}n
-              </span>
               <button
                 onClick={toggleTheme}
                 className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90"
