@@ -1,12 +1,53 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { StickyNote } from '../types'
 
 const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange']
+const DEBOUNCE_MS = 400
 
 export function useStickyNotes(userId: string | null) {
   const [notes, setNotes] = useState<StickyNote[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Dirty-flag + debounce: only sync what actually changed, and only after
+  // activity stops. Dragging/resizing/typing updates local state immediately;
+  // Supabase gets the final settled state.
+  const dirtyRef = useRef<Map<string, Partial<StickyNote>>>(new Map())
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const syncedSnapshotRef = useRef<Map<string, string>>(new Map()) // id → JSON snapshot
+
+  const flushDirty = useCallback(async () => {
+    const dirty = dirtyRef.current
+    if (dirty.size === 0) return
+
+    // Snapshot and clear before awaiting so new changes during flight aren't lost
+    const entries = Array.from(dirty.entries())
+    dirtyRef.current = new Map()
+
+    for (const [id, updates] of entries) {
+      const prevSnapshot = syncedSnapshotRef.current.get(id)
+      const nextSnapshot = JSON.stringify(updates)
+      if (prevSnapshot === nextSnapshot) continue // nothing actually changed
+
+      await supabase.from('sticky_notes').update(updates).eq('id', id)
+      syncedSnapshotRef.current.set(id, nextSnapshot)
+    }
+  }, [])
+
+  const scheduleFlush = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(flushDirty, DEBOUNCE_MS)
+  }, [flushDirty])
+
+  // Cleanup timer on unmount — also flush any pending changes
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        flushDirty() // fire-and-forget on unmount
+      }
+    }
+  }, [flushDirty])
 
   const loadNotes = useCallback(async () => {
     if (!userId) return
@@ -16,7 +57,15 @@ export function useStickyNotes(userId: string | null) {
       .eq('user_id', userId)
       .order('position', { ascending: true, nullsFirst: true })
       .order('created_at', { ascending: false })
-    if (data) setNotes(data as StickyNote[])
+    if (data) {
+      setNotes(data as StickyNote[])
+      // Seed the dirty-detection snapshot
+      const snap = new Map<string, string>()
+      for (const n of data as StickyNote[]) {
+        snap.set(n.id, JSON.stringify({ content: n.content, color: n.color, position_x: n.position_x, position_y: n.position_y, pinned: n.pinned }))
+      }
+      syncedSnapshotRef.current = snap
+    }
     setLoading(false)
   }, [userId])
 
@@ -75,20 +124,30 @@ export function useStickyNotes(userId: string | null) {
     }
     setNotes((prev) => [note as StickyNote, ...prev])
     await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
-  }, [userId, notes.length])
+  }, [userId])
 
+  // Optimistic local update + debounced Supabase sync.
+  // Only fires a write if the tracked fields actually changed from last sync.
   const updateNote = useCallback(async (id: string, updates: Partial<StickyNote>) => {
+    // Optimistic: update local state immediately
     setNotes((prev) =>
       prev.map((n) => (n.id === id ? { ...n, ...updates } : n))
     )
-    await supabase.from('sticky_notes').update(updates).eq('id', id)
-  }, [])
+
+    // Merge into dirty map — last write wins per field
+    const dirty = dirtyRef.current
+    const existing = dirty.get(id) || {}
+    dirty.set(id, { ...existing, ...updates })
+
+    scheduleFlush()
+  }, [scheduleFlush])
 
   const deleteNote = useCallback(async (id: string) => {
+    // Cancel any pending sync for this note
+    dirtyRef.current.delete(id)
     setNotes((prev) => prev.filter((n) => n.id !== id))
     await supabase.from('sticky_notes').delete().eq('id', id)
   }, [])
-
 
   const reorderNote = useCallback(async (id: string, newIndex: number) => {
     setNotes((prev) => {
@@ -100,12 +159,19 @@ export function useStickyNotes(userId: string | null) {
       return updated.map((note, index) => ({ ...note, position: index }))
     })
 
-    const { data } = await supabase.from('sticky_notes').select('id').eq('user_id', userId)
-    if (data) {
-      const updates = data.map((n, index) => ({ id: n.id, position: index }))
-      await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+    // Batch-upsert positions — debounced, not immediate
+    const updatePositions = async () => {
+      const { data } = await supabase.from('sticky_notes').select('id').eq('user_id', userId)
+      if (data) {
+        const updates = data.map((n, index) => ({ id: n.id, position: index }))
+        await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+      }
     }
+
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(updatePositions, DEBOUNCE_MS)
   }, [userId])
+
   const pinnedNotes = notes.filter((n) => n.pinned)
 
   return { notes, pinnedNotes, loading, addNote, updateNote, deleteNote, reorderNote, reload: loadNotes }
