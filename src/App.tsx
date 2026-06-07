@@ -190,7 +190,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-hidden max-w-full">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
-        <div className="px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
+        <div className="px-1 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide">
             <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
             </h1>
@@ -295,7 +295,7 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-0 sm:px-6 py-4 sm:py-5 w-full">
+      <div className="px-1 sm:px-6 py-4 sm:py-5">
         <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full">
 
           {/* Matrix column */}
