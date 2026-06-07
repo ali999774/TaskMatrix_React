@@ -7,10 +7,10 @@ Stack: React + TypeScript + Vite, Supabase (PostgREST + Realtime), Capacitor PWA
 Apply with judgment — not rigid gates. Point at the repo, never copy content into this project.
 
 **Backend:**
-- https://github.com/ali999774/ali-agent-standards/blob/master/backend-standards/AGENTS.md
-- https://github.com/ali999774/ali-agent-standards/blob/master/backend-standards/data-classification.md
-- https://github.com/ali999774/ali-agent-standards/blob/master/backend-standards/supabase-sync.md
-- https://github.com/ali999774/ali-agent-standards/blob/master/backend-standards/auth-patterns.md
+- https://github.com/ali999774/ali-agent-standards/blob/main/backend-standards/AGENTS.md
+- https://github.com/ali999774/ali-agent-standards/blob/main/backend-standards/data-classification.md
+- https://github.com/ali999774/ali-agent-standards/blob/main/backend-standards/supabase-sync.md
+- https://github.com/ali999774/ali-agent-standards/blob/main/backend-standards/auth-patterns.md
 
 **UI/UX:**
 - https://github.com/ali999774/ali-agent-standards/blob/main/ui-ux/AGENTS.md
