@@ -68,7 +68,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`sm:rounded-xl rounded-none border ${QUADRANT_BG[quadrant]} 
+      className={`sm:rounded-xl rounded-none border ${QUADRANT_BG[quadrant]} w-full
         p-4 flex flex-col transition-all duration-300
         ${collapsed ? 'min-h-0' : 'min-h-[220px]'}
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
