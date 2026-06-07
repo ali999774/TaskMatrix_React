@@ -295,8 +295,8 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-0 sm:px-6 py-4 sm:py-5">
-        <div className="flex flex-col lg:flex-row gap-5 lg:items-start">
+      <div className="px-0 sm:px-6 py-4 sm:py-5 w-full">
+        <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full">
 
           {/* Matrix column */}
           <div className="flex-1 min-w-0 w-full">
@@ -304,7 +304,7 @@ export default function App() {
             {/* Today strip */}
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start w-full">
               {quadrants.map((q) => (
                 <QuadrantPanel
                   key={q}

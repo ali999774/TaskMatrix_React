@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taskmatrix-react-v1'
+const CACHE_NAME = 'taskmatrix-react-v2'
 
 // App shell assets to pre-cache on install
 const SHELL_ASSETS = [
