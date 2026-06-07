@@ -295,7 +295,7 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-3 sm:px-6 py-4 sm:py-5">
+      <div className="px-0 sm:px-6 py-4 sm:py-5">
         <div className="flex flex-col lg:flex-row gap-5 items-start">
 
           {/* Matrix column */}
