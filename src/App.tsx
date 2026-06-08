@@ -231,22 +231,6 @@ export default function App() {
             {/* Right actions */}
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={toggleTheme}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                title={dark ? 'Switch to light' : 'Switch to dark'}
-                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {dark ? '☀️' : '🌙'}
-              </button>
-              <button
-                onClick={() => setShowPomodoro((v) => !v)}
-                className="text-lg p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                title="Pomodoro timer"
-                aria-label="Pomodoro timer"
-              >
-                ⏱
-              </button>
-              <button
                 onClick={() => window.location.reload()}
                 className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
