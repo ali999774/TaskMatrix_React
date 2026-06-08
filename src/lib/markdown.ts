@@ -6,14 +6,11 @@ interface RenderBlock {
   lines: string[]
 }
 
-/**
- * Trims whitespace AND markdown formatting characters for search matching.
- * Strips **, ~~, -, 1., etc so "**hello**" matches search "hello".
- */
+/** Strip markdown formatting for search matching. */
 export function stripMarkdown(text: string): string {
   return text
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/~~(.+?)~~/g, '$1')
+    .replace(BOLD, '$1')
+    .replace(STRIKETHROUGH, '$1')
     .replace(/^[\s]*[-*]\s/gm, '')
     .replace(/^[\s]*\d+\.\s/gm, '')
     .trim()
@@ -21,8 +18,8 @@ export function stripMarkdown(text: string): string {
 
 function renderInline(text: string): string {
   return text
-    .replace(BOLD, '<strong class="font-bold">$1</strong>')
-    .replace(STRIKETHROUGH, '<del class="line-through opacity-60">$1</del>')
+    .replace(BOLD, '<strong>$1</strong>')
+    .replace(STRIKETHROUGH, '<del>$1</del>')
 }
 
 function renderBlock(block: RenderBlock): string {
@@ -31,16 +28,15 @@ function renderBlock(block: RenderBlock): string {
       .map((l) => l.replace(/^[\s]*[-*]\s/, ''))
       .map((l) => `<li>${renderInline(l)}</li>`)
       .join('')
-    return `<ul class="list-disc pl-4 space-y-0.5">${items}</ul>`
+    return `<ul style="list-style-type:disc;padding-left:1rem">${items}</ul>`
   }
   if (block.type === 'ol') {
     const items = block.lines
       .map((l) => l.replace(/^[\s]*\d+\.\s/, ''))
       .map((l) => `<li>${renderInline(l)}</li>`)
       .join('')
-    return `<ol class="list-decimal pl-4 space-y-0.5">${items}</ol>`
+    return `<ol style="list-style-type:decimal;padding-left:1rem">${items}</ol>`
   }
-  // paragraph
   return `<p>${renderInline(block.lines[0])}</p>`
 }
 

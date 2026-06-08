@@ -108,6 +108,44 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     if (ta) insertFormatting(ta, wrapper, setContent)
   }
 
+  // Auto-increment numbered lists on Enter
+  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== 'Enter') return
+    const ta = e.currentTarget
+    const { selectionStart, value } = ta
+    const before = value.slice(0, selectionStart)
+    const lineStart = before.lastIndexOf('\n', selectionStart - 1) + 1
+    const currentLine = value.slice(lineStart, selectionStart)
+
+    const match = currentLine.match(/^(\d+)\.\s(.*)/)
+    if (!match) return
+
+    e.preventDefault()
+    const num = parseInt(match[1], 10)
+    const text = match[2]
+
+    // If line is empty after number, cancel the list
+    if (!text.trim()) {
+      // Remove the empty numbered line
+      const beforeLine = value.slice(0, lineStart)
+      const afterCursor = value.slice(selectionStart)
+      // If there's a \n at cursor, skip it
+      const after = afterCursor.startsWith('\n') ? afterCursor.slice(1) : afterCursor
+      setContent(beforeLine + after)
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = lineStart
+      })
+      return
+    }
+
+    // Insert next number
+    const after = value.slice(selectionStart)
+    setContent(before + '\n' + (num + 1) + '. ' + after)
+    requestAnimationFrame(() => {
+      ta.selectionStart = ta.selectionEnd = selectionStart + 3 + String(num + 1).length
+    })
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center
@@ -143,7 +181,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           />
 
           {/* Formatting toolbar */}
-          <div className="flex gap-0.5 -mb-2">
+          <div className="flex gap-0.5">
             {[
               { label: 'B', title: 'Bold (**text**)', wrapper: '**' },
               { label: 'S̶', title: 'Strikethrough (~~text~~)', wrapper: '~~' },
@@ -166,6 +204,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleContentKeyDown}
             placeholder="Write your note here...\n\n**bold** ~~strikethrough~~\n- bullet\n1. numbered"
             rows={6}
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono"
