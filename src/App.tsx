@@ -306,12 +306,6 @@ export default function App() {
                 />
               ))}
             </div>
-
-            <CompletedSection
-              userId={userId}
-              context={context}
-              onTaskClick={setSelectedTask}
-            />
           </div>
 
           {/* Sticky notes sidebar */}
@@ -327,6 +321,12 @@ export default function App() {
             />
           </div>
         </div>
+
+        <CompletedSection
+          userId={userId}
+          context={context}
+          onTaskClick={setSelectedTask}
+        />
       </div>
 
       {selectedTask && (
