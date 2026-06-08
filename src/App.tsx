@@ -357,14 +357,13 @@ export default function App() {
       {/* Mobile bottom action bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around px-3 py-2">
-          <button
-            onClick={() => { const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
-            aria-label="Quick add task"
-          >
-            <span className="text-lg">＋</span>
-            <span className="text-xs font-medium">Add</span>
-          </button>
+          <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
+            <VoiceButton
+              onTranscript={(t) => { setQuickAdd(t); const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
+              className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            />
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Voice</span>
+          </div>
           <button
             onClick={() => setShowPomodoro(v => !v)}
             className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
