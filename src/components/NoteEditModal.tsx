@@ -108,7 +108,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     if (ta) insertFormatting(ta, wrapper, setContent)
   }
 
-  // Auto-increment numbered lists on Enter
+  // Auto-advance lists on Enter (numbered + bullet)
   const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Enter') return
     const ta = e.currentTarget
@@ -117,19 +117,18 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     const lineStart = before.lastIndexOf('\n', selectionStart - 1) + 1
     const currentLine = value.slice(lineStart, selectionStart)
 
-    const match = currentLine.match(/^(\d+)\.\s(.*)/)
-    if (!match) return
+    const numMatch = currentLine.match(/^(\d+)\.\s(.*)/)
+    const bulletMatch = currentLine.match(/^([-*])\s(.*)/)
+
+    if (!numMatch && !bulletMatch) return
 
     e.preventDefault()
-    const num = parseInt(match[1], 10)
-    const text = match[2]
+    const text = (numMatch || bulletMatch)![2]
 
-    // If line is empty after number, cancel the list
+    // If line is empty after prefix, cancel the list
     if (!text.trim()) {
-      // Remove the empty numbered line
       const beforeLine = value.slice(0, lineStart)
       const afterCursor = value.slice(selectionStart)
-      // If there's a \n at cursor, skip it
       const after = afterCursor.startsWith('\n') ? afterCursor.slice(1) : afterCursor
       setContent(beforeLine + after)
       requestAnimationFrame(() => {
@@ -138,11 +137,18 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       return
     }
 
-    // Insert next number
+    // Insert next prefix
     const after = value.slice(selectionStart)
-    setContent(before + '\n' + (num + 1) + '. ' + after)
+    let nextPrefix: string
+    if (numMatch) {
+      const num = parseInt(numMatch[1], 10)
+      nextPrefix = (num + 1) + '. '
+    } else {
+      nextPrefix = bulletMatch![1] + ' '
+    }
+    setContent(before + '\n' + nextPrefix + after)
     requestAnimationFrame(() => {
-      ta.selectionStart = ta.selectionEnd = selectionStart + 3 + String(num + 1).length
+      ta.selectionStart = ta.selectionEnd = selectionStart + nextPrefix.length + 1
     })
   }
 
