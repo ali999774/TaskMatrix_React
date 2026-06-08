@@ -229,7 +229,7 @@ export default function App() {
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-0.5 shrink-0">
+            <div className="flex items-center gap-0 shrink-0">
               <button
                 onClick={() => window.location.reload()}
                 className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
