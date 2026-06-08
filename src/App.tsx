@@ -198,6 +198,16 @@ export default function App() {
     if (note) setEditingNote(note)
   }
 
+  const handleVoiceNote = async (transcript: string) => {
+    if (!transcript.trim()) return
+    const note = await addNote(transcript.trim())
+    if (note) {
+      // Brief flash: show the note was created
+      setEditingNote(note)
+      setTimeout(() => setEditingNote(null), 2000)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-clip max-w-[100vw]">
       {/* Top bar */}
@@ -372,7 +382,7 @@ export default function App() {
         <div className="flex items-center justify-around px-3 py-2">
           <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
             <VoiceButton
-              onTranscript={(t) => { setQuickAdd(t); const input = document.querySelector<HTMLInputElement>('input[placeholder*="Quick add"]'); input?.focus() }}
+              onTranscript={handleVoiceNote}
               className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             />
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Voice</span>
