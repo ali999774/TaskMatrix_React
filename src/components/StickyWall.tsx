@@ -11,6 +11,7 @@ interface Props {
   onShowAll?: () => void
   sidebar?: boolean
   onReorder?: (id: string, newIndex: number) => void
+  onNewBlank?: () => void
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -22,7 +23,7 @@ const COLOR_MAP: Record<string, string> = {
   orange: 'bg-orange-100 dark:bg-orange-400/20 border-orange-300 dark:border-orange-400/40 text-orange-800 dark:text-orange-100',
 }
 
-export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder }: Props) {
+export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder, onNewBlank }: Props) {
   const [input, setInput] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(() => {
@@ -37,15 +38,16 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     })
   }
 
-  const handleAdd = () => {
-    if (input.trim() && onAdd) {
-      onAdd(input.trim())
-      setInput('')
+  const handleAddOrNew = () => {
+    if (input.trim()) {
+      if (onAdd) { onAdd(input.trim()); setInput('') }
+    } else {
+      onNewBlank?.()
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleAdd()
+    if (e.key === 'Enter') handleAddOrNew()
   }
 
   // Drag handlers
@@ -102,7 +104,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                   placeholder="+ Quick note..."
                   className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
                 />
-                <button onClick={handleAdd} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-90">+</button>
+                <button onClick={handleAddOrNew} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-90">+</button>
               </div>
             )}
 

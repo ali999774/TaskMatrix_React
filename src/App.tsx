@@ -186,6 +186,11 @@ export default function App() {
     updateTask(taskId, { importance: defaults.importance, urgency: defaults.urgency })
   }
 
+  const handleNewBlankNote = async () => {
+    const note = await addNote('')
+    if (note) setEditingNote(note)
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-hidden max-w-full">
       {/* Top bar */}
@@ -317,6 +322,7 @@ export default function App() {
               onAdd={addNote}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
+              onNewBlank={handleNewBlankNote}
               sidebar
             />
           </div>

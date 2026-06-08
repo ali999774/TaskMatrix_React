@@ -112,8 +112,8 @@ export function useStickyNotes(userId: string | null) {
   }, [userId])
 
   const addNote = useCallback(async (content: string) => {
-    if (!userId) return
-    const note: Partial<StickyNote> = {
+    if (!userId) return null
+    const note: StickyNote = {
       id: crypto.randomUUID(),
       user_id: userId,
       content,
@@ -121,9 +121,10 @@ export function useStickyNotes(userId: string | null) {
       position_x: Math.floor(Math.random() * 200),
       position_y: Math.floor(Math.random() * 200),
       pinned: false,
-    }
-    setNotes((prev) => [note as StickyNote, ...prev])
+    } as StickyNote
+    setNotes((prev) => [note, ...prev])
     await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
+    return note
   }, [userId])
 
   // Optimistic local update + debounced Supabase sync.
