@@ -120,7 +120,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Pr
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <span className="text-[10px] text-slate-400 dark:text-slate-600" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
             I{task.importance}U{task.urgency}
           </span>
