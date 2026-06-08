@@ -39,7 +39,7 @@ export default function CompletedSection({ userId, context, onTaskClick }: Props
   }, [show, userId, context, tasks.length])
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 mb-20 lg:mb-0">
       <button
         onClick={() => setShow((v) => !v)}
         className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500
