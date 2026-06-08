@@ -75,7 +75,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
 
   if (sidebar) {
     return (
-      <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 w-full">
+      <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 w-full mb-20 lg:mb-0">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
           <span className="text-sm text-slate-400">{notes.length}</span>
