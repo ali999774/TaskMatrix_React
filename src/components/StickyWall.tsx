@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { StickyNote } from '../types'
+import { renderMarkdown } from '../lib/markdown'
 import VoiceButton from './VoiceButton'
 
 interface Props {
@@ -128,7 +129,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                             {note.title}
                           </div>
                         )}
-                        <div className="whitespace-pre-wrap break-words">{note.content}</div>
+                        <div className="whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}

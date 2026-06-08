@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { StickyNote } from '../types'
+import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 
 const COLOR_MAP: Record<string, string> = {
   yellow: 'bg-yellow-100 dark:bg-yellow-400/20 border-yellow-300 dark:border-yellow-400/40',
@@ -25,7 +26,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
     ? notes.filter(
         (n) =>
           (n.title || '').toLowerCase().includes(search.toLowerCase()) ||
-          n.content.toLowerCase().includes(search.toLowerCase())
+          stripMarkdown(n.content).toLowerCase().includes(search.toLowerCase())
       )
     : notes
 
@@ -114,9 +115,10 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
                   {note.title && (
                     <p className="font-semibold text-sm mb-1 opacity-80">{note.title}</p>
                   )}
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed line-clamp-4">
-                    {note.content || 'Empty note'}
-                  </p>
+                  <p
+                    className="text-sm whitespace-pre-wrap leading-relaxed line-clamp-4"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
+                  />
                   <div className="flex items-center gap-2 mt-2 text-xs opacity-60">
                     {note.pinned && <span>📌</span>}
                     {note.created_at && (
