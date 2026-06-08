@@ -106,6 +106,13 @@ export default function App() {
     }
   }, [])
 
+  // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
+  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro)
+  useEffect(() => {
+    document.body.style.overflow = hasModal ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [hasModal])
+
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
   // Keep selectedTask in sync with realtime updates
@@ -192,7 +199,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-hidden max-w-full">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-clip max-w-[100vw]">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
         <div className="px-1 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide">
