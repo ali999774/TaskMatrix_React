@@ -94,6 +94,7 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [online, setOnline] = useState(navigator.onLine)
+  const [voiceStatus, setVoiceStatus] = useState('')
 
   useEffect(() => {
     const goOnline = () => setOnline(true)
@@ -200,11 +201,16 @@ export default function App() {
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
+    setVoiceStatus('saving')
     const note = await addNote(transcript.trim())
     if (note) {
-      // Brief flash: show the note was created
       setEditingNote(note)
       setTimeout(() => setEditingNote(null), 2000)
+      setVoiceStatus('saved!')
+      setTimeout(() => setVoiceStatus(''), 2500)
+    } else {
+      setVoiceStatus('save failed')
+      setTimeout(() => setVoiceStatus(''), 2000)
     }
   }
 
@@ -383,9 +389,12 @@ export default function App() {
           <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
             <VoiceButton
               onTranscript={handleVoiceNote}
+              onStatus={setVoiceStatus}
               className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Voice</span>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              {voiceStatus || 'Voice'}
+            </span>
           </div>
           <button
             onClick={() => setShowPomodoro(v => !v)}

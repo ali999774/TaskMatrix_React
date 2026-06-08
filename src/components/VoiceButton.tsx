@@ -1,59 +1,88 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface Props {
   onTranscript: (text: string) => void
+  onStatus?: (status: string) => void
   className?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionLike = any
 
-export default function VoiceButton({ onTranscript, className = '' }: Props) {
+export default function VoiceButton({ onTranscript, onStatus, className = '' }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  // Keep callback in ref to avoid stale closure issues
+  const onTranscriptRef = useRef(onTranscript)
+  onTranscriptRef.current = onTranscript
 
-  const getRecognition = useCallback((): SpeechRecognitionLike | null => {
-    if (recognitionRef.current) return recognitionRef.current
-
+  useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
       setUnsupported(true)
-      return null
+      return
     }
 
     const rec = new SpeechRecognitionAPI()
     rec.continuous = false
-    rec.interimResults = false
+    rec.interimResults = true // get interim for faster feedback
     rec.lang = 'en-US'
 
+    let finalTranscript = ''
+
     rec.onresult = (event: any) => {
-      const transcript = event.results[0]?.[0]?.transcript
-      if (transcript) {
-        onTranscript(transcript.trim())
+      let interim = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          finalTranscript += result[0]?.transcript || ''
+        } else {
+          interim += result[0]?.transcript || ''
+        }
       }
-      setListening(false)
+      
+      if (finalTranscript.trim()) {
+        onTranscriptRef.current(finalTranscript.trim())
+        onStatus?.('saved')
+        setListening(false)
+        finalTranscript = ''
+      } else if (interim) {
+        onStatus?.('hearing: ' + interim)
+      }
     }
 
     rec.onerror = (event: { error: string }) => {
       console.warn('[Voice] Recognition error:', event.error)
       setListening(false)
+      finalTranscript = ''
       if (event.error === 'not-allowed') {
         setUnsupported(true)
+        onStatus?.('mic denied')
+      } else if (event.error === 'no-speech') {
+        onStatus?.('no speech')
+      } else {
+        onStatus?.('error: ' + event.error)
       }
     }
 
     rec.onend = () => {
       setListening(false)
+      if (!finalTranscript) {
+        onStatus?.('')
+      }
     }
 
     recognitionRef.current = rec
-    return rec
-  }, [onTranscript])
+
+    return () => {
+      try { rec.abort() } catch { /* ignore */ }
+    }
+  }, []) // create once on mount
 
   const toggle = () => {
-    const rec = getRecognition()
+    const rec = recognitionRef.current
     if (!rec) return
 
     if (listening) {
@@ -63,6 +92,7 @@ export default function VoiceButton({ onTranscript, className = '' }: Props) {
       try {
         rec.start()
         setListening(true)
+        onStatus?.('listening')
       } catch {
         setUnsupported(true)
       }
