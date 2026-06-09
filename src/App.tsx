@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
+import { useOfflineQueue } from './hooks/useOfflineQueue'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
@@ -85,8 +86,10 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
-  const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId)
+  const offlineQueue = useOfflineQueue(userId, supabase)
+
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId, offlineQueue)
+  const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -288,7 +291,7 @@ export default function App() {
       {!online && (
         <div className="bg-amber-50 dark:bg-amber-950/50 border-b border-amber-200 dark:border-amber-800 px-3 sm:px-6 py-2 text-center">
           <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-            You're offline. Changes will sync when you reconnect.
+            You're offline.{offlineQueue.pendingCount > 0 ? ` ${offlineQueue.pendingCount} change${offlineQueue.pendingCount !== 1 ? 's' : ''} pending.` : ''} Changes will sync when you reconnect.
           </span>
         </div>
       )}

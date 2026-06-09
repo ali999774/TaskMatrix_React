@@ -5,7 +5,12 @@ import type { StickyNote } from '../types'
 const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange']
 const DEBOUNCE_MS = 400
 
-export function useStickyNotes(userId: string | null) {
+interface OfflineQueue {
+  enqueue: (table: 'tasks' | 'sticky_notes', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>) => Promise<void>
+  online: boolean
+}
+
+export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueue) {
   const [notes, setNotes] = useState<StickyNote[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -29,10 +34,14 @@ export function useStickyNotes(userId: string | null) {
       const nextSnapshot = JSON.stringify(updates)
       if (prevSnapshot === nextSnapshot) continue // nothing actually changed
 
-      await supabase.from('sticky_notes').update(updates).eq('id', id)
+      if (offlineQueue && !offlineQueue.online) {
+        await offlineQueue.enqueue('sticky_notes', 'update', id, updates)
+      } else {
+        await supabase.from('sticky_notes').update(updates).eq('id', id)
+      }
       syncedSnapshotRef.current.set(id, nextSnapshot)
     }
-  }, [])
+  }, [offlineQueue])
 
   const scheduleFlush = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -123,9 +132,13 @@ export function useStickyNotes(userId: string | null) {
       pinned: false,
     } as StickyNote
     setNotes((prev) => [note, ...prev])
-    await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('sticky_notes', 'create', note.id, note as unknown as Record<string, unknown>)
+    } else {
+      await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
+    }
     return note
-  }, [userId])
+  }, [userId, offlineQueue])
 
   // Optimistic local update + debounced Supabase sync.
   // Only fires a write if the tracked fields actually changed from last sync.
@@ -147,8 +160,12 @@ export function useStickyNotes(userId: string | null) {
     // Cancel any pending sync for this note
     dirtyRef.current.delete(id)
     setNotes((prev) => prev.filter((n) => n.id !== id))
-    await supabase.from('sticky_notes').delete().eq('id', id)
-  }, [])
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('sticky_notes', 'delete', id)
+    } else {
+      await supabase.from('sticky_notes').delete().eq('id', id)
+    }
+  }, [offlineQueue])
 
   const reorderNote = useCallback(async (id: string, newIndex: number) => {
     setNotes((prev) => {

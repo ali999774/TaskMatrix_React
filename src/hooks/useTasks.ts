@@ -4,7 +4,12 @@ import type { Task } from '../types'
 
 const DEBOUNCE_MS = 400
 
-export function useTasks(userId: string | null) {
+interface OfflineQueue {
+  enqueue: (table: 'tasks' | 'sticky_notes', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>) => Promise<void>
+  online: boolean
+}
+
+export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
@@ -26,10 +31,14 @@ export function useTasks(userId: string | null) {
       const nextSnapshot = JSON.stringify(updates)
       if (prevSnapshot === nextSnapshot) continue
 
-      await supabase.from('tasks').update(updates).eq('id', id)
+      if (offlineQueue && !offlineQueue.online) {
+        await offlineQueue.enqueue('tasks', 'update', id, updates)
+      } else {
+        await supabase.from('tasks').update(updates).eq('id', id)
+      }
       syncedSnapshotRef.current.set(id, nextSnapshot)
     }
-  }, [])
+  }, [offlineQueue])
 
   const scheduleFlush = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -133,8 +142,12 @@ export function useTasks(userId: string | null) {
       recurring: false,
     }
     setTasks((prev) => [newTask as Task, ...prev])
-    await supabase.from('tasks').upsert(newTask, { onConflict: 'id' })
-  }, [userId])
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('tasks', 'create', newTask.id!, newTask)
+    } else {
+      await supabase.from('tasks').upsert(newTask, { onConflict: 'id' })
+    }
+  }, [userId, offlineQueue])
 
   // Status changes are user-initiated and infrequent — immediate sync is fine.
   // No debounce needed; these aren't continuous events like drag.
@@ -142,8 +155,12 @@ export function useTasks(userId: string | null) {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status } : t))
     )
-    await supabase.from('tasks').update({ status }).eq('id', id)
-  }, [])
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('tasks', 'update', id, { status })
+    } else {
+      await supabase.from('tasks').update({ status }).eq('id', id)
+    }
+  }, [offlineQueue])
 
   // Debounced sync for title edits, importance/urgency, position changes.
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
@@ -161,11 +178,15 @@ export function useTasks(userId: string | null) {
   const deleteTask = useCallback(async (id: string) => {
     dirtyRef.current.delete(id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
-    await supabase
-      .from('tasks')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id)
-  }, [])
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('tasks', 'delete', id)
+    } else {
+      await supabase
+        .from('tasks')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id)
+    }
+  }, [offlineQueue])
 
   return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, reload: loadTasks }
 }
