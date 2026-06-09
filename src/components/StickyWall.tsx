@@ -83,7 +83,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
           <span className="text-sm text-slate-400">{notes.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 ml-auto p-0.5"
+            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 motion-reduce:scale-100 ml-auto p-0.5"
             title={collapsed ? 'Expand' : 'Collapse'}
             aria-label={collapsed ? 'Expand pinned notes' : 'Collapse pinned notes'}
           >

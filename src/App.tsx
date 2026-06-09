@@ -88,7 +88,7 @@ export default function App() {
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId)
   const [quickAdd, setQuickAdd] = useState('')
-  const [context, setContext] = useState('all')
+  const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
@@ -106,6 +106,11 @@ export default function App() {
       window.removeEventListener('offline', goOffline)
     }
   }, [])
+
+  // Persist context filter across sessions
+  useEffect(() => {
+    localStorage.setItem('tm-context', context)
+  }, [context])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro)
@@ -138,7 +143,7 @@ export default function App() {
 
   if (!userId) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-slate-950">
+      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-[#121212]">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">TaskMatrix</h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to see your tasks</p>
         <button
@@ -154,7 +159,7 @@ export default function App() {
 
   if (tasksLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950 px-3 sm:px-6">
+      <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#121212] px-3 sm:px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-4xl">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse">
@@ -215,9 +220,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-[env(safe-area-inset-bottom)] overflow-x-clip max-w-[100vw]">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#121212] pb-[env(safe-area-inset-bottom)] overflow-x-clip max-w-[100vw]">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
         <div className="px-1 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
@@ -247,7 +252,7 @@ export default function App() {
                       key={q}
                       onClick={() => handleQuickAdd(q)}
                       className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border min-h-[44px]
-                        transition-all active:scale-95 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
+                        transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
                     >
                       {QUADRANT_LABELS_SHORT[q]}
                     </button>
@@ -260,7 +265,7 @@ export default function App() {
             <div className="flex items-center gap-0 shrink-0">
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
                 aria-label="Refresh"
               >
@@ -268,7 +273,7 @@ export default function App() {
               </button>
               <button
                 onClick={signOut}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Sign out"
                 aria-label="Sign out"
               >
@@ -288,13 +293,13 @@ export default function App() {
         </div>
       )}
       {/* Context switcher */}
-      <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
+      <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-[#121212]/60">
         <div className="flex gap-1.5 overflow-x-auto">
           {['all', 'clinic', 'practice-launch', 'dev', 'personal'].map((ctx) => (
             <button
               key={ctx}
               onClick={() => setContext(ctx)}
-              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 active:opacity-80 min-h-[44px] inline-flex items-center
+              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
                 ${context === ctx
                   ? 'bg-blue-600 dark:bg-blue-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -384,12 +389,13 @@ export default function App() {
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
 
       {/* Mobile bottom action bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around px-3 py-2">
           <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
             <VoiceButton
               onTranscript={handleVoiceNote}
               onStatus={setVoiceStatus}
+              icon="🎙️"
               className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             />
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -398,7 +404,7 @@ export default function App() {
           </div>
           <button
             onClick={() => setShowPomodoro(v => !v)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
             <span className="text-lg">⏱</span>
@@ -406,7 +412,7 @@ export default function App() {
           </button>
           <button
             onClick={toggleTheme}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
@@ -414,7 +420,7 @@ export default function App() {
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
             <span className="text-lg">📌</span>

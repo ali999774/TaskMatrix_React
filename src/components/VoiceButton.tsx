@@ -4,12 +4,13 @@ interface Props {
   onTranscript: (text: string) => void
   onStatus?: (status: string) => void
   className?: string
+  icon?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionLike = any
 
-export default function VoiceButton({ onTranscript, onStatus, className = '' }: Props) {
+export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤' }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
@@ -104,7 +105,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '' }: 
   return (
     <button
       onClick={toggle}
-      className={`shrink-0 p-2 rounded-lg text-sm transition-all active:scale-90 ${
+      className={`shrink-0 p-2 rounded-lg text-sm transition-all active:scale-90 motion-reduce:scale-100 ${
         listening
           ? 'bg-red-500 text-white animate-pulse'
           : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
@@ -112,7 +113,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '' }: 
       title={listening ? 'Listening... tap to stop' : 'Voice input'}
       aria-label={listening ? 'Stop voice input' : 'Start voice input'}
     >
-      {listening ? '🔴' : '🎤'}
+      {listening ? '🔴' : icon}
     </button>
   )
 }
