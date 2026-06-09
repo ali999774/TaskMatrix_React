@@ -121,7 +121,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick }: Pr
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium text-transparent" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
             I{task.importance}U{task.urgency}
           </span>
           <button
