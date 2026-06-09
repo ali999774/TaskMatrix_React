@@ -5,6 +5,18 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskMatrix</title>
+    <style>
+      /* Base focus ring — floor §5 */
+      :focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px rgb(96 165 250 / 0.6);
+        border-radius: 4px;
+      }
+      /* Dark mode focus ring */
+      .dark :focus-visible {
+        box-shadow: 0 0 0 2px rgb(96 165 250 / 0.5);
+      }
+    </style>
     <script>
       // Prevent flash of wrong theme
       (function() {
