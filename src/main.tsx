@@ -5,7 +5,7 @@ import './index.css'
 
 // Register service worker for offline support
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {
+  navigator.serviceWorker.register('./sw.js').catch(() => {
     // SW registration failed — app still works online
   })
 }
