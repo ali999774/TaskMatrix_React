@@ -177,18 +177,22 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
       return updated.map((note, index) => ({ ...note, position: index }))
     })
 
-    // Batch-upsert positions — debounced, not immediate
-    const updatePositions = async () => {
+    // Debounced batch-upsert positions with offline support
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(async () => {
       const { data } = await supabase.from('sticky_notes').select('id').eq('user_id', userId)
       if (data) {
         const updates = data.map((n, index) => ({ id: n.id, position: index }))
-        await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+        if (offlineQueue && !offlineQueue.online) {
+          for (const u of updates) {
+            await offlineQueue.enqueue('sticky_notes', 'update', u.id, { position: u.position })
+          }
+        } else {
+          await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+        }
       }
-    }
-
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(updatePositions, DEBOUNCE_MS)
-  }, [userId])
+    }, DEBOUNCE_MS)
+  }, [userId, offlineQueue])
 
   const pinnedNotes = notes.filter((n) => n.pinned)
 

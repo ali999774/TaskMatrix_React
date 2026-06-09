@@ -96,19 +96,7 @@ export default function App() {
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
-  const [online, setOnline] = useState(navigator.onLine)
   const [voiceStatus, setVoiceStatus] = useState('')
-
-  useEffect(() => {
-    const goOnline = () => setOnline(true)
-    const goOffline = () => setOnline(false)
-    window.addEventListener('online', goOnline)
-    window.addEventListener('offline', goOffline)
-    return () => {
-      window.removeEventListener('online', goOnline)
-      window.removeEventListener('offline', goOffline)
-    }
-  }, [])
 
   // Persist context filter across sessions
   useEffect(() => {
@@ -288,7 +276,7 @@ export default function App() {
 
       {/* Context switcher + body */}
       {/* Offline banner */}
-      {!online && (
+      {!offlineQueue.online && (
         <div className="bg-amber-50 dark:bg-amber-950/50 border-b border-amber-200 dark:border-amber-800 px-3 sm:px-6 py-2 text-center">
           <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
             You're offline.{offlineQueue.pendingCount > 0 ? ` ${offlineQueue.pendingCount} change${offlineQueue.pendingCount !== 1 ? 's' : ''} pending.` : ''} Changes will sync when you reconnect.

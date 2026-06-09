@@ -184,7 +184,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       {showMove && (
         <div className="absolute top-full right-0 mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px]"
           onClick={(e) => e.stopPropagation()}>
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
+          <div className="text-xs text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
           {([1, 2, 3, 4] as Quadrant[]).map((q) => (
             <button
               key={q}

@@ -74,7 +74,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
         ${dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : ''}`}
     >
       {/* Quadrant header with icon + count + collapse toggle */}
-      <div className={`sm:-mx-4 sm:-mt-4 -mt-4 px-4 py-2.5 sm:rounded-t-xl rounded-none ${QUADRANT_HEADER_BG[quadrant]} ${collapsed ? 'mb-0 sm:rounded-b-xl rounded-none' : 'mb-3'} flex items-center justify-between`}>
+      <div className={`sm:-mx-4 sm:-mt-4 -mt-4 px-4 py-2 sm:rounded-t-xl rounded-none ${QUADRANT_HEADER_BG[quadrant]} ${collapsed ? 'mb-0 sm:rounded-b-xl rounded-none' : 'mb-3'} flex items-center justify-between`}>
         <h3 className="text-sm font-semibold flex items-center gap-1.5">
           <span>{QUADRANT_ICONS[quadrant]}</span>
           {QUADRANT_LABELS[quadrant]}

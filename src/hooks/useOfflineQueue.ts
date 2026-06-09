@@ -24,8 +24,10 @@ class OfflineDB extends Dexie {
 
 export function useOfflineQueue(userId: string | null, supabase: SupabaseClient | null) {
   const [pendingCount, setPendingCount] = useState(0)
-  const [flushing, setFlushing] = useState(false)
+  const [online, setOnline] = useState(navigator.onLine)
   const dbRef = useRef<OfflineDB | null>(null)
+  const flushingRef = useRef(false)
+  const onlineRef = useRef(navigator.onLine)
 
   // Initialize DB
   useEffect(() => {
@@ -39,9 +41,6 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
   }, [userId])
 
   // Track online status
-  const onlineRef = useRef(navigator.onLine)
-  const [online, setOnline] = useState(navigator.onLine)
-
   useEffect(() => {
     const goOnline = () => { onlineRef.current = true; setOnline(true) }
     const goOffline = () => { onlineRef.current = false; setOnline(false) }
@@ -75,12 +74,12 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
   // Flush all pending mutations
   const flush = useCallback(async () => {
     const db = dbRef.current
-    if (!db || !supabase || flushing) return
+    if (!db || !supabase || flushingRef.current) return
 
     const items = await db.mutations.orderBy('timestamp').toArray()
     if (items.length === 0) return
 
-    setFlushing(true)
+    flushingRef.current = true
 
     for (const item of items) {
       try {
@@ -98,15 +97,14 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
         // Remove from queue on success
         if (item.id !== undefined) await db.mutations.delete(item.id)
       } catch (err) {
-        // Conflict — surface to user, don't silently drop
         console.warn('[OfflineQueue] Flush failed for', item, err)
       }
     }
 
     const remaining = await db.mutations.count()
     setPendingCount(remaining)
-    setFlushing(false)
-  }, [supabase, flushing])
+    flushingRef.current = false
+  }, [supabase]) // stable — supabase client never changes
 
   // Auto-flush on reconnect
   useEffect(() => {
@@ -115,5 +113,6 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     }
   }, [online, pendingCount, flush])
 
-  return { enqueue, flush, pendingCount, online, flushing }
+  // Expose online for the banner — single source of truth
+  return { enqueue, flush, pendingCount, online }
 }

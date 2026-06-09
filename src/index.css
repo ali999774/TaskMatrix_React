@@ -21,7 +21,7 @@ body {
 .dark body,
 body.dark,
 .dark {
-  background: #0f172a;
+  background: #121212;
   color: #e2e8f0;
 }
 
@@ -45,4 +45,15 @@ body.dark,
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Global focus ring for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Subtle press feedback on all interactive elements */
+button:active, [role="button"]:active {
+  opacity: 0.8;
 }
