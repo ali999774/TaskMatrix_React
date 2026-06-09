@@ -63,9 +63,11 @@ export default function App() {
 
   const signInWithGoogle = async () => {
     setAuthError(null)
+    const isCapacitor = typeof (window as any).Capacitor !== 'undefined'
+    const redirectTo = isCapacitor ? 'taskmatrix://auth/callback' : window.location.origin + window.location.pathname
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname }
+      options: { redirectTo }
     })
     if (error) setAuthError(error.message)
   }
