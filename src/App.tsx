@@ -380,7 +380,7 @@ export default function App() {
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
 
       {/* Mobile bottom action bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around px-3 py-2">
           <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
             <VoiceButton
