@@ -46,7 +46,17 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
+  const [flipUp, setFlipUp] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Open the move menu, flipping it above the card when there isn't
+  // enough room below (cards near the bottom were rendering off-screen).
+  const openMove = useCallback(() => {
+    const rect = cardRef.current?.getBoundingClientRect()
+    setFlipUp(!!rect && window.innerHeight - rect.bottom < 240)
+    setShowMove(true)
+  }, [])
 
   const cycleStatus = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -91,9 +101,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   const startLongPress = useCallback(() => {
     longPressTimer.current = setTimeout(() => {
       haptics('medium')
-      setShowMove(true)
+      openMove()
     }, 500)
-  }, [haptics])
+  }, [haptics, openMove])
 
   const cancelLongPress = useCallback(() => {
     clearTimeout(longPressTimer.current)
@@ -102,13 +112,14 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   // Context menu (desktop right-click)
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
-    setShowMove(true)
+    openMove()
   }
 
   const dueInfo = task.due_date ? dueLabel(task.due_date) : null
 
   return (
     <div
+      ref={cardRef}
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -183,7 +194,14 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
 
       {/* Move popup */}
       {showMove && (
-        <div className="absolute top-full right-0 mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px]"
+        <>
+          {/* Invisible backdrop: tap anywhere outside to dismiss */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={(e) => { e.stopPropagation(); setShowMove(false) }}
+            aria-hidden="true"
+          />
+          <div className={`absolute right-0 z-50 ${flipUp ? 'bottom-full mb-1' : 'top-full mt-1'} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px]`}
           onClick={(e) => e.stopPropagation()}>
           <div className="text-xs text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
           {([1, 2, 3, 4] as Quadrant[]).map((q) => (
@@ -196,7 +214,8 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
               <span className="text-slate-700 dark:text-slate-300">{QUADRANT_LABELS[q]}</span>
             </button>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )

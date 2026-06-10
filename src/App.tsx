@@ -1,4 +1,5 @@
-import { useState, useEffect, Component } from 'react'
+import { useState, useEffect, useRef, Component } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
 import { supabase } from './lib/supabase'
@@ -91,10 +92,14 @@ export default function App() {
 
   const signInWithGoogle = async () => {
     setAuthError(null)
-    const isCapacitor = typeof (window as any).Capacitor !== 'undefined'
-    const redirectTo = isCapacitor ? 'taskmatrix://auth/callback' : window.location.origin + window.location.pathname
-    
-    if (isCapacitor) {
+    // isNativePlatform(), NOT `window.Capacitor` — importing @capacitor/core
+    // defines window.Capacitor even in a regular browser (web shim), which
+    // sent web users down the native OAuth path (new tab + taskmatrix://
+    // redirect that no browser can complete).
+    const isNative = Capacitor.isNativePlatform()
+    const redirectTo = isNative ? 'taskmatrix://auth/callback' : window.location.origin + window.location.pathname
+
+    if (isNative) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo, skipBrowserRedirect: true },
@@ -157,7 +162,7 @@ export default function App() {
 
   const offlineQueue = useOfflineQueue(userId, supabase)
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask } = useTasks(userId, offlineQueue)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
@@ -166,6 +171,26 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
+
+  // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
+  const [undoTask, setUndoTask] = useState<Task | null>(null)
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleDeleteTask = (id: string) => {
+    const task = tasks.find((t) => t.id === id)
+    deleteTask(id)
+    if (task) {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+      setUndoTask(task)
+      undoTimerRef.current = setTimeout(() => setUndoTask(null), 5000)
+    }
+  }
+
+  const handleUndoDelete = () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    if (undoTask) restoreTask(undoTask)
+    setUndoTask(null)
+  }
 
   // Persist context filter across sessions
   useEffect(() => {
@@ -390,7 +415,7 @@ export default function App() {
                   quadrant={q}
                   tasks={quadrantTasks(q)}
                   onStatusChange={updateStatus}
-                  onDelete={deleteTask}
+                  onDelete={handleDeleteTask}
                   onMove={handleMove}
                   onTaskClick={setSelectedTask}
                 />
@@ -449,6 +474,25 @@ export default function App() {
       )}
 
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
+
+      {/* Undo snackbar — sits above the bottom nav */}
+      {undoTask && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50
+            flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
+            rounded-xl shadow-lg pl-4 pr-1 py-1 max-w-[calc(100vw-2rem)]"
+        >
+          <span className="text-sm truncate">Deleted “{undoTask.title}”</span>
+          <button
+            onClick={handleUndoDelete}
+            className="text-sm font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
+          >
+            Undo
+          </button>
+        </div>
+      )}
 
       {/* Mobile bottom action bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">

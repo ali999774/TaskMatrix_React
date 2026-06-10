@@ -18,7 +18,11 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
   const titleRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    titleRef.current?.focus()
+    // Autofocus only with a fine pointer (mouse/trackpad). On touch it
+    // pops the keyboard every time a task is opened just to read it.
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      titleRef.current?.focus()
+    }
   }, [])
 
   // Sync local state when task prop changes (realtime updates)

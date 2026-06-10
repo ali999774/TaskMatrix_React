@@ -188,5 +188,16 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     }
   }, [offlineQueue])
 
-  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, reload: loadTasks }
+  // Undo for deleteTask. Delete is already a soft delete (deleted_at
+  // timestamp), so restore is just nulling it and re-inserting locally.
+  const restoreTask = useCallback(async (task: Task) => {
+    setTasks((prev) => (prev.some((t) => t.id === task.id) ? prev : [task, ...prev]))
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('tasks', 'update', task.id, { deleted_at: null })
+    } else {
+      await supabase.from('tasks').update({ deleted_at: null }).eq('id', task.id)
+    }
+  }, [offlineQueue])
+
+  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, reload: loadTasks }
 }
