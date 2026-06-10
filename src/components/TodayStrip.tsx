@@ -1,4 +1,5 @@
 import type { Task } from '../types'
+import { parseLocalDate, localTodayStr } from '../lib/dates'
 
 interface Props {
   tasks: Task[]
@@ -6,17 +7,18 @@ interface Props {
 }
 
 export default function TodayStrip({ tasks, onTaskClick }: Props) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayStr = today.toISOString().split('T')[0]
+  // Local date string — toISOString() converts to UTC and can shift the day
+  const todayStr = localTodayStr()
 
+  // Status value is 'done' (see TaskCard cycle), not 'completed' — the old
+  // check matched nothing, so finished tasks never left the strips.
   const overdue = tasks.filter((t) => {
-    if (!t.due_date || t.status === 'completed') return false
+    if (!t.due_date || t.status === 'done') return false
     return t.due_date < todayStr
   })
 
   const dueToday = tasks.filter((t) => {
-    if (!t.due_date || t.status === 'completed') return false
+    if (!t.due_date || t.status === 'done') return false
     return t.due_date === todayStr
   })
 
@@ -40,7 +42,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
               >
                 <span className="font-medium">{task.title}</span>
                 <span className="ml-2 text-xs text-red-400 dark:text-red-500">
-                  {task.due_date && new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {task.due_date && parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               </button>
             ))}

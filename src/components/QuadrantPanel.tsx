@@ -3,6 +3,11 @@ import type { Quadrant, Task } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import TaskCard from './TaskCard'
 
+// HTML5 drag-and-drop doesn't exist on iOS touch — the empty-state hint
+// must describe the interaction that actually works there (long-press menu).
+// `pointer: coarse` = primary input is touch; evaluated once at module load.
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 interface Props {
   quadrant: Quadrant
   tasks: Task[]
@@ -106,7 +111,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           ))}
           {tasks.length === 0 && (
             <p className="text-xs text-slate-400 dark:text-slate-500 italic text-center py-6">
-              {dragOver ? 'Drop here' : 'Drag tasks here'}
+              {dragOver ? 'Drop here' : IS_TOUCH ? 'Long-press a task to move it here' : 'Drag tasks here'}
             </p>
           )}
         </div>

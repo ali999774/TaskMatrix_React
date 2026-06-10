@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Component } from 'react'
+import { App as CapacitorApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
 import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
@@ -12,8 +14,30 @@ import TodayStrip from './components/TodayStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import VoiceButton from './components/VoiceButton'
+import { speechSupported } from './lib/speech'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen gap-2 px-6 bg-white dark:bg-[#121212] text-slate-700 dark:text-slate-300 text-sm">
+          <p className="font-bold text-red-500">App Crashed</p>
+          <p className="text-center break-all font-mono text-xs">{this.state.error.message}</p>
+          <button onClick={() => { this.setState({ error: null }); window.location.reload() }}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Reload</button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function useTheme(): [boolean, () => void] {
   const [dark, setDark] = useState(() => {
@@ -58,6 +82,10 @@ export default function App() {
         return
       }
       setAuthLoading(false)
+    }).catch(err => {
+      console.error('[App] getSession failed', err)
+      setAuthLoading(false)
+      setAuthError(err.message)
     })
   }, [])
 
@@ -65,11 +93,21 @@ export default function App() {
     setAuthError(null)
     const isCapacitor = typeof (window as any).Capacitor !== 'undefined'
     const redirectTo = isCapacitor ? 'taskmatrix://auth/callback' : window.location.origin + window.location.pathname
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo }
-    })
-    if (error) setAuthError(error.message)
+    
+    if (isCapacitor) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, skipBrowserRedirect: true },
+      })
+      if (error) { setAuthError(error.message); return }
+      if (data.url) await Browser.open({ url: data.url })
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      })
+      if (error) setAuthError(error.message)
+    }
   }
 
   const signOut = async () => {
@@ -86,6 +124,35 @@ export default function App() {
       }
     })
     return () => subscription.unsubscribe()
+  }, [])
+
+  // Handle Capacitor deep link — Google OAuth redirects to taskmatrix://auth/callback
+  useEffect(() => {
+    // addListener returns a Promise<PluginListenerHandle> — keep it so the
+    // cleanup can remove the listener. Without cleanup, StrictMode's
+    // double-mount registers two listeners and the token exchange fires twice.
+    const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
+      await Browser.close()
+      // Extract tokens from URL hash (Google OAuth PKCE flow)
+      const hash = callbackUrl.split('#')[1]
+      if (hash) {
+        const params = new URLSearchParams(hash)
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token })
+        }
+      }
+      // Fallback: try code exchange for PKCE code flow
+      const qs = callbackUrl.includes('?') ? callbackUrl.split('?')[1] : ''
+      const code = new URLSearchParams(qs).get('code')
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code)
+      }
+    })
+    return () => {
+      handlePromise.then((handle) => handle.remove())
+    }
   }, [])
 
   const offlineQueue = useOfflineQueue(userId, supabase)
@@ -213,9 +280,10 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#121212] pb-[env(safe-area-inset-bottom)] overflow-x-clip max-w-[100vw]">
+    <ErrorBoundary>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#121212] overflow-x-clip max-w-[100vw]">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-[env(safe-area-inset-top)]">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)' }}>
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
@@ -305,7 +373,8 @@ export default function App() {
       </div>
 
       {/* Body: matrix + sticky notes side by side */}
-      <div className="px-1 sm:px-6 py-4 sm:py-5">
+      {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
+      <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full">
 
           {/* Matrix column */}
@@ -383,21 +452,25 @@ export default function App() {
 
       {/* Mobile bottom action bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around px-3 py-2">
-          <div className="flex flex-col items-center gap-0.5 p-2 rounded-lg min-h-[44px] min-w-[44px]">
-            <VoiceButton
-              onTranscript={handleVoiceNote}
-              onStatus={setVoiceStatus}
-              icon="🎙️"
-              className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {voiceStatus || 'Voice'}
-            </span>
-          </div>
+        <div className="flex items-center justify-around px-3 py-1">
+          {/* Hide the whole slot when speech is unsupported (e.g. WKWebView) —
+              VoiceButton renders null but the label would remain as a dead item */}
+          {speechSupported() && (
+            <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg min-h-[44px] min-w-[44px]">
+              <VoiceButton
+                onTranscript={handleVoiceNote}
+                onStatus={setVoiceStatus}
+                icon="🎙️"
+                className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              />
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {voiceStatus || 'Voice'}
+              </span>
+            </div>
+          )}
           <button
             onClick={() => setShowPomodoro(v => !v)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
             <span className="text-lg">⏱</span>
@@ -405,7 +478,7 @@ export default function App() {
           </button>
           <button
             onClick={toggleTheme}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
@@ -413,7 +486,7 @@ export default function App() {
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
-            className="flex flex-col items-center gap-0.5 p-2 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
             <span className="text-lg">📌</span>
@@ -422,5 +495,6 @@ export default function App() {
         </div>
       </nav>
     </div>
+    </ErrorBoundary>
   )
 }

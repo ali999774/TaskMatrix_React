@@ -184,9 +184,10 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                     >
                       {st.title}
                     </span>
+                    {/* Always visible — hover-reveal is unreachable on touch */}
                     <button
                       onClick={() => deleteSubtask(i)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-400 
+                      className="text-slate-400 dark:text-slate-500
                         hover:text-red-500 transition-all text-xs min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                       aria-label={`Delete subtask: ${st.title}`}
                     >

@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
+import { parseLocalDate } from '../lib/dates'
 
 const QUADRANT_ICONS: Record<Quadrant, string> = {
   1: '🔥',
@@ -31,11 +32,10 @@ const STATUS_ICONS: Record<string, string> = {
 }
 
 function dueLabel(dateStr: string): { text: string; urgent: boolean } {
-  const due = new Date(dateStr)
+  const due = parseLocalDate(dateStr) // local midnight — new Date('YYYY-MM-DD') is UTC and shifts a day in US timezones
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  due.setHours(0, 0, 0, 0)
-  const diff = (due.getTime() - today.getTime()) / 86400000
+  const diff = Math.round((due.getTime() - today.getTime()) / 86400000)
   if (diff < 0) return { text: 'Overdue', urgent: true }
   if (diff === 0) return { text: 'Today', urgent: true }
   if (diff <= 7) return { text: 'This Week', urgent: false }
@@ -117,8 +117,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
       onContextMenu={handleContextMenu}
-      className={`p-3 rounded-lg border border-slate-200 dark:border-slate-700 
+      className={`p-3 rounded-lg border border-slate-200 dark:border-slate-700
         bg-white dark:bg-slate-800/60 transition-all relative
+        select-none [-webkit-touch-callout:none]
         hover:border-slate-400 dark:hover:border-slate-500 group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
         ${task.category === 'clinic' ? 'border-l-4 border-l-red-400' : 

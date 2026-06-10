@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>TaskMatrix</title>
     <style>
       /* Base focus ring — floor §5 */
@@ -22,6 +25,18 @@
       }
     </style>
     <script>
+      // Force clear stale cache on app update.
+      // NOTE: localStorage.clear() also wipes the Supabase session — every
+      // APP_VERSION bump signs everyone out. Bump deliberately.
+      var APP_VERSION = '3';
+      if (localStorage.getItem('tm-version') !== APP_VERSION) {
+        localStorage.clear();
+        // Also nuke IndexedDB (stale Supabase sessions)
+        if (window.indexedDB) {
+          try { window.indexedDB.deleteDatabase('taskmatrix_offline_'); } catch(e) {}
+        }
+        localStorage.setItem('tm-version', APP_VERSION);
+      }
       // Prevent flash of wrong theme
       (function() {
         var t = localStorage.getItem('tm-theme');
