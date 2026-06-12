@@ -262,9 +262,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
-                    className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-sm hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
+                      text-slate-500 dark:text-slate-400 text-lg hover:bg-slate-100 dark:hover:bg-slate-800
+                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
                     aria-label={`Decrease ${type} duration`}
                   >
                     −
@@ -274,9 +274,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                   </span>
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? 1 : 5)}
-                    className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-sm hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
+                      text-slate-500 dark:text-slate-400 text-lg hover:bg-slate-100 dark:hover:bg-slate-800
+                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
                     aria-label={`Increase ${type} duration`}
                   >
                     +

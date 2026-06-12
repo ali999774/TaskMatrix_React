@@ -32,7 +32,7 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
           <p className="font-bold text-red-500">App Crashed</p>
           <p className="text-center break-all font-mono text-xs">{this.state.error.message}</p>
           <button onClick={() => { this.setState({ error: null }); window.location.reload() }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Reload</button>
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm min-h-[44px]">Reload</button>
         </div>
       )
     }
@@ -233,7 +233,7 @@ export default function App() {
         <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to see your tasks</p>
         <button
           onClick={signInWithGoogle}
-          className="bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+          className="bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity min-h-[44px]"
         >
           Sign in with Google
         </button>

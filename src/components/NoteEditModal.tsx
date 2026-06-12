@@ -170,7 +170,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
           >
             ✕
           </button>
@@ -199,7 +199,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
                 type="button"
                 onClick={() => fmt(btn.wrapper)}
                 title={btn.title}
-                className="px-2 py-1 text-xs font-medium rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                className="px-2.5 py-2 text-xs font-medium rounded text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
               >
                 {btn.label}
               </button>
@@ -224,8 +224,8 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full ${COLOR_BG[c]} transition-transform border-2
-                    ${color === c ? 'scale-125 border-slate-800 dark:border-white' : 'border-transparent hover:scale-110'}`}
+                  className={`w-10 h-10 rounded-full ${COLOR_BG[c]} transition-transform border-2
+                    ${color === c ? 'scale-110 border-slate-800 dark:border-white' : 'border-transparent hover:scale-110'} min-h-[44px] min-w-[44px]`}
                 />
               ))}
             </div>
@@ -257,20 +257,20 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <button
             onClick={handleDelete}
-            className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
+            className="text-sm text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors min-h-[44px] px-2"
           >
             Delete
           </button>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-sm font-medium hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-sm font-medium hover:opacity-90 transition-opacity min-h-[44px]"
             >
               Save
             </button>

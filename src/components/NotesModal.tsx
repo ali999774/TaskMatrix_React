@@ -63,7 +63,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
             <span className="text-sm text-slate-400">{notes.length} total</span>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             >
               ✕
             </button>
@@ -83,7 +83,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
             />
             <button
               onClick={handleAdd}
-              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-sm font-medium hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-sm font-medium hover:opacity-90 transition-opacity min-h-[44px]"
             >
               Add
             </button>
