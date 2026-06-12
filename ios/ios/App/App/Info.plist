@@ -55,6 +55,14 @@
 				<string>taskmatrix</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).oauth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>taskmatrix-auth</string>
+			</array>
+		</dict>
 	</array>
 	<!-- UIScene lifecycle — required by Apple in the SDK release after iOS 26 -->
 	<key>UIApplicationSceneManifest</key>

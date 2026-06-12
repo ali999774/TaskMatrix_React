@@ -25,6 +25,7 @@ class OfflineDB extends Dexie {
 export function useOfflineQueue(userId: string | null, supabase: SupabaseClient | null) {
   const [pendingCount, setPendingCount] = useState(0)
   const [online, setOnline] = useState(navigator.onLine)
+  const [isFlushing, setIsFlushing] = useState(false)
   const dbRef = useRef<OfflineDB | null>(null)
   const flushingRef = useRef(false)
   const onlineRef = useRef(navigator.onLine)
@@ -52,7 +53,7 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     }
   }, [])
 
-  // Enqueue a mutation
+  // Enqueue a mutation (capped at 500, drops oldest if exceeded)
   const enqueue = useCallback(async (
     table: 'tasks' | 'sticky_notes',
     operation: 'create' | 'update' | 'delete',
@@ -61,6 +62,14 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
   ) => {
     const db = dbRef.current
     if (!db) return
+
+    // Enforce queue size limit — drop oldest if at capacity
+    const count = await db.mutations.count()
+    if (count >= 500) {
+      const oldest = await db.mutations.orderBy('timestamp').first()
+      if (oldest?.id !== undefined) await db.mutations.delete(oldest.id)
+    }
+
     await db.mutations.add({
       table,
       operation,
@@ -79,9 +88,24 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     const items = await db.mutations.orderBy('timestamp').toArray()
     if (items.length === 0) return
 
-    flushingRef.current = true
+    // Discard mutations older than 24h (stale — the record was likely
+    // modified on another device in the meantime, or the user signed out)
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000
+    const stale = items.filter((i) => i.timestamp < cutoff)
+    for (const s of stale) {
+      if (s.id !== undefined) await db.mutations.delete(s.id)
+    }
+    const fresh = items.filter((i) => i.timestamp >= cutoff)
+    if (fresh.length === 0) {
+      setPendingCount(0)
+      flushingRef.current = false
+      return
+    }
 
-    for (const item of items) {
+    flushingRef.current = true
+    setIsFlushing(true)
+
+    for (const item of fresh) {
       try {
         switch (item.operation) {
           case 'create':
@@ -104,6 +128,7 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     const remaining = await db.mutations.count()
     setPendingCount(remaining)
     flushingRef.current = false
+    setIsFlushing(false)
   }, [supabase]) // stable — supabase client never changes
 
   // Auto-flush on reconnect
@@ -114,5 +139,5 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
   }, [online, pendingCount, flush])
 
   // Expose online for the banner — single source of truth
-  return { enqueue, flush, pendingCount, online }
+  return { enqueue, flush, pendingCount, isFlushing, online }
 }

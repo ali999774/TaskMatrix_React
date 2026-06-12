@@ -97,7 +97,7 @@ export default function App() {
     // sent web users down the native OAuth path (new tab + taskmatrix://
     // redirect that no browser can complete).
     const isNative = Capacitor.isNativePlatform()
-    const redirectTo = isNative ? 'taskmatrix://auth/callback' : window.location.origin + window.location.pathname
+    const redirectTo = isNative ? 'taskmatrix-auth://auth/callback' : window.location.origin + window.location.pathname
 
     if (isNative) {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -352,7 +352,23 @@ export default function App() {
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-0 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
+              {/* Sync indicator — visible when offline or flushing */}
+              {(!offlineQueue.online || offlineQueue.isFlushing || offlineQueue.pendingCount > 0) && (
+                <span className={`text-xs px-2 py-1 rounded-full font-medium min-h-[44px] inline-flex items-center ${
+                  !offlineQueue.online
+                    ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'
+                    : offlineQueue.isFlushing
+                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                }`} role="status" aria-live="polite">
+                  {!offlineQueue.online
+                    ? `Offline${offlineQueue.pendingCount > 0 ? ` · ${offlineQueue.pendingCount}` : ''}`
+                    : offlineQueue.isFlushing
+                    ? 'Syncing…'
+                    : `${offlineQueue.pendingCount} pending`}
+                </span>
+              )}
               <button
                 onClick={() => window.location.reload()}
                 className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
