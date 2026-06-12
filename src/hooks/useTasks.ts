@@ -77,6 +77,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   }, [userId])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount/user change
     if (userId) loadTasks()
   }, [userId, loadTasks])
 

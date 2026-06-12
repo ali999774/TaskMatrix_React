@@ -27,6 +27,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
 
   // Sync local state when task prop changes (realtime updates)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
     setTitle(task.title)
     setNotes(task.notes || '')
     setDueDate(task.due_date || '')

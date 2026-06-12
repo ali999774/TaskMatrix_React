@@ -17,6 +17,7 @@ export default function CompletedSection({ userId, context, onTaskClick }: Props
     if (!show || tasks.length > 0) return
     if (!userId) return
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async fetch
     setLoading(true)
     let query = supabase
       .from('tasks')

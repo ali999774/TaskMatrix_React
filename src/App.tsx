@@ -133,10 +133,12 @@ export default function App() {
 
   // Handle Capacitor deep link — Google OAuth redirects to taskmatrix://auth/callback
   useEffect(() => {
-    // addListener returns a Promise<PluginListenerHandle> — keep it so the
-    // cleanup can remove the listener. Without cleanup, StrictMode's
-    // double-mount registers two listeners and the token exchange fires twice.
+    // Use a guard ref to prevent double-processing under React StrictMode
+    // (mount → unmount → remount registers two listeners before cleanup resolves)
+    let active = true
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
+      if (!active) return
+      active = false // prevent re-entry from duplicate listener
       await Browser.close()
       // Extract tokens from URL hash (Google OAuth PKCE flow)
       const hash = callbackUrl.split('#')[1]
@@ -156,6 +158,7 @@ export default function App() {
       }
     })
     return () => {
+      active = false
       handlePromise.then((handle) => handle.remove())
     }
   }, [])
@@ -211,6 +214,7 @@ export default function App() {
     if (selectedTask) {
       const updated = tasks.find((t) => t.id === selectedTask.id)
       if (updated) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing derived state from upstream data
         setSelectedTask(updated)
       } else {
         setSelectedTask(null)

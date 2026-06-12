@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { StickyNote } from '../types'
+import { useHaptics } from '../hooks/useHaptics'
 
 const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange'] as const
 
@@ -70,8 +71,10 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const [color, setColor] = useState(note.color || 'yellow')
   const [pinned, setPinned] = useState(!!note.pinned)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const haptics = useHaptics()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
     setTitle(note.title || '')
     setContent(note.content || '')
     setColor(note.color || 'yellow')
@@ -83,6 +86,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       alert('Please add a title or content')
       return
     }
+    haptics('success')
     onSave(note.id, {
       title: title.trim() || null,
       content: content.trim(),
@@ -94,6 +98,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
 
   const handleDelete = () => {
     if (confirm('Delete this note?')) {
+      haptics('medium')
       onDelete(note.id)
       onClose()
     }

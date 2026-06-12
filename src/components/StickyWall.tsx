@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown } from '../lib/markdown'
 import VoiceButton from './VoiceButton'
+import { useHaptics } from '../hooks/useHaptics'
 
 interface Props {
   notes: StickyNote[]
@@ -26,6 +27,7 @@ const COLOR_MAP: Record<string, string> = {
 export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder, onNewBlank }: Props) {
   const [input, setInput] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const haptics = useHaptics()
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('tm-pinned-collapsed') === 'true'
   })
@@ -134,7 +136,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                         <div className="whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
                       </div>
                       <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(note.id) }}
+                        onClick={(e) => { e.stopPropagation(); haptics('medium'); onDelete(note.id) }}
                         className="text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500"
                         aria-label="Delete note"
                       >

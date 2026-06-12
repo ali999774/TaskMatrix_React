@@ -16,12 +16,14 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   // Keep callback in ref to avoid stale closure issues
   const onTranscriptRef = useRef(onTranscript)
+  // eslint-disable-next-line react-hooks/refs -- canonical stale-closure fix: keep callback fresh in ref
   onTranscriptRef.current = onTranscript
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time capability detection on mount
       setUnsupported(true)
       return
     }
@@ -33,7 +35,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
     let finalTranscript = ''
 
-    rec.onresult = (event: any) => {
+    rec.onresult = (event: SpeechRecognitionEvent) => {
       let interim = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i]
@@ -80,6 +82,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     return () => {
       try { rec.abort() } catch { /* ignore */ }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onStatus is a stable prop; including it would recreate SpeechRecognition on every render
   }, []) // create once on mount
 
   const toggle = () => {

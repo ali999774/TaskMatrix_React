@@ -79,6 +79,7 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
   }, [userId])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount/user change
     if (userId) loadNotes()
   }, [userId, loadNotes])
 

@@ -25,18 +25,6 @@
       }
     </style>
     <script>
-      // Force clear stale cache on app update.
-      // NOTE: localStorage.clear() also wipes the Supabase session — every
-      // APP_VERSION bump signs everyone out. Bump deliberately.
-      var APP_VERSION = '3';
-      if (localStorage.getItem('tm-version') !== APP_VERSION) {
-        localStorage.clear();
-        // Also nuke IndexedDB (stale Supabase sessions)
-        if (window.indexedDB) {
-          try { window.indexedDB.deleteDatabase('taskmatrix_offline_'); } catch(e) {}
-        }
-        localStorage.setItem('tm-version', APP_VERSION);
-      }
       // Prevent flash of wrong theme
       (function() {
         var t = localStorage.getItem('tm-theme');

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useHaptics } from '../hooks/useHaptics'
 
 type SessionType = 'work' | 'short' | 'long'
 
@@ -26,6 +27,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   const dragStart = useRef({ x: 0, y: 0 })
   const popupRef = useRef<HTMLDivElement>(null)
   const posRef = useRef(pos)
+  const haptics = useHaptics()
+  // eslint-disable-next-line react-hooks/refs -- keep ref in sync for pointer event callbacks
   posRef.current = pos
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -54,7 +57,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
     setTimeLeft(durations[type] * 60)
   }, [durations, stopTimer])
 
-  const toggleTimer = useCallback(() => {
+  const toggleTimer = () => {
+    haptics(running ? 'light' : 'medium')
     if (running) {
       stopTimer()
       setRunning(false)
@@ -89,9 +93,10 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         })
       }, 1000)
     }
-  }, [running, stopTimer, session, switchSession])
+  }
 
   const resetTimer = useCallback(() => {
+    haptics('medium')
     stopTimer()
     setRunning(false)
     setTimeLeft(durations[session] * 60)
