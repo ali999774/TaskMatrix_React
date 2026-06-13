@@ -141,7 +141,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       <div className="flex items-start gap-2">
         <button
           onClick={cycleStatus}
-          className={`mt-0.5 text-lg flex-shrink-0 transition-colors active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
+          className={`mt-0.5 text-[1.125rem] flex-shrink-0 transition-colors active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
             ${task.status === 'done' ? 'text-emerald-500 dark:text-emerald-400' 
               : task.status === 'in_progress' ? 'text-amber-500 dark:text-amber-400' 
               : 'text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300'}`}
@@ -151,13 +151,13 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           {STATUS_ICONS[task.status] || '○'}
         </button>
         <div className="flex-1 min-w-0">
-          <span className={`text-sm ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
+          <span className={`text-[0.875rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
             {task.title}
           </span>
           {(task.category || dueInfo) && (
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {task.category && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium
+                <span className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
                   ${task.category === 'clinic' ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' :
                     task.category === 'practice-launch' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400' :
                     task.category === 'dev' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' :
@@ -167,7 +167,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
                 </span>
               )}
               {dueInfo && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium
+                <span className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
                   ${dueInfo.urgent 
                     ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' 
                     : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'}`}
@@ -179,12 +179,12 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs px-1.5 py-0.5 rounded-full font-medium text-transparent" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
+          <span className="text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium text-transparent" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
             I{task.importance}U{task.urgency}
           </span>
           <button
             onClick={handleDelete}
-            className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-xs px-1.5 py-1 active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-[0.75rem] px-1.5 py-1 active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             aria-label="Delete task"
           >
             ✕
@@ -203,12 +203,12 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           />
           <div className={`absolute right-0 z-50 ${flipUp ? 'bottom-full mb-1' : 'top-full mt-1'} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px]`}
           onClick={(e) => e.stopPropagation()}>
-          <div className="text-xs text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
+          <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
           {([1, 2, 3, 4] as Quadrant[]).map((q) => (
             <button
               key={q}
               onClick={(e) => handleMovePick(e, q)}
-              className="text-xs px-2.5 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-left flex items-center gap-2 active:scale-95 motion-reduce:scale-100 transition-all min-h-[44px]"
+              className="text-[0.75rem] px-2.5 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-left flex items-center gap-2 active:scale-95 motion-reduce:scale-100 transition-all min-h-[44px]"
             >
               <span>{QUADRANT_ICONS[q]}</span>
               <span className="text-slate-700 dark:text-slate-300">{QUADRANT_LABELS[q]}</span>

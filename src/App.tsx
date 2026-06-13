@@ -28,11 +28,11 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
   render() {
     if (this.state.error) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen gap-2 px-6 bg-white dark:bg-[#121212] text-slate-700 dark:text-slate-300 text-sm">
+        <div className="flex flex-col items-center justify-center h-screen gap-2 px-6 bg-white dark:bg-[#121212] text-slate-700 dark:text-slate-300 text-[0.875rem]">
           <p className="font-bold text-red-500">App Crashed</p>
-          <p className="text-center break-all font-mono text-xs">{this.state.error.message}</p>
+          <p className="text-center break-all font-mono text-[0.75rem]">{this.state.error.message}</p>
           <button onClick={() => { this.setState({ error: null }); window.location.reload() }}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm min-h-[44px]">Reload</button>
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.875rem] min-h-[44px]">Reload</button>
         </div>
       )
     }
@@ -233,30 +233,42 @@ export default function App() {
   if (!userId) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4 bg-white dark:bg-[#121212]">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">TaskMatrix</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to see your tasks</p>
+        <h1 className="text-[1.5rem] font-bold text-slate-800 dark:text-white">TaskMatrix</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-[0.875rem]">Sign in to see your tasks</p>
         <button
           onClick={signInWithGoogle}
           className="bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity min-h-[44px]"
         >
           Sign in with Google
         </button>
-        {authError && <p className="text-red-500 dark:text-red-400 text-sm">{authError}</p>}
+        {authError && <p className="text-red-500 dark:text-red-400 text-[0.875rem]">{authError}</p>}
       </div>
     )
   }
 
   if (tasksLoading) {
+    const QUADRANT_BG = [
+      'bg-blue-50 dark:bg-blue-950/30',
+      'bg-emerald-50 dark:bg-emerald-950/30',
+      'bg-amber-50 dark:bg-amber-950/30',
+      'bg-purple-50 dark:bg-purple-950/30',
+    ]
+    const SHIMMER = 'bg-gradient-to-r from-transparent via-slate-200/60 dark:via-slate-700/40 to-transparent bg-[length:200%_100%]'
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#121212] px-3 sm:px-6">
+        <style>{`
+          @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+          .shimmer-bar{animation:shimmer 1.5s ease-in-out infinite}
+          @media (prefers-reduced-motion:reduce){.shimmer-bar{animation:none}}
+        `}</style>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-4xl">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse motion-reduce:animate-none">
-              <div className="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={`rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] ${QUADRANT_BG[i]} overflow-hidden motion-reduce:animate-none`}>
+              <div className={`shimmer-bar h-5 w-20 rounded mb-3 bg-slate-300 dark:bg-slate-600 ${SHIMMER}`} />
               <div className="space-y-2">
-                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-                <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg w-3/4" />
+                <div className={`shimmer-bar h-12 rounded-lg bg-slate-200 dark:bg-slate-700 ${SHIMMER}`} />
+                <div className={`shimmer-bar h-12 rounded-lg bg-slate-200 dark:bg-slate-700 ${SHIMMER}`} />
+                <div className={`shimmer-bar h-12 rounded-lg bg-slate-200 dark:bg-slate-700 w-3/4 ${SHIMMER}`} />
               </div>
             </div>
           ))}
@@ -314,7 +326,7 @@ export default function App() {
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)' }}>
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <h1 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
+            <h1 className="text-[1rem] sm:text-[1.125rem] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
             </h1>
 
@@ -329,7 +341,7 @@ export default function App() {
                   onKeyDown={handleQuickAddKeyDown}
                   placeholder="Quick add task..."
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
-                    dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-700 
+                    dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.875rem] text-slate-700 
                     dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
                     outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
                 />
@@ -341,7 +353,7 @@ export default function App() {
                     <button
                       key={q}
                       onClick={() => handleQuickAdd(q)}
-                      className={`shrink-0 text-xs font-medium px-3 py-2 rounded-lg border min-h-[44px]
+                      className={`shrink-0 text-[0.75rem] font-medium px-3 py-2 rounded-lg border min-h-[44px]
                         transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
                     >
                       {QUADRANT_LABELS_SHORT[q]}
@@ -355,7 +367,7 @@ export default function App() {
             <div className="flex items-center gap-0.5 shrink-0">
               {/* Sync indicator — visible when offline or flushing */}
               {(!offlineQueue.online || offlineQueue.isFlushing || offlineQueue.pendingCount > 0) && (
-                <span className={`text-xs px-2 py-1 rounded-full font-medium min-h-[44px] inline-flex items-center ${
+                <span className={`text-[0.75rem] px-2 py-1 rounded-full font-medium min-h-[44px] inline-flex items-center ${
                   !offlineQueue.online
                     ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'
                     : offlineQueue.isFlushing
@@ -371,7 +383,7 @@ export default function App() {
               )}
               <button
                 onClick={() => window.location.reload()}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
                 aria-label="Refresh"
               >
@@ -379,7 +391,7 @@ export default function App() {
               </button>
               <button
                 onClick={signOut}
-                className="text-sm p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Sign out"
                 aria-label="Sign out"
               >
@@ -393,7 +405,7 @@ export default function App() {
       {/* Offline banner */}
       {!offlineQueue.online && (
         <div className="bg-amber-50 dark:bg-amber-950/50 border-b border-amber-200 dark:border-amber-800 px-3 sm:px-6 py-2 text-center">
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+          <span className="text-[0.75rem] font-medium text-amber-700 dark:text-amber-400">
             You're offline.{offlineQueue.pendingCount > 0 ? ` ${offlineQueue.pendingCount} change${offlineQueue.pendingCount !== 1 ? 's' : ''} pending.` : ''} Changes will sync when you reconnect.
           </span>
         </div>
@@ -405,7 +417,7 @@ export default function App() {
             <button
               key={ctx}
               onClick={() => setContext(ctx)}
-              className={`text-xs px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
+              className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
                 ${context === ctx
                   ? 'bg-blue-600 dark:bg-blue-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -504,10 +516,10 @@ export default function App() {
             flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
             rounded-xl shadow-lg pl-4 pr-1 py-1 max-w-[calc(100vw-2rem)]"
         >
-          <span className="text-sm truncate">Deleted “{undoTask.title}”</span>
+          <span className="text-[0.875rem] truncate">Deleted “{undoTask.title}”</span>
           <button
             onClick={handleUndoDelete}
-            className="text-sm font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
+            className="text-[0.875rem] font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
           >
             Undo
           </button>
@@ -525,9 +537,9 @@ export default function App() {
                 onTranscript={handleVoiceNote}
                 onStatus={setVoiceStatus}
                 icon="🎙️"
-                className="p-0 bg-transparent border-none text-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               />
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">
                 {voiceStatus || 'Voice'}
               </span>
             </div>
@@ -537,24 +549,24 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
-            <span className="text-lg">⏱</span>
-            <span className="text-xs font-medium">Focus</span>
+            <span className="text-[1.125rem]">⏱</span>
+            <span className="text-[0.75rem] font-medium">Focus</span>
           </button>
           <button
             onClick={toggleTheme}
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <span className="text-lg">{dark ? '☀️' : '🌙'}</span>
-            <span className="text-xs font-medium">Theme</span>
+            <span className="text-[1.125rem]">{dark ? '☀️' : '🌙'}</span>
+            <span className="text-[0.75rem] font-medium">Theme</span>
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
-            <span className="text-lg">📌</span>
-            <span className="text-xs font-medium">Notes</span>
+            <span className="text-[1.125rem]">📌</span>
+            <span className="text-[0.75rem] font-medium">Notes</span>
           </button>
         </div>
       </nav>

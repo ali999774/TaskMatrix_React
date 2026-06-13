@@ -108,7 +108,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   return (
     <button
       onClick={toggle}
-      className={`shrink-0 p-2 rounded-lg text-sm transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${
+      className={`shrink-0 p-2 rounded-lg text-[0.875rem] transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${
         listening
           ? 'bg-red-500 text-white animate-pulse motion-reduce:animate-none'
           : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'

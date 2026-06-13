@@ -58,12 +58,12 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white">📝 Notes</h2>
+          <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">📝 Notes</h2>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400">{notes.length} total</span>
+            <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             >
               ✕
             </button>
@@ -79,11 +79,11 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="+ Quick note..."
-              className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+              className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
             />
             <button
               onClick={handleAdd}
-              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-sm font-medium hover:opacity-90 transition-opacity min-h-[44px]"
+              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-[0.875rem] font-medium hover:opacity-90 transition-opacity min-h-[44px]"
             >
               Add
             </button>
@@ -93,7 +93,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 Search notes..."
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
           />
         </div>
 
@@ -113,13 +113,13 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
                     ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}`}
                 >
                   {note.title && (
-                    <p className="font-semibold text-sm mb-1 opacity-80">{note.title}</p>
+                    <p className="font-semibold text-[0.875rem] mb-1 opacity-80">{note.title}</p>
                   )}
                   <p
-                    className="text-sm whitespace-pre-wrap leading-relaxed line-clamp-4"
+                    className="text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
                   />
-                  <div className="flex items-center gap-2 mt-2 text-xs opacity-60">
+                  <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
                     {note.pinned && <span>📌</span>}
                     {note.created_at && (
                       <span>{new Date(note.created_at).toLocaleDateString()}</span>

@@ -116,14 +116,14 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-            className="flex-1 bg-transparent text-lg font-semibold text-slate-800 dark:text-white 
+            className="flex-1 bg-transparent text-[1.125rem] font-semibold text-slate-800 dark:text-white 
               outline-none placeholder-slate-400"
             placeholder="Task title"
           />
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-              text-xl leading-none p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+              text-[1.25rem] leading-none p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             aria-label="Close task details"
           >
             ✕
@@ -135,7 +135,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
           {/* Due date + time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
                 Due date
               </label>
               <input
@@ -143,13 +143,13 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                 value={dueDate}
                 onChange={(e) => handleDueDateChange(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
+                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
                   dark:text-slate-300 outline-none focus:border-slate-400 
                   dark:focus:border-slate-500 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
                 Due time
               </label>
               <input
@@ -157,7 +157,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                 value={dueTime}
                 onChange={(e) => handleDueTimeChange(e.target.value)}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
+                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
                   dark:text-slate-300 outline-none focus:border-slate-400 
                   dark:focus:border-slate-500 transition-colors"
               />
@@ -166,7 +166,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
 
           {/* Subtasks */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
               Subtasks {subtasks.length > 0 && `(${completed}/${subtasks.length})`}
             </label>
             {subtasks.length > 0 && (
@@ -181,7 +181,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                         text-blue-500 focus:ring-blue-500"
                     />
                     <span
-                      className={`flex-1 text-sm ${
+                      className={`flex-1 text-[0.875rem] ${
                         st.done
                           ? 'line-through text-slate-400 dark:text-slate-500'
                           : 'text-slate-700 dark:text-slate-300'
@@ -193,7 +193,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                     <button
                       onClick={() => deleteSubtask(i)}
                       className="text-slate-400 dark:text-slate-500
-                        hover:text-red-500 transition-all text-xs min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                        hover:text-red-500 transition-all text-[0.75rem] min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                       aria-label={`Delete subtask: ${st.title}`}
                     >
                       ✕
@@ -210,7 +210,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
                 onKeyDown={(e) => e.key === 'Enter' && addSubtask()}
                 placeholder="+ Add subtask..."
                 className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
+                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
                   dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
                   outline-none focus:border-slate-400 dark:focus:border-slate-500 
                   transition-colors"
@@ -220,7 +220,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
               Notes
             </label>
             <textarea
@@ -230,7 +230,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
               rows={3}
               placeholder="Add notes..."
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 
+                dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
                 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
                 outline-none focus:border-slate-400 dark:focus:border-slate-500 
                 transition-colors resize-none"

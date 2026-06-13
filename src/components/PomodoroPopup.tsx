@@ -166,14 +166,14 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         >
-          <div className="font-bold text-base text-slate-800 dark:text-white">
+          <div className="font-bold text-[1rem] text-slate-800 dark:text-white">
             ⏱ Pomodoro
           </div>
           <div className="flex gap-2 items-center">
             <select
               value={session}
               onChange={(e) => switchSession(e.target.value as SessionType)}
-              className="text-xs border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1
+              className="text-[0.75rem] border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1
                 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             >
               <option value="work">Work</option>
@@ -182,7 +182,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             </select>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
               aria-label="Close pomodoro timer"
             >
               ×
@@ -210,7 +210,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
               <div className="text-4xl font-bold text-slate-800 dark:text-white tabular-nums tracking-tight">
                 {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
               </div>
-              <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 mt-0.5">
                 {SESSION_LABELS[session]}
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         <div className="flex gap-2 justify-center pb-4">
           <button
             onClick={toggleTimer}
-            className="px-8 py-2.5 rounded-lg text-sm font-semibold tracking-wide text-white
+            className="px-8 py-2.5 rounded-lg text-[0.875rem] font-semibold tracking-wide text-white
               bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90 active:scale-95 motion-reduce:scale-100 active:opacity-80 transition-all min-h-[44px]"
             aria-label={running ? 'Pause timer' : timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'}
           >
@@ -244,7 +244,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           </button>
           <button
             onClick={resetTimer}
-            className="px-4 py-2.5 rounded-lg text-sm text-slate-500 dark:text-slate-400
+            className="px-4 py-2.5 rounded-lg text-[0.875rem] text-slate-500 dark:text-slate-400
               bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700
               hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
             aria-label="Reset timer"
@@ -255,32 +255,32 @@ export default function PomodoroPopup({ show, onClose }: Props) {
 
         {/* Duration settings */}
         <div className="border-t border-slate-200 dark:border-slate-700 px-4 py-3">
-          <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+          <div className="text-[0.75rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
             Durations
           </div>
           <div className="flex flex-col gap-2">
             {(['work', 'short', 'long'] as SessionType[]).map((type) => (
               <div key={type} className="flex justify-between items-center">
-                <span className="text-sm text-slate-500 dark:text-slate-400">
+                <span className="text-[0.875rem] text-slate-500 dark:text-slate-400">
                   {type === 'work' ? 'Work' : type === 'short' ? 'Short break' : 'Long break'}
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
                     className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-lg hover:bg-slate-100 dark:hover:bg-slate-800
+                      text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
                       flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
                     aria-label={`Decrease ${type} duration`}
                   >
                     −
                   </button>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 w-9 text-center tabular-nums">
+                  <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-300 w-9 text-center tabular-nums">
                     {durations[type]}m
                   </span>
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? 1 : 5)}
                     className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-lg hover:bg-slate-100 dark:hover:bg-slate-800
+                      text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
                       flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
                     aria-label={`Increase ${type} duration`}
                   >

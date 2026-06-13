@@ -81,11 +81,11 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     return (
       <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 w-full mb-20 lg:mb-0">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
-          <span className="text-sm text-slate-400">{notes.length}</span>
+          <h2 className="text-[0.875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
+          <span className="text-[0.875rem] text-slate-400">{notes.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 motion-reduce:scale-100 ml-auto p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            className="text-[0.75rem] opacity-50 hover:opacity-100 transition-all active:scale-75 motion-reduce:scale-100 ml-auto p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             title={collapsed ? 'Expand' : 'Collapse'}
             aria-label={collapsed ? 'Expand pinned notes' : 'Collapse pinned notes'}
           >
@@ -104,14 +104,14 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="+ Quick note..."
-                  className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+                  className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
                 />
-                <button onClick={handleAddOrNew} className="text-sm px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center">+</button>
+                <button onClick={handleAddOrNew} className="text-[0.875rem] px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center">+</button>
               </div>
             )}
 
             {notes.length === 0 ? (
-              <p className="text-sm text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
+              <p className="text-[0.875rem] text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
             ) : (
               <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3 scrollbar-hide">
                 {notes.map((note) => (
@@ -124,12 +124,12 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                     onDragEnd={handleDragEnd}
                     onClick={() => onEdit?.(note)}
                     style={{ userSelect: 'none' }}
-                    className={`group p-3 rounded-lg border text-sm cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
+                    className={`group p-3 rounded-lg border text-[0.875rem] cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
                         {note.title && (
-                          <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1 truncate">
+                          <div className="text-[0.75rem] font-semibold text-slate-700 dark:text-slate-200 mb-1 truncate">
                             {note.title}
                           </div>
                         )}
@@ -137,7 +137,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); haptics('medium'); onDelete(note.id) }}
-                        className="text-xs px-1.5 py-0.5 rounded hover:bg-black/10 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500"
+                        className="text-[0.75rem] px-1.5 py-0.5 rounded hover:bg-black/10 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500"
                         aria-label="Delete note"
                       >
                         ×
@@ -149,7 +149,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
             )}
 
             {onShowAll && (
-              <button onClick={onShowAll} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center min-h-[44px]">
+              <button onClick={onShowAll} className="text-[0.75rem] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center min-h-[44px]">
                 View all notes →
               </button>
             )}

@@ -80,15 +80,15 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
     >
       {/* Quadrant header with icon + count + collapse toggle */}
       <div className={`sm:-mx-4 sm:-mt-4 -mt-4 px-4 py-2 sm:rounded-t-xl rounded-none ${QUADRANT_HEADER_BG[quadrant]} ${collapsed ? 'mb-0 sm:rounded-b-xl rounded-none' : 'mb-3'} flex items-center justify-between`}>
-        <h3 className="text-sm font-semibold flex items-center gap-1.5">
+        <h3 className="text-[0.875rem] font-semibold flex items-center gap-1.5">
           <span>{QUADRANT_ICONS[quadrant]}</span>
           {QUADRANT_LABELS[quadrant]}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium opacity-60 tabular-nums">{tasks.length}</span>
+          <span className="text-[0.75rem] font-medium opacity-60 tabular-nums">{tasks.length}</span>
           <button
             onClick={toggleCollapsed}
-            className="text-xs opacity-50 hover:opacity-100 transition-all active:scale-75 motion-reduce:scale-100 ml-1 p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            className="text-[0.75rem] opacity-50 hover:opacity-100 transition-all active:scale-75 motion-reduce:scale-100 ml-1 p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             title={collapsed ? 'Expand' : 'Collapse'}
             aria-label={collapsed ? 'Expand quadrant' : 'Collapse quadrant'}
           >
@@ -110,7 +110,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
             />
           ))}
           {tasks.length === 0 && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 italic text-center py-6">
+            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6">
               {dragOver ? 'Drop here' : IS_TOUCH ? 'Long-press a task to move it here' : 'Drag tasks here'}
             </p>
           )}
