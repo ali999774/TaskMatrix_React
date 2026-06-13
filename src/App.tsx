@@ -97,7 +97,7 @@ export default function App() {
     // sent web users down the native OAuth path (new tab + taskmatrix://
     // redirect that no browser can complete).
     const isNative = Capacitor.isNativePlatform()
-    const redirectTo = isNative ? 'taskmatrix-auth://auth/callback' : window.location.origin + window.location.pathname
+    const redirectTo = isNative ? 'taskmatrix-auth://callback' : window.location.origin + window.location.pathname
 
     if (isNative) {
       const { data, error } = await supabase.auth.signInWithOAuth({
