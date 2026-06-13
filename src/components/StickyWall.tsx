@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown } from '../lib/markdown'
 import VoiceButton from './VoiceButton'
@@ -27,10 +27,13 @@ const COLOR_MAP: Record<string, string> = {
 export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder, onNewBlank }: Props) {
   const [input, setInput] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [dropAbove, setDropAbove] = useState(true) // true = insert above target, false = below
   const haptics = useHaptics()
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('tm-pinned-collapsed') === 'true'
   })
+  const dragCounterRef = useRef(0)
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -56,14 +59,38 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedId(id)
     e.dataTransfer.setData('text/plain', id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragEnter = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    dragCounterRef.current++
+    if (draggedId === id) return
+    setDragOverId(id)
+    // Detect above/below midpoint
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setDropAbove(e.clientY < rect.top + rect.height / 2)
+  }
+
+  const handleDragLeave = (_e: React.DragEvent) => {
+    dragCounterRef.current--
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0
+      setDragOverId(null)
+    }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
   }
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault()
+    dragCounterRef.current = 0
+    setDragOverId(null)
+    setDraggedId(null)
+
     const dragged = e.dataTransfer.getData('text/plain')
     if (!dragged || !onReorder || dragged === targetId) return
 
@@ -71,11 +98,22 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     const to = notes.findIndex(n => n.id === targetId)
     if (from === -1 || to === -1) return
 
-    onReorder(dragged, to)
-    setDraggedId(null)
+    // Insert above or below based on cursor position relative to midpoint
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const insertAbove = e.clientY < rect.top + rect.height / 2
+    let targetIndex = insertAbove ? to : to + 1
+    // If dragging from above the target, adjust for the removed item
+    if (from < targetIndex && insertAbove) targetIndex--
+    if (from < targetIndex && !insertAbove) targetIndex--
+
+    onReorder(dragged, Math.max(0, targetIndex))
   }
 
-  const handleDragEnd = () => setDraggedId(null)
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    setDragOverId(null)
+    dragCounterRef.current = 0
+  }
 
   if (sidebar) {
     return (
@@ -119,12 +157,22 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                     key={note.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, note.id)}
+                    onDragEnter={(e) => handleDragEnter(e, note.id)}
+                    onDragLeave={handleDragLeave}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, note.id)}
                     onDragEnd={handleDragEnd}
                     onClick={() => onEdit?.(note)}
                     style={{ userSelect: 'none' }}
-                    className={`group p-3 rounded-lg border text-[0.875rem] cursor-grab active:cursor-grabbing transition-all ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow} ${draggedId === note.id ? 'opacity-50 scale-[0.98]' : ''}`}
+                    className={`group p-3 rounded-lg border text-[0.875rem] cursor-grab active:cursor-grabbing transition-all
+                      ${COLOR_MAP[note.color ?? 'yellow'] || COLOR_MAP.yellow}
+                      ${draggedId === note.id ? 'opacity-40 scale-[0.97]' : ''}
+                      ${dragOverId === note.id
+                        ? dropAbove
+                          ? 'ring-2 ring-blue-400 border-t-2 border-t-blue-500'
+                          : 'ring-2 ring-blue-400 border-b-2 border-b-blue-500'
+                        : ''
+                      }`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
