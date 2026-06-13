@@ -14,6 +14,16 @@ export const DEFAULT_CATEGORIES: CategoryDef[] = [
 
 export const CATEGORY_COLORS = ['slate', 'red', 'amber', 'emerald', 'blue', 'purple', 'pink'] as const
 
+export const CATEGORY_COLOR_HEX: Record<string, string> = {
+  slate: '#94a3b8',
+  red: '#f87171',
+  amber: '#fbbf24',
+  emerald: '#34d399',
+  blue: '#60a5fa',
+  purple: '#c084fc',
+  pink: '#f472b6',
+}
+
 export const CATEGORY_BORDER: Record<string, string> = {
   slate: 'border-l-slate-400 dark:border-l-slate-500',
   red: 'border-l-red-400 dark:border-l-red-500',

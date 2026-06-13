@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import type { CategoryDef } from '../lib/categories'
-import { CATEGORY_COLORS, CATEGORY_BADGE } from '../lib/categories'
+import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX } from '../lib/categories'
 
 interface Props {
   categories: CategoryDef[]
@@ -181,7 +181,7 @@ export default function SettingsModal({ categories, onSave, onClose }: Props) {
                                   ? 'border-slate-800 dark:border-white scale-110'
                                   : 'border-transparent hover:scale-105'
                                 }`}
-                              style={{ backgroundColor: `var(--tw-${color}-400, #94a3b8)` }}
+                              style={{ backgroundColor: CATEGORY_COLOR_HEX[color] || "#94a3b8" }}
                               aria-label={`Color: ${color}`}
                             />
                           ))}
