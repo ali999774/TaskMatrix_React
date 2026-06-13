@@ -31,6 +31,7 @@ export interface StickyNote {
   position_x?: number
   position_y?: number
   pinned?: boolean
+  position?: number
   created_at?: string
   updated_at?: string
 }

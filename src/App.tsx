@@ -166,7 +166,7 @@ export default function App() {
   const offlineQueue = useOfflineQueue(userId, supabase)
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
-  const { notes, pinnedNotes, addNote, updateNote, deleteNote } = useStickyNotes(userId, offlineQueue)
+  const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -464,6 +464,7 @@ export default function App() {
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
               onNewBlank={handleNewBlankNote}
+              onReorder={reorderNote}
               sidebar
             />
           </div>

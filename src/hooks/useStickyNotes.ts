@@ -71,7 +71,7 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
       // Seed the dirty-detection snapshot
       const snap = new Map<string, string>()
       for (const n of data as StickyNote[]) {
-        snap.set(n.id, JSON.stringify({ content: n.content, color: n.color, position_x: n.position_x, position_y: n.position_y, pinned: n.pinned }))
+        snap.set(n.id, JSON.stringify({ content: n.content, color: n.color, position_x: n.position_x, position_y: n.position_y, pinned: n.pinned, position: n.position }))
       }
       syncedSnapshotRef.current = snap
     }
