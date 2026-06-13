@@ -7,11 +7,20 @@ interface Props {
   onClose: () => void
 }
 
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: '', label: 'None' },
+  { value: 'clinic', label: '🏥 Clinic' },
+  { value: 'practice-launch', label: '🏗 Launch' },
+  { value: 'dev', label: '💻 Dev' },
+  { value: 'personal', label: '👤 Personal' },
+]
+
 export default function TaskDetail({ task, onUpdate, onClose }: Props) {
   const [title, setTitle] = useState(task.title)
   const [notes, setNotes] = useState(task.notes || '')
   const [dueDate, setDueDate] = useState(task.due_date || '')
   const [dueTime, setDueTime] = useState(task.due_time || '')
+  const [category, setCategory] = useState(task.category || '')
   const [subtasks, setSubtasks] = useState(task.subtasks || [])
   const [newSubtask, setNewSubtask] = useState('')
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -32,6 +41,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
     setNotes(task.notes || '')
     setDueDate(task.due_date || '')
     setDueTime(task.due_time || '')
+    setCategory(task.category || '')
     setSubtasks(task.subtasks || [])
   }, [task])
 
@@ -62,6 +72,11 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
   const handleDueTimeChange = (val: string) => {
     setDueTime(val)
     save({ due_time: val || null })
+  }
+
+  const handleCategoryChange = (val: string) => {
+    setCategory(val)
+    save({ category: val || null })
   }
 
   const addSubtask = () => {
@@ -132,6 +147,29 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
 
         {/* Body */}
         <div className="px-5 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
+          {/* Category */}
+          <div>
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
+                dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
+                dark:text-slate-300 outline-none focus:border-slate-400 
+                dark:focus:border-slate-500 transition-colors appearance-none
+                bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] 
+                bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+            >
+              {CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Due date + time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
