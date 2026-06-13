@@ -150,7 +150,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         ref={popupRef}
         className="absolute bg-white dark:bg-slate-900 rounded-2xl shadow-xl
           border border-slate-200 dark:border-slate-700 min-w-[280px] overflow-hidden
-          animate-[slideUp_0.3s_ease] select-none"
+          animate-[slideUp_0.3s_ease] motion-reduce:animate-none select-none"
         style={{
           right: pos.x ? undefined : '24px',
           bottom: pos.y ? undefined : '100px',

@@ -46,7 +46,7 @@ export default function CompletedSection({ userId, context, onTaskClick }: Props
         className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500
           hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium"
       >
-        <span className={`transition-transform ${show ? 'rotate-90' : ''}`}>▸</span>
+        <span className={`transition-transform motion-reduce:transition-none ${show ? 'rotate-90' : ''}`}>▸</span>
         Completed
         {tasks.length > 0 && (
           <span className="text-xs text-slate-300 dark:text-slate-600">({tasks.length})</span>

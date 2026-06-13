@@ -106,7 +106,7 @@ export default function TaskDetail({ task, onUpdate, onClose }: Props) {
         bg-black/50 backdrop-blur-sm p-4"
     >
       <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
-        border border-slate-200 dark:border-slate-700 overflow-hidden animate-in">
+        border border-slate-200 dark:border-slate-700 overflow-hidden animate-in motion-reduce:animate-none">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
           <input

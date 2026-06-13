@@ -251,7 +251,7 @@ export default function App() {
       <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-[#121212] px-3 sm:px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-4xl">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse">
+            <div key={i} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 min-h-[220px] animate-pulse motion-reduce:animate-none">
               <div className="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
               <div className="space-y-2">
                 <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
