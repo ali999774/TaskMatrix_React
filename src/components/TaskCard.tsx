@@ -1,5 +1,7 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
+import type { CategoryDef } from '../lib/categories'
+import { getCategoryDef, CATEGORY_BORDER, CATEGORY_BADGE } from '../lib/categories'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
 
@@ -23,6 +25,7 @@ interface Props {
   onDelete: (id: string) => void
   onClick: (task: Task) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
+  categories?: CategoryDef[]
 }
 
 const STATUS_ICONS: Record<string, string> = {
@@ -42,7 +45,7 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
   return { text: due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), urgent: false }
 }
 
-export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove }: Props) {
+export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, categories = [] }: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
@@ -116,6 +119,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   }
 
   const dueInfo = task.due_date ? dueLabel(task.due_date) : null
+  const catDef = getCategoryDef(categories, task.category)
 
   return (
     <div
@@ -133,10 +137,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         select-none [-webkit-touch-callout:none]
         hover:border-slate-400 dark:hover:border-slate-500 group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
-        ${task.category === 'clinic' ? 'border-l-4 border-l-red-400' : 
-          task.category === 'practice-launch' ? 'border-l-4 border-l-amber-400' :
-          task.category === 'dev' ? 'border-l-4 border-l-blue-400' :
-          task.category === 'personal' ? 'border-l-4 border-l-emerald-400' : ''}`}
+        ${catDef ? `border-l-4 ${CATEGORY_BORDER[catDef.color] || ''}` : ''}`}
     >
       <div className="flex items-start gap-2">
         <button
@@ -158,12 +159,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               {task.category && (
                 <span className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
-                  ${task.category === 'clinic' ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' :
-                    task.category === 'practice-launch' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400' :
-                    task.category === 'dev' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400' :
-                    'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'}`}
+                  ${catDef ? CATEGORY_BADGE[catDef.color] || '' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
                 >
-                  {task.category === 'practice-launch' ? 'Launch' : task.category.charAt(0).toUpperCase() + task.category.slice(1)}
+                  {catDef ? `${catDef.icon} ${catDef.display}` : task.category}
                 </span>
               )}
               {dueInfo && (

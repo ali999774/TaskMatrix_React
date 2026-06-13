@@ -6,6 +6,7 @@ import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
+import { useUserSettings } from './hooks/useUserSettings'
 import QuadrantPanel from './components/QuadrantPanel'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
@@ -14,10 +15,12 @@ import PomodoroPopup from './components/PomodoroPopup'
 import TodayStrip from './components/TodayStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
+import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported } from './lib/speech'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
+
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   constructor(props: { children: React.ReactNode }) {
@@ -167,12 +170,14 @@ export default function App() {
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
+  const { categories, updateCategories } = useUserSettings(userId)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
@@ -201,7 +206,7 @@ export default function App() {
   }, [context])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
-  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro)
+  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
   useEffect(() => {
     document.body.style.overflow = hasModal ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -382,6 +387,14 @@ export default function App() {
                 </span>
               )}
               <button
+                onClick={() => setShowSettings(true)}
+                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                title="Settings"
+                aria-label="Settings"
+              >
+                ⚙️
+              </button>
+              <button
                 onClick={() => window.location.reload()}
                 className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
                 title="Refresh"
@@ -413,17 +426,28 @@ export default function App() {
       {/* Context switcher */}
       <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-[#121212]/60">
         <div className="flex gap-1.5 overflow-x-auto">
-          {['all', 'clinic', 'practice-launch', 'dev', 'personal'].map((ctx) => (
+          <button
+            key="all"
+            onClick={() => setContext('all')}
+            className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
+              ${context === 'all'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
             <button
-              key={ctx}
-              onClick={() => setContext(ctx)}
+              key={cat.label}
+              onClick={() => setContext(cat.label)}
               className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
-                ${context === ctx
+                ${context === cat.label
                   ? 'bg-blue-600 dark:bg-blue-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
             >
-              {ctx === 'all' ? 'All' : ctx === 'practice-launch' ? '🏗 Launch' : ctx === 'clinic' ? '🏥 Clinic' : ctx === 'dev' ? '💻 Dev' : '👤 Personal'}
+              {cat.icon} {cat.display}
             </button>
           ))}
         </div>
@@ -450,6 +474,7 @@ export default function App() {
                   onDelete={handleDeleteTask}
                   onMove={handleMove}
                   onTaskClick={setSelectedTask}
+                  categories={categories}
                 />
               ))}
             </div>
@@ -482,6 +507,7 @@ export default function App() {
           task={selectedTask}
           onUpdate={updateTask}
           onClose={() => setSelectedTask(null)}
+          categories={categories}
         />
       )}
 
@@ -507,6 +533,14 @@ export default function App() {
       )}
 
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
+
+      {showSettings && (
+        <SettingsModal
+          categories={categories}
+          onSave={updateCategories}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       {/* Undo snackbar — sits above the bottom nav */}
       {undoTask && (

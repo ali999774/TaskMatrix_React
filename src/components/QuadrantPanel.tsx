@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Quadrant, Task } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import TaskCard from './TaskCard'
+import type { CategoryDef } from '../lib/categories'
 
 // HTML5 drag-and-drop doesn't exist on iOS touch — the empty-state hint
 // must describe the interaction that actually works there (long-press menu).
@@ -15,6 +16,7 @@ interface Props {
   onDelete: (id: string) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
   onTaskClick: (task: Task) => void
+  categories?: CategoryDef[]
 }
 
 const QUADRANT_BG: Record<Quadrant, string> = {
@@ -31,7 +33,7 @@ const QUADRANT_HEADER_BG: Record<Quadrant, string> = {
   4: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
 }
 
-export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onMove, onTaskClick }: Props) {
+export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelete, onMove, onTaskClick, categories = [] }: Props) {
   const [dragOver, setDragOver] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem(`tm-q-${quadrant}`) === 'true'
@@ -107,6 +109,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
               onDelete={onDelete}
               onClick={onTaskClick}
               onMove={onMove}
+              categories={categories}
             />
           ))}
           {tasks.length === 0 && (
