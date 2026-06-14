@@ -135,13 +135,24 @@ export default function App() {
   }, [])
 
   // Handle Capacitor deep link — Google OAuth redirects to taskmatrix://auth/callback
+  // Also handles Home Screen Quick Actions via taskmatrix://quick-action/*
+  const pendingQuickAction = useRef<string | null>(null)
+
   useEffect(() => {
     // Use a guard ref to prevent double-processing under React StrictMode
     // (mount → unmount → remount registers two listeners before cleanup resolves)
     let active = true
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
       if (!active) return
-      active = false // prevent re-entry from duplicate listener
+
+      // Quick actions: taskmatrix://quick-action/new-task | new-note
+      if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
+        const action = callbackUrl.replace('taskmatrix://quick-action/', '')
+        pendingQuickAction.current = action
+        return
+      }
+
+      active = false // prevent re-entry from duplicate listener (OAuth only)
       await Browser.close()
       // Extract tokens from URL hash (Google OAuth PKCE flow)
       const hash = callbackUrl.split('#')[1]
@@ -309,6 +320,20 @@ export default function App() {
     const note = await addNote('')
     if (note) setEditingNote(note)
   }
+
+  // Process Home Screen Quick Actions once authenticated
+  useEffect(() => {
+    const action = pendingQuickAction.current
+    if (!userId || !action) return
+    pendingQuickAction.current = null
+    if (action === 'new-task') {
+      // Focus the quick-add input
+      const input = document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')
+      input?.focus()
+    } else if (action === 'new-note') {
+      handleNewBlankNote()
+    }
+  }, [userId])
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
