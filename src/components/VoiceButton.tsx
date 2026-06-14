@@ -5,13 +5,12 @@ interface Props {
   onStatus?: (status: string) => void
   className?: string
   icon?: string
-  autoStart?: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionLike = any
 
-export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤', autoStart = false }: Props) {
+export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤' }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
@@ -85,19 +84,6 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onStatus is a stable prop; including it would recreate SpeechRecognition on every render
   }, []) // create once on mount
-
-  // Auto-start from quick action — fires once when autoStart transitions to true
-  useEffect(() => {
-    if (autoStart && !unsupported && recognitionRef.current && !listening) {
-      try {
-        recognitionRef.current.start()
-        setListening(true)
-        onStatus?.('listening')
-      } catch {
-        setUnsupported(true)
-      }
-    }
-  }, [autoStart, unsupported, listening, onStatus])
 
   const toggle = () => {
     const rec = recognitionRef.current

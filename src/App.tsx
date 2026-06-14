@@ -339,12 +339,21 @@ export default function App() {
     }
   }, [userId])
 
-  // Reset voiceTrigger after it's been consumed
+  // Process voice quick actions via DOM click on the right mic button
   useEffect(() => {
-    if (voiceTrigger) {
-      const t = setTimeout(() => setVoiceTrigger(null), 500)
-      return () => clearTimeout(t)
-    }
+    if (!voiceTrigger) return
+    const delay = setTimeout(() => {
+      // Task voice: click the header mic (🎤) — first VoiceButton in DOM
+      // Note voice: click the bottom nav mic (🎙️) — has aria-label with 'voice input'
+      const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
+      if (voiceTrigger === 'task' && buttons.length > 0) {
+        buttons[0].click() // first VoiceButton = header
+      } else if (voiceTrigger === 'note' && buttons.length > 1) {
+        buttons[buttons.length - 1].click() // last VoiceButton = bottom nav
+      }
+      setVoiceTrigger(null)
+    }, 300)
+    return () => clearTimeout(delay)
   }, [voiceTrigger])
 
   const handleVoiceNote = async (transcript: string) => {
@@ -375,7 +384,7 @@ export default function App() {
             {/* Quick-add input */}
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={setQuickAdd} autoStart={voiceTrigger === 'task'} />
+                <VoiceButton onTranscript={setQuickAdd} />
                 <input
                   type="text"
                   value={quickAdd}
@@ -610,7 +619,6 @@ export default function App() {
                 onStatus={setVoiceStatus}
                 icon="🎙️"
                 className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                autoStart={voiceTrigger === 'note'}
               />
               <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">
                 {voiceStatus || 'Voice'}
