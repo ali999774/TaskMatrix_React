@@ -178,6 +178,8 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  // @ts-expect-error unused until quick-action wiring is added back
+  const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
