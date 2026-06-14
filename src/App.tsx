@@ -135,32 +135,13 @@ export default function App() {
   }, [])
 
   // Handle Capacitor deep link — Google OAuth redirects to taskmatrix://auth/callback
-  // Quick actions fire via setQuickAction below, processed after auth in the voiceTrigger effect
   useEffect(() => {
     // Use a guard ref to prevent double-processing under React StrictMode
     // (mount → unmount → remount registers two listeners before cleanup resolves)
     let active = true
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
       if (!active) return
-
-      // Quick actions: taskmatrix://quick-action/*
-      if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
-        const action = callbackUrl.replace('taskmatrix://quick-action/', '')
-        // 'new-task' → focus input; 'new-note' → blank note; 'voice-*' → mic click
-        if (action === 'new-task') {
-          setTimeout(() => {
-            document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')?.focus()
-          }, 500)
-        } else if (action === 'new-note') {
-          // handled after auth via setQuickAction flag below
-          setQuickAction('new-note')
-        } else if (action === 'voice-task' || action === 'voice-note') {
-          setQuickAction(action)
-        }
-        return
-      }
-
-      active = false // prevent re-entry from duplicate listener (OAuth only)
+      active = false // prevent re-entry from duplicate listener
       await Browser.close()
       // Extract tokens from URL hash (Google OAuth PKCE flow)
       const hash = callbackUrl.split('#')[1]
@@ -197,7 +178,6 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
@@ -329,26 +309,6 @@ export default function App() {
     const note = await addNote('')
     if (note) setEditingNote(note)
   }
-
-  // Process Home Screen Quick Actions once authenticated
-  useEffect(() => {
-    if (!userId || !quickAction) return
-    const action = quickAction
-    setQuickAction(null)
-
-    if (action === 'new-note') {
-      handleNewBlankNote()
-    } else if (action === 'voice-task' || action === 'voice-note') {
-      setTimeout(() => {
-        const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
-        if (action === 'voice-task' && buttons.length > 0) {
-          buttons[0].click() // first VoiceButton = header mic
-        } else if (action === 'voice-note' && buttons.length > 1) {
-          buttons[buttons.length - 1].click() // last VoiceButton = bottom nav mic
-        }
-      }, 300)
-    }
-  }, [userId, quickAction])
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
