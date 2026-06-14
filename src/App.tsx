@@ -215,6 +215,18 @@ export default function App() {
     localStorage.setItem('tm-context', context)
   }, [context])
 
+  // Process Home Screen Quick Actions once authenticated
+  useEffect(() => {
+    if (!userId || !quickAction) return
+    const action = quickAction
+    setQuickAction(null)
+    if (action === 'new-task') {
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')?.focus()
+      }, 500)
+    }
+  }, [userId, quickAction])
+
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
   useEffect(() => {
