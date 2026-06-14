@@ -141,6 +141,14 @@ export default function App() {
     let active = true
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
       if (!active) return
+
+      // Quick actions: taskmatrix://quick-action/*
+      if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
+        const action = callbackUrl.replace('taskmatrix://quick-action/', '')
+        setQuickAction(action)
+        return
+      }
+
       active = false // prevent re-entry from duplicate listener
       await Browser.close()
       // Extract tokens from URL hash (Google OAuth PKCE flow)
