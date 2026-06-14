@@ -145,14 +145,17 @@ export default function App() {
       // Quick actions: taskmatrix://quick-action/*
       if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
         const action = callbackUrl.replace('taskmatrix://quick-action/', '')
-        // Delay to let React finish rendering after auth
-        setTimeout(() => {
-          if (action === 'voice-task' || action === 'voice-note') {
+        if (action === 'new-note') {
+          // Flag read by a useEffect below after auth completes
+          ;(window as any).__tmQuickAction = 'new-note'
+        } else {
+          // Voice actions: click mic buttons after DOM settles
+          setTimeout(() => {
             const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
             if (action === 'voice-task' && buttons.length > 0) buttons[0].click()
             else if (action === 'voice-note' && buttons.length > 1) buttons[buttons.length - 1].click()
-          }
-        }, 800)
+          }, 800)
+        }
         return
       }
 
@@ -219,6 +222,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('tm-context', context)
   }, [context])
+
+  // Process new-note quick action (set via window.__tmQuickAction in appUrlOpen)
+  useEffect(() => {
+    if (!userId) return
+    const t = setTimeout(() => {
+      const flag = (window as any).__tmQuickAction
+      if (flag === 'new-note') {
+        (window as any).__tmQuickAction = null
+        handleNewBlankNote()
+      }
+    }, 600)
+    return () => clearTimeout(t)
+  }, [userId])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
