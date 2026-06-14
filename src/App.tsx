@@ -144,7 +144,15 @@ export default function App() {
 
       // Quick actions: taskmatrix://quick-action/*
       if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
-        setQuickAction(callbackUrl.replace('taskmatrix://quick-action/', ''))
+        const action = callbackUrl.replace('taskmatrix://quick-action/', '')
+        // Delay to let React finish rendering after auth
+        setTimeout(() => {
+          if (action === 'voice-task' || action === 'voice-note') {
+            const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
+            if (action === 'voice-task' && buttons.length > 0) buttons[0].click()
+            else if (action === 'voice-note' && buttons.length > 1) buttons[buttons.length - 1].click()
+          }
+        }, 800)
         return
       }
 
@@ -185,7 +193,6 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
@@ -212,25 +219,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('tm-context', context)
   }, [context])
-
-  // Process Home Screen Quick Actions once authenticated
-  useEffect(() => {
-    if (!userId || !quickAction) return
-    const action = quickAction
-    setQuickAction(null)
-    if (action === 'new-note') {
-      handleNewBlankNote()
-    } else if (action === 'voice-task' || action === 'voice-note') {
-      setTimeout(() => {
-        const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
-        if (action === 'voice-task' && buttons.length > 0) {
-          buttons[0].click()
-        } else if (action === 'voice-note' && buttons.length > 1) {
-          buttons[buttons.length - 1].click()
-        }
-      }, 300)
-    }
-  }, [userId, quickAction])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
