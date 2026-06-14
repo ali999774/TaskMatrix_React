@@ -144,8 +144,7 @@ export default function App() {
 
       // Quick actions: taskmatrix://quick-action/*
       if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
-        const action = callbackUrl.replace('taskmatrix://quick-action/', '')
-        setQuickAction(action)
+        setQuickAction(callbackUrl.replace('taskmatrix://quick-action/', ''))
         return
       }
 
@@ -219,10 +218,17 @@ export default function App() {
     if (!userId || !quickAction) return
     const action = quickAction
     setQuickAction(null)
-    if (action === 'new-task') {
+    if (action === 'new-note') {
+      handleNewBlankNote()
+    } else if (action === 'voice-task' || action === 'voice-note') {
       setTimeout(() => {
-        document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')?.focus()
-      }, 500)
+        const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
+        if (action === 'voice-task' && buttons.length > 0) {
+          buttons[0].click()
+        } else if (action === 'voice-note' && buttons.length > 1) {
+          buttons[buttons.length - 1].click()
+        }
+      }, 300)
     }
   }, [userId, quickAction])
 

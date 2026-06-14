@@ -34,7 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             icon: UIApplicationShortcutIcon(systemImageName: "waveform.circle"),
             userInfo: nil
         )
-        application.shortcutItems = [newTask, voiceTask, newNote, voiceNote]
+        application.shortcutItems = [voiceTask, newNote, voiceNote]
         return true
     }
 
