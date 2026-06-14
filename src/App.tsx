@@ -189,6 +189,7 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [voiceTrigger, setVoiceTrigger] = useState<string | null>(null)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
@@ -327,13 +328,24 @@ export default function App() {
     if (!userId || !action) return
     pendingQuickAction.current = null
     if (action === 'new-task') {
-      // Focus the quick-add input
       const input = document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')
       input?.focus()
     } else if (action === 'new-note') {
       handleNewBlankNote()
+    } else if (action === 'voice-task') {
+      setVoiceTrigger('task')
+    } else if (action === 'voice-note') {
+      setVoiceTrigger('note')
     }
   }, [userId])
+
+  // Reset voiceTrigger after it's been consumed
+  useEffect(() => {
+    if (voiceTrigger) {
+      const t = setTimeout(() => setVoiceTrigger(null), 500)
+      return () => clearTimeout(t)
+    }
+  }, [voiceTrigger])
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
@@ -363,7 +375,7 @@ export default function App() {
             {/* Quick-add input */}
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={setQuickAdd} />
+                <VoiceButton onTranscript={setQuickAdd} autoStart={voiceTrigger === 'task'} />
                 <input
                   type="text"
                   value={quickAdd}
@@ -598,6 +610,7 @@ export default function App() {
                 onStatus={setVoiceStatus}
                 icon="🎙️"
                 className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                autoStart={voiceTrigger === 'note'}
               />
               <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">
                 {voiceStatus || 'Voice'}

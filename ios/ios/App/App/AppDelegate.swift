@@ -20,7 +20,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             icon: UIApplicationShortcutIcon(systemImageName: "note.text.badge.plus"),
             userInfo: nil
         )
-        application.shortcutItems = [newTask, newNote]
+        let voiceTask = UIApplicationShortcutItem(
+            type: "com.milestonepediatrics.taskmatrix.voice-task",
+            localizedTitle: "Voice Task",
+            localizedSubtitle: nil,
+            icon: UIApplicationShortcutIcon(systemImageName: "mic.circle"),
+            userInfo: nil
+        )
+        let voiceNote = UIApplicationShortcutItem(
+            type: "com.milestonepediatrics.taskmatrix.voice-note",
+            localizedTitle: "Voice Note",
+            localizedSubtitle: nil,
+            icon: UIApplicationShortcutIcon(systemImageName: "waveform.circle"),
+            userInfo: nil
+        )
+        application.shortcutItems = [newTask, voiceTask, newNote, voiceNote]
         return true
     }
 
