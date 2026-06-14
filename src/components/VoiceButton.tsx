@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { isNativeSpeech } from '../lib/speech'
 
 interface Props {
   onTranscript: (text: string) => void
@@ -14,52 +15,128 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  // Keep callback in ref to avoid stale closure issues
+  const listenerRef = useRef<any>(null) // native plugin listener handle
+  const partialRef = useRef('') // accumulated partial results for fallback
   const onTranscriptRef = useRef(onTranscript)
-  // eslint-disable-next-line react-hooks/refs -- canonical stale-closure fix: keep callback fresh in ref
   onTranscriptRef.current = onTranscript
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+  // --- Native (iOS) path using @capgo/capacitor-speech-recognition ---
+  const setupNative = useCallback(async () => {
+    try {
+      const { SpeechRecognition } = await import('@capgo/capacitor-speech-recognition')
+
+      // Request permissions
+      const perm = await SpeechRecognition.requestPermissions()
+      if (perm.speechRecognition !== 'granted') {
+        setUnsupported(true)
+        onStatus?.('mic denied')
+        return
+      }
+
+      const { available } = await SpeechRecognition.available()
+      if (!available) {
+        setUnsupported(true)
+        return
+      }
+
+      // Store a start/stop controller in the ref
+      recognitionRef.current = {
+        start: async () => {
+          // Remove any stale listener
+          if (listenerRef.current) {
+            await listenerRef.current.remove()
+            listenerRef.current = null
+          }
+
+          // Register partial results listener
+          listenerRef.current = await SpeechRecognition.addListener('partialResults', (event: any) => {
+            const match = event.matches?.[0]
+            if (match) {
+              partialRef.current = match
+              onStatus?.('hearing: ' + match)
+            }
+          })
+
+          await SpeechRecognition.start({
+            language: 'en-US',
+            maxResults: 1,
+            partialResults: true,
+          })
+        },
+        stop: async () => {
+          try {
+            await SpeechRecognition.stop()
+          } catch { /* ignore */ }
+          // Get final result
+          try {
+            const result = await SpeechRecognition.getLastPartialResult()
+            const finalText = result?.matches?.[0] || partialRef.current
+            partialRef.current = ''
+            if (finalText?.trim()) {
+              onTranscriptRef.current(finalText.trim())
+              onStatus?.('saved')
+            } else {
+              onStatus?.('no speech')
+            }
+          } catch {
+            const fallback = partialRef.current
+            partialRef.current = ''
+            if (fallback?.trim()) {
+              onTranscriptRef.current(fallback.trim())
+              onStatus?.('saved')
+            } else {
+              onStatus?.('no speech')
+            }
+          }
+          // Clean up listener
+          if (listenerRef.current) {
+            try { await listenerRef.current.remove() } catch { /* ignore */ }
+            listenerRef.current = null
+          }
+        },
+        abort: async () => {
+          try { await SpeechRecognition.stop() } catch { /* ignore */ }
+          if (listenerRef.current) {
+            try { await listenerRef.current.remove() } catch { /* ignore */ }
+            listenerRef.current = null
+          }
+        },
+      }
+    } catch (err) {
+      console.warn('[Voice] Native speech setup failed:', err)
+      setUnsupported(true)
+    }
+  }, [onStatus])
+
+  // --- Web path using Web Speech API ---
+  const setupWeb = useCallback(() => {
+    const w = window as any
+    const SpeechRecognitionAPI = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time capability detection on mount
       setUnsupported(true)
       return
     }
 
     const rec = new SpeechRecognitionAPI()
     rec.continuous = false
-    rec.interimResults = true // get interim for faster feedback
+    rec.interimResults = true
     rec.lang = 'en-US'
 
-    let finalTranscript = ''
+    let accumulated = ''
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i]
-        if (result.isFinal) {
-          finalTranscript += result[0]?.transcript || ''
-        } else {
-          interim += result[0]?.transcript || ''
-        }
+        accumulated += event.results[i][0]?.transcript || ''
       }
-      
-      if (finalTranscript.trim()) {
-        onTranscriptRef.current(finalTranscript.trim())
-        onStatus?.('saved')
-        setListening(false)
-        finalTranscript = ''
-      } else if (interim) {
-        onStatus?.('hearing: ' + interim)
+      if (accumulated) {
+        onStatus?.('hearing: ' + accumulated)
       }
     }
 
     rec.onerror = (event: { error: string }) => {
       console.warn('[Voice] Recognition error:', event.error)
       setListening(false)
-      finalTranscript = ''
+      accumulated = ''
       if (event.error === 'not-allowed') {
         setUnsupported(true)
         onStatus?.('mic denied')
@@ -72,29 +149,49 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
     rec.onend = () => {
       setListening(false)
-      if (!finalTranscript) {
-        onStatus?.('')
+      if (accumulated.trim()) {
+        onTranscriptRef.current(accumulated.trim())
+        onStatus?.('saved')
+      } else {
+        onStatus?.('no speech')
       }
+      accumulated = ''
     }
 
     recognitionRef.current = rec
+  }, [onStatus])
+
+  useEffect(() => {
+    if (isNativeSpeech()) {
+      setupNative()
+    } else {
+      setupWeb()
+    }
 
     return () => {
-      try { rec.abort() } catch { /* ignore */ }
+      // Cleanup
+      const rec = recognitionRef.current
+      if (rec) {
+        try { rec.abort() } catch { /* ignore */ }
+      }
+      if (listenerRef.current) {
+        try { listenerRef.current.remove() } catch { /* ignore */ }
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onStatus is a stable prop; including it would recreate SpeechRecognition on every render
-  }, []) // create once on mount
+  }, [setupNative, setupWeb])
 
-  const toggle = () => {
+  const toggle = async () => {
     const rec = recognitionRef.current
     if (!rec) return
 
     if (listening) {
-      rec.stop()
+      try {
+        await rec.stop()
+      } catch { /* ignore */ }
       setListening(false)
     } else {
       try {
-        rec.start()
+        await rec.start()
         setListening(true)
         onStatus?.('listening')
       } catch {

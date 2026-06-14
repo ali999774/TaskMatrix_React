@@ -83,9 +83,15 @@ export default function App() {
       if (session?.user) {
         setUserId(session.user.id)
         setAuthLoading(false)
-        return
+      } else {
+        setAuthLoading(false)
       }
-      setAuthLoading(false)
+      // Cold-start quick action: URL may have landed before JS was ready
+      const launch = await CapacitorApp.getLaunchUrl()
+      if (launch?.url?.startsWith('taskmatrix://quick-action/')) {
+        const action = launch.url.replace('taskmatrix://quick-action/', '')
+        if (action === 'new-note') setQuickAction('new-note')
+      }
     }).catch(err => {
       console.error('[App] getSession failed', err)
       setAuthLoading(false)
@@ -142,19 +148,11 @@ export default function App() {
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
       if (!active) return
 
-      // Quick actions: taskmatrix://quick-action/*
+      // Quick actions: taskmatrix://quick-action/new-note
       if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
         const action = callbackUrl.replace('taskmatrix://quick-action/', '')
         if (action === 'new-note') {
-          // Flag read by a useEffect below after auth completes
-          ;(window as any).__tmQuickAction = 'new-note'
-        } else {
-          // Voice actions: click mic buttons after DOM settles
-          setTimeout(() => {
-            const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
-            if (action === 'voice-task' && buttons.length > 0) buttons[0].click()
-            else if (action === 'voice-note' && buttons.length > 1) buttons[buttons.length - 1].click()
-          }, 800)
+          setQuickAction('new-note')
         }
         return
       }
@@ -197,6 +195,8 @@ export default function App() {
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
+  const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
+  const [quickAction, setQuickAction] = useState<string | null>(null)
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
@@ -223,18 +223,12 @@ export default function App() {
     localStorage.setItem('tm-context', context)
   }, [context])
 
-  // Process new-note quick action (set via window.__tmQuickAction in appUrlOpen)
+  // Process new-note quick action
   useEffect(() => {
-    if (!userId) return
-    const t = setTimeout(() => {
-      const flag = (window as any).__tmQuickAction
-      if (flag === 'new-note') {
-        (window as any).__tmQuickAction = null
-        handleNewBlankNote()
-      }
-    }, 600)
-    return () => clearTimeout(t)
-  }, [userId])
+    if (!userId || quickAction !== 'new-note') return
+    setQuickAction(null)
+    handleNewBlankNote()
+  }, [userId, quickAction])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
@@ -344,13 +338,19 @@ export default function App() {
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceStatus('saving')
-    const note = await addNote(transcript.trim())
-    if (note) {
-      setEditingNote(note)
-      setTimeout(() => setEditingNote(null), 2000)
-      setVoiceStatus('saved!')
-      setTimeout(() => setVoiceStatus(''), 2500)
-    } else {
+    try {
+      const note = await addNote(transcript.trim())
+      if (note) {
+        setEditingNote(note)
+        setTimeout(() => setEditingNote(null), 2000)
+        setVoiceStatus('saved!')
+        setTimeout(() => setVoiceStatus(''), 2500)
+      } else {
+        setVoiceStatus('save failed')
+        setTimeout(() => setVoiceStatus(''), 2000)
+      }
+    } catch (err) {
+      console.error('[Voice] Failed to save note:', err)
       setVoiceStatus('save failed')
       setTimeout(() => setVoiceStatus(''), 2000)
     }
@@ -369,13 +369,13 @@ export default function App() {
             {/* Quick-add input */}
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={setQuickAdd} />
+                <VoiceButton onTranscript={setQuickAdd} onStatus={setVoiceTaskStatus} />
                 <input
                   type="text"
                   value={quickAdd}
                   onChange={(e) => setQuickAdd(e.target.value)}
                   onKeyDown={handleQuickAddKeyDown}
-                  placeholder="Quick add task..."
+                  placeholder={voiceTaskStatus || 'Quick add task...'}
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
                     dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.875rem] text-slate-700 
                     dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 

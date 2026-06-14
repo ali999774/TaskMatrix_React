@@ -1,11 +1,19 @@
-// Web Speech API capability check. Lives outside VoiceButton.tsx so
-// component files only export components (react-refresh requirement),
-// and so parents can hide surrounding UI (labels, nav slots) instead of
-// rendering a labeled hole when VoiceButton returns null.
-// Note: the API is often unavailable inside WKWebView (Capacitor iOS).
+import { Capacitor } from '@capacitor/core'
+
+// Check if any speech recognition is available.
+// On iOS: uses native SFSpeechRecognizer via @capgo/capacitor-speech-recognition.
+// On web: uses Web Speech API.
 export function speechSupported(): boolean {
   if (typeof window === 'undefined') return false
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Native platforms: check Capacitor (plugin available if installed)
+  if (Capacitor.isNativePlatform()) return true
+  // Web: check Web Speech API
   const w = window as any
   return !!(w.SpeechRecognition || w.webkitSpeechRecognition)
+}
+
+// Returns true if the native Capacitor speech plugin is available
+// (import succeeds — plugin is installed and synced).
+export function isNativeSpeech(): boolean {
+  return Capacitor.isNativePlatform()
 }
