@@ -135,9 +135,7 @@ export default function App() {
   }, [])
 
   // Handle Capacitor deep link — Google OAuth redirects to taskmatrix://auth/callback
-  // Also handles Home Screen Quick Actions via taskmatrix://quick-action/*
-  const pendingQuickAction = useRef<string | null>(null)
-
+  // Quick actions fire via setQuickAction below, processed after auth in the voiceTrigger effect
   useEffect(() => {
     // Use a guard ref to prevent double-processing under React StrictMode
     // (mount → unmount → remount registers two listeners before cleanup resolves)
@@ -145,10 +143,20 @@ export default function App() {
     const handlePromise = CapacitorApp.addListener('appUrlOpen', async ({ url: callbackUrl }) => {
       if (!active) return
 
-      // Quick actions: taskmatrix://quick-action/new-task | new-note
+      // Quick actions: taskmatrix://quick-action/*
       if (callbackUrl.startsWith('taskmatrix://quick-action/')) {
         const action = callbackUrl.replace('taskmatrix://quick-action/', '')
-        pendingQuickAction.current = action
+        // 'new-task' → focus input; 'new-note' → blank note; 'voice-*' → mic click
+        if (action === 'new-task') {
+          setTimeout(() => {
+            document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')?.focus()
+          }, 500)
+        } else if (action === 'new-note') {
+          // handled after auth via setQuickAction flag below
+          setQuickAction('new-note')
+        } else if (action === 'voice-task' || action === 'voice-note') {
+          setQuickAction(action)
+        }
         return
       }
 
@@ -189,7 +197,7 @@ export default function App() {
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [voiceTrigger, setVoiceTrigger] = useState<string | null>(null)
+  const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceStatus, setVoiceStatus] = useState('')
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
@@ -324,37 +332,23 @@ export default function App() {
 
   // Process Home Screen Quick Actions once authenticated
   useEffect(() => {
-    const action = pendingQuickAction.current
-    if (!userId || !action) return
-    pendingQuickAction.current = null
-    if (action === 'new-task') {
-      const input = document.querySelector<HTMLInputElement>('input[placeholder="Quick add task..."]')
-      input?.focus()
-    } else if (action === 'new-note') {
-      handleNewBlankNote()
-    } else if (action === 'voice-task') {
-      setVoiceTrigger('task')
-    } else if (action === 'voice-note') {
-      setVoiceTrigger('note')
-    }
-  }, [userId])
+    if (!userId || !quickAction) return
+    const action = quickAction
+    setQuickAction(null)
 
-  // Process voice quick actions via DOM click on the right mic button
-  useEffect(() => {
-    if (!voiceTrigger) return
-    const delay = setTimeout(() => {
-      // Task voice: click the header mic (🎤) — first VoiceButton in DOM
-      // Note voice: click the bottom nav mic (🎙️) — has aria-label with 'voice input'
-      const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
-      if (voiceTrigger === 'task' && buttons.length > 0) {
-        buttons[0].click() // first VoiceButton = header
-      } else if (voiceTrigger === 'note' && buttons.length > 1) {
-        buttons[buttons.length - 1].click() // last VoiceButton = bottom nav
-      }
-      setVoiceTrigger(null)
-    }, 300)
-    return () => clearTimeout(delay)
-  }, [voiceTrigger])
+    if (action === 'new-note') {
+      handleNewBlankNote()
+    } else if (action === 'voice-task' || action === 'voice-note') {
+      setTimeout(() => {
+        const buttons = document.querySelectorAll<HTMLButtonElement>('button[aria-label="Start voice input"]')
+        if (action === 'voice-task' && buttons.length > 0) {
+          buttons[0].click() // first VoiceButton = header mic
+        } else if (action === 'voice-note' && buttons.length > 1) {
+          buttons[buttons.length - 1].click() // last VoiceButton = bottom nav mic
+        }
+      }, 300)
+    }
+  }, [userId, quickAction])
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
