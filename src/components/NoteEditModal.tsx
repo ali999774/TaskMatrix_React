@@ -165,7 +165,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     >
       <div
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl
-          max-sm:rounded-b-none max-sm:max-h-[85vh] overflow-y-auto"
+          max-sm:rounded-b-none max-sm:max-h-[85vh] overflow-y-auto max-sm:pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

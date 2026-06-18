@@ -61,7 +61,7 @@ export default function CompletedSection({ userId, context, onTaskClick }: Props
             </p>
           ) : tasks.length === 0 ? (
             <p className="text-[0.75rem] text-slate-300 dark:text-slate-600 italic py-3 text-center">
-              No completed tasks
+              Nothing finished yet — completed tasks will appear here
             </p>
           ) : (
             tasks.map((task) => (

@@ -149,7 +149,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
             )}
 
             {notes.length === 0 ? (
-              <p className="text-[0.875rem] text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes</p>
+              <p className="text-[0.875rem] text-slate-300 dark:text-slate-600 italic text-center py-4">No pinned notes yet — type above to add one</p>
             ) : (
               <div className="flex flex-col gap-2 max-h-[calc(100vh-14rem)] overflow-y-auto mb-3 scrollbar-hide">
                 {notes.map((note) => (

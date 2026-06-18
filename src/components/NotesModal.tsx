@@ -53,7 +53,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
     >
       <div
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto
-          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh]"
+          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

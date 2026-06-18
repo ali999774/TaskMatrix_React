@@ -114,7 +114,7 @@ export default function QuadrantPanel({ quadrant, tasks, onStatusChange, onDelet
           ))}
           {tasks.length === 0 && (
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6">
-              {dragOver ? 'Drop here' : IS_TOUCH ? 'Long-press a task to move it here' : 'Drag tasks here'}
+              {dragOver ? 'Drop here' : IS_TOUCH ? 'Nothing here yet — long-press any task to move it in' : 'Nothing here yet — drag a task in or add one above'}
             </p>
           )}
         </div>

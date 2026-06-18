@@ -184,7 +184,7 @@ export default function App() {
 
   const offlineQueue = useOfflineQueue(userId, supabase)
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, reload } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const { categories, updateCategories } = useUserSettings(userId)
   const [quickAdd, setQuickAdd] = useState('')
@@ -201,6 +201,46 @@ export default function App() {
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Pull-to-refresh (touch-only; no-ops on desktop where touch events don't fire)
+  const PULL_THRESHOLD = 64
+  const [pullYDisplay, setPullYDisplay] = useState(0)
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false)
+  const pullYRef = useRef(0)
+  const touchStartRef = useRef({ y: 0, active: false })
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY > 0) return
+    touchStartRef.current = { y: e.touches[0].clientY, active: true }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current.active) return
+    if (window.scrollY > 0) { touchStartRef.current.active = false; pullYRef.current = 0; setPullYDisplay(0); return }
+    const dy = e.touches[0].clientY - touchStartRef.current.y
+    if (dy > 0) {
+      const clamped = Math.min(dy * 0.45, PULL_THRESHOLD + 16)
+      pullYRef.current = clamped
+      setPullYDisplay(clamped)
+    } else {
+      touchStartRef.current.active = false
+      pullYRef.current = 0
+      setPullYDisplay(0)
+    }
+  }
+
+  const handleTouchEnd = async () => {
+    if (!touchStartRef.current.active) return
+    touchStartRef.current.active = false
+    const py = pullYRef.current
+    pullYRef.current = 0
+    setPullYDisplay(0)
+    if (py >= PULL_THRESHOLD && !isPullRefreshing) {
+      setIsPullRefreshing(true)
+      await reload()
+      setIsPullRefreshing(false)
+    }
+  }
 
   const handleDeleteTask = (id: string) => {
     const task = tasks.find((t) => t.id === id)
@@ -358,7 +398,12 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-slate-50 dark:bg-[#121212] overflow-x-clip max-w-[100vw]">
+    <div
+      className="min-h-screen bg-slate-50 dark:bg-[#121212] overflow-x-clip max-w-[100vw]"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)' }}>
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
@@ -483,6 +528,17 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      {/* Pull-to-refresh indicator — only visible on touch during a pull gesture */}
+      {(pullYDisplay > 0 || isPullRefreshing) && (
+        <div
+          className="flex items-center justify-center text-[0.8125rem] text-slate-400 dark:text-slate-500 py-2 select-none"
+          style={{ opacity: isPullRefreshing ? 1 : Math.min(pullYDisplay / PULL_THRESHOLD, 1) }}
+          aria-hidden="true"
+        >
+          {isPullRefreshing ? '⟳ Refreshing…' : pullYDisplay >= PULL_THRESHOLD ? '↑ Release to refresh' : '↓ Pull to refresh'}
+        </div>
+      )}
 
       {/* Body: matrix + sticky notes side by side */}
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
