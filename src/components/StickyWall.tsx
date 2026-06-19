@@ -72,7 +72,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     setDropAbove(e.clientY < rect.top + rect.height / 2)
   }
 
-  const handleDragLeave = (_e: React.DragEvent) => {
+  const handleDragLeave = () => {
     dragCounterRef.current--
     if (dragCounterRef.current <= 0) {
       dragCounterRef.current = 0

@@ -100,7 +100,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
     stopTimer()
     setRunning(false)
     setTimeLeft(durations[session] * 60)
-  }, [durations, session, stopTimer])
+  }, [durations, session, stopTimer, haptics])
 
   const adjustDuration = useCallback((type: SessionType, delta: number) => {
     const min = type === 'short' ? 1 : 5

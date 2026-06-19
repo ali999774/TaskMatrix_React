@@ -19,7 +19,7 @@ export function speechSupported(): boolean {
   // Native platforms: check Capacitor (plugin available if installed)
   if (isNativePlatformSafe()) return true
   // Web: check Web Speech API
-  const w = window as any
+  const w = window as Window & { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown }
   return !!(w.SpeechRecognition || w.webkitSpeechRecognition)
 }
 

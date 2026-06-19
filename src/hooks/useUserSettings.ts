@@ -18,7 +18,7 @@ export function useUserSettings(userId: string | null) {
     try {
       const cached = localStorage.getItem(LS_KEY)
       if (cached) return JSON.parse(cached) as CategoryDef[]
-    } catch {}
+    } catch { /* ignore invalid cached JSON */ }
     return DEFAULT_CATEGORIES
   })
   const [loading, setLoading] = useState(true)

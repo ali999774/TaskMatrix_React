@@ -5,6 +5,7 @@ declare module '@capgo/capacitor-speech-recognition' {
     start(options: { language: string; maxResults: number; partialResults: boolean }): Promise<void>
     stop(): Promise<void>
     getLastPartialResult(): Promise<{ matches?: string[] }>
-    addListener(event: string, callback: (data: any) => void): Promise<{ remove: () => Promise<void> }>
+    addListener(event: 'partialResults', callback: (data: { matches: string[] }) => void): Promise<{ remove: () => Promise<void> }>
+    addListener(event: string, callback: (data: Record<string, unknown>) => void): Promise<{ remove: () => Promise<void> }>
   }
 }
