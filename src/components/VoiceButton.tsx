@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { isNativeSpeech } from '../lib/speech'
+import { registerPlugin } from '@capacitor/core'
 
 interface Props {
   onTranscript: (text: string) => void
@@ -20,10 +21,13 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const onTranscriptRef = useRef(onTranscript)
   onTranscriptRef.current = onTranscript
 
-  // --- Native (iOS) path using @capgo/capacitor-speech-recognition ---
+  // --- Native (iOS) path using Capacitor plugin bridge ---
   const setupNative = useCallback(async () => {
     try {
-      const { SpeechRecognition } = await import('@capgo/capacitor-speech-recognition')
+      // Use Capacitor's registerPlugin to access the native speech recognition plugin.
+      // This avoids dynamic import() of @capgo/capacitor-speech-recognition which
+      // Rolldown can't resolve in CI.
+      const SpeechRecognition = registerPlugin('SpeechRecognition') as any
 
       // Request permissions
       const perm = await SpeechRecognition.requestPermissions()
