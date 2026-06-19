@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react'
 import { isNativeSpeech } from '../lib/speech'
 
 interface Props {
@@ -15,28 +15,29 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  const listenerRef = useRef<any>(null) // native plugin listener handle
+  const listenerRef = useRef<{ remove: () => Promise<void> } | null>(null) // native plugin listener handle
   const partialRef = useRef('') // accumulated partial results for fallback
   const onTranscriptRef = useRef(onTranscript)
-  onTranscriptRef.current = onTranscript
+
+  useLayoutEffect(() => {
+    onTranscriptRef.current = onTranscript
+  })
 
   // --- Native (iOS) path using @capgo/capacitor-speech-recognition ---
-  const setupNative = useCallback(async () => {
+  const setupNative = useCallback(async (): Promise<boolean> => {
     try {
       const { SpeechRecognition } = await import('@capgo/capacitor-speech-recognition')
 
       // Request permissions
       const perm = await SpeechRecognition.requestPermissions()
       if (perm.speechRecognition !== 'granted') {
-        setUnsupported(true)
         onStatus?.('mic denied')
-        return
+        return false
       }
 
       const { available } = await SpeechRecognition.available()
       if (!available) {
-        setUnsupported(true)
-        return
+        return false
       }
 
       // Store a start/stop controller in the ref
@@ -49,7 +50,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           }
 
           // Register partial results listener
-          listenerRef.current = await SpeechRecognition.addListener('partialResults', (event: any) => {
+          listenerRef.current = await SpeechRecognition.addListener('partialResults', (event) => {
             const match = event.matches?.[0]
             if (match) {
               partialRef.current = match
@@ -102,19 +103,22 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           }
         },
       }
+      return true
     } catch (err) {
       console.warn('[Voice] Native speech setup failed:', err)
-      setUnsupported(true)
+      return false
     }
   }, [onStatus])
 
   // --- Web path using Web Speech API ---
-  const setupWeb = useCallback(() => {
-    const w = window as any
-    const SpeechRecognitionAPI = w.SpeechRecognition || w.webkitSpeechRecognition
+  const setupWeb = useCallback((): boolean => {
+    const w = window as Window & {
+      SpeechRecognition?: new () => SpeechRecognitionLike
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike
+    }
+    const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
-      setUnsupported(true)
-      return
+      return false
     }
 
     const rec = new SpeechRecognitionAPI()
@@ -159,17 +163,16 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
 
     recognitionRef.current = rec
+    return true
   }, [onStatus])
 
   useEffect(() => {
-    if (isNativeSpeech()) {
-      setupNative()
-    } else {
-      setupWeb()
-    }
+    const init = isNativeSpeech() ? setupNative() : Promise.resolve(setupWeb())
+    init.then(supported => {
+      if (!supported) setUnsupported(true)
+    })
 
     return () => {
-      // Cleanup
       const rec = recognitionRef.current
       if (rec) {
         try { rec.abort() } catch { /* ignore */ }

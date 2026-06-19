@@ -77,6 +77,7 @@ export default function App() {
   const [userId, setUserId] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [quickAction, setQuickAction] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -196,7 +197,6 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
-  const [quickAction, setQuickAction] = useState<string | null>(null)
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
@@ -223,9 +223,15 @@ export default function App() {
     localStorage.setItem('tm-context', context)
   }, [context])
 
+  const handleNewBlankNote = async () => {
+    const note = await addNote('')
+    if (note) setEditingNote(note)
+  }
+
   // Process new-note quick action
   useEffect(() => {
     if (!userId || quickAction !== 'new-note') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting one-shot trigger after consuming it
     setQuickAction(null)
     handleNewBlankNote()
   }, [userId, quickAction])
@@ -328,11 +334,6 @@ export default function App() {
   const handleMove = (taskId: string, toQuadrant: Quadrant) => {
     const defaults = QUADRANT_DEFAULTS[toQuadrant]
     updateTask(taskId, { importance: defaults.importance, urgency: defaults.urgency })
-  }
-
-  const handleNewBlankNote = async () => {
-    const note = await addNote('')
-    if (note) setEditingNote(note)
   }
 
   const handleVoiceNote = async (transcript: string) => {
