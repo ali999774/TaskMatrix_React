@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 
 export interface AISettings {
   enabled: boolean
-  apiKey: string
   provider: 'deepseek' | 'openai'
   model: string
 }
@@ -11,9 +10,8 @@ const LS_KEY = 'tm-ai-settings'
 
 const DEFAULTS: AISettings = {
   enabled: false,
-  apiKey: '',
   provider: 'deepseek',
-  model: 'deepseek-v4-pro',
+  model: 'deepseek-v4-flash',
 }
 
 export function useAISettings() {
@@ -23,7 +21,7 @@ export function useAISettings() {
       if (stored) {
         const parsed = JSON.parse(stored)
         // Migrate old model name
-        if (parsed.model === 'deepseek-chat') parsed.model = 'deepseek-v4-pro'
+        if (parsed.model === 'deepseek-chat') parsed.model = 'deepseek-v4-flash'
         return { ...DEFAULTS, ...parsed }
       }
     } catch { /* ignore corrupt data */ }

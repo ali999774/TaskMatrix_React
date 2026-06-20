@@ -376,11 +376,10 @@ export default function App() {
     setVoiceTaskStatus('saving')
 
     // AI path: parse transcript into structured task
-    if (aiSettings.enabled && aiSettings.apiKey) {
+    if (aiSettings.enabled) {
       setVoiceTaskStatus('parsing...')
       const result = await parseVoiceTranscript(
         transcript,
-        aiSettings.apiKey,
         aiSettings.model,
         getAIBaseUrl()
       )
@@ -412,11 +411,10 @@ export default function App() {
     setVoiceStatus('saving')
 
     // AI path: parse transcript into structured task
-    if (aiSettings.enabled && aiSettings.apiKey) {
+    if (aiSettings.enabled) {
       setVoiceStatus('parsing...')
       const result = await parseVoiceTranscript(
         transcript,
-        aiSettings.apiKey,
         aiSettings.model,
         getAIBaseUrl()
       )

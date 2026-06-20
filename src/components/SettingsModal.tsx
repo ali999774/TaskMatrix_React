@@ -121,8 +121,8 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               🤖 AI Task Parsing
             </label>
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
-              When enabled, voice transcripts are parsed by an LLM to create structured
-              tasks with dates, categories, and priority. Your API key is stored locally.
+              When enabled, voice transcripts are parsed by AI to create structured
+              tasks with dates, categories, and priority.
             </p>
 
             <div className="space-y-3">
@@ -148,17 +148,6 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                       <option value="deepseek">DeepSeek</option>
                       <option value="openai">OpenAI</option>
                     </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">API Key</label>
-                    <input
-                      type="password"
-                      value={aiSettings.apiKey}
-                      onChange={(e) => onAISettingsChange({ apiKey: e.target.value })}
-                      placeholder="sk-..."
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors font-mono"
-                    />
                   </div>
 
                   <div>
