@@ -187,7 +187,7 @@ export default function App() {
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
-  const { categories, updateCategories } = useUserSettings(userId)
+  const { categories, updateCategories } = useUserSettings(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)

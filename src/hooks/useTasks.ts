@@ -5,7 +5,7 @@ import type { Task } from '../types'
 const DEBOUNCE_MS = 400
 
 interface OfflineQueue {
-  enqueue: (table: 'tasks' | 'sticky_notes', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>) => Promise<void>
+  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
   online: boolean
 }
 

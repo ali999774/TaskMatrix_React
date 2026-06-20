@@ -4,9 +4,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 interface QueuedMutation {
   id?: number
-  table: 'tasks' | 'sticky_notes'
+  table: 'tasks' | 'sticky_notes' | 'user_settings'
   operation: 'create' | 'update' | 'delete'
   recordId: string
+  /** Column to use as upsert conflict key (defaults to 'id'). */
+  conflictKey?: string
   payload?: Record<string, unknown>
   timestamp: number
 }
@@ -55,10 +57,11 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
 
   // Enqueue a mutation (capped at 500, drops oldest if exceeded)
   const enqueue = useCallback(async (
-    table: 'tasks' | 'sticky_notes',
+    table: 'tasks' | 'sticky_notes' | 'user_settings',
     operation: 'create' | 'update' | 'delete',
     recordId: string,
     payload?: Record<string, unknown>,
+    conflictKey?: string,
   ) => {
     const db = dbRef.current
     if (!db) return
@@ -74,6 +77,7 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
       table,
       operation,
       recordId,
+      conflictKey,
       payload,
       timestamp: Date.now(),
     })
@@ -107,15 +111,16 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
 
     for (const item of fresh) {
       try {
+        const ck = item.conflictKey ?? 'id'
         switch (item.operation) {
           case 'create':
           case 'update': {
-            const record = { id: item.recordId, ...(item.payload || {}) }
-            await supabase.from(item.table).upsert(record, { onConflict: 'id' })
+            const record = { [ck]: item.recordId, ...(item.payload || {}) }
+            await supabase.from(item.table).upsert(record, { onConflict: ck })
             break
           }
           case 'delete':
-            await supabase.from(item.table).delete().eq('id', item.recordId)
+            await supabase.from(item.table).delete().eq(ck, item.recordId)
             break
         }
         // Remove from queue on success

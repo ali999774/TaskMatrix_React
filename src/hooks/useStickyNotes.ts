@@ -6,7 +6,7 @@ const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange']
 const DEBOUNCE_MS = 400
 
 interface OfflineQueue {
-  enqueue: (table: 'tasks' | 'sticky_notes', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>) => Promise<void>
+  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
   online: boolean
 }
 
@@ -168,32 +168,33 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
     }
   }, [offlineQueue])
 
-  const reorderNote = useCallback(async (id: string, newIndex: number) => {
+  const reorderNote = useCallback((id: string, newIndex: number) => {
+    // Compute new positions entirely from local state — never read from Supabase
+    // to build a mutation payload (network read before offline check breaks offline)
     setNotes((prev) => {
       const updated = [...prev]
       const currentIndex = updated.findIndex((n) => n.id === id)
       if (currentIndex === -1) return prev
       const [moved] = updated.splice(currentIndex, 1)
       updated.splice(newIndex, 0, moved)
-      return updated.map((note, index) => ({ ...note, position: index }))
-    })
+      const reordered = updated.map((note, index) => ({ ...note, position: index }))
 
-    // Debounced batch-upsert positions with offline support
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(async () => {
-      const { data } = await supabase.from('sticky_notes').select('id').eq('user_id', userId)
-      if (data) {
-        const updates = data.map((n, index) => ({ id: n.id, position: index }))
-        if (offlineQueue && !offlineQueue.online) {
-          for (const u of updates) {
-            await offlineQueue.enqueue('sticky_notes', 'update', u.id, { position: u.position })
-          }
-        } else {
-          await supabase.from('sticky_notes').upsert(updates, { onConflict: 'id' })
+      // Schedule a debounced flush for each note whose position changed.
+      // Uses the same dirty-flag path as updateNote, so offline → queued,
+      // online → flushed after DEBOUNCE_MS. No setTimeout + network read.
+      for (const note of reordered) {
+        const prev_note = prev.find((n) => n.id === note.id)
+        if (!prev_note || prev_note.position !== note.position) {
+          const dirty = dirtyRef.current
+          const existing = dirty.get(note.id) || {}
+          dirty.set(note.id, { ...existing, position: note.position })
         }
       }
-    }, DEBOUNCE_MS)
-  }, [userId, offlineQueue])
+      scheduleFlush()
+
+      return reordered
+    })
+  }, [scheduleFlush])
 
   const pinnedNotes = notes.filter((n) => n.pinned)
 

@@ -5,6 +5,11 @@ import { DEFAULT_CATEGORIES } from '../lib/categories'
 
 const LS_KEY = 'tm-categories'
 
+interface OfflineQueue {
+  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
+  online: boolean
+}
+
 // Ali's pre-existing categories for the migration path
 const ALI_CATEGORIES: CategoryDef[] = [
   { label: 'clinic', display: 'Clinic', color: 'red', icon: '🏥' },
@@ -13,7 +18,7 @@ const ALI_CATEGORIES: CategoryDef[] = [
   { label: 'personal', display: 'Personal', color: 'emerald', icon: '👤' },
 ]
 
-export function useUserSettings(userId: string | null) {
+export function useUserSettings(userId: string | null, offlineQueue?: OfflineQueue) {
   const [categories, setCategories] = useState<CategoryDef[]>(() => {
     try {
       const cached = localStorage.getItem(LS_KEY)
@@ -75,10 +80,22 @@ export function useUserSettings(userId: string | null) {
     localStorage.setItem(LS_KEY, JSON.stringify(cats))
 
     if (!userId) return
-    await supabase
-      .from('user_settings')
-      .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' })
-  }, [userId])
+
+    if (offlineQueue && !offlineQueue.online) {
+      // Queue offline — flush will upsert on reconnect using user_id as conflict key
+      await offlineQueue.enqueue(
+        'user_settings',
+        'update',
+        userId,
+        { categories: cats as unknown as Record<string, unknown> },
+        'user_id',
+      )
+    } else {
+      await supabase
+        .from('user_settings')
+        .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' })
+    }
+  }, [userId, offlineQueue])
 
   return { categories, updateCategories, loading }
 }
