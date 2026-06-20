@@ -146,6 +146,8 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         onStatus?.('mic denied')
       } else if (event.error === 'no-speech') {
         onStatus?.('no speech')
+      } else if (event.error === 'language-not-supported') {
+        onStatus?.('unsupported browser')
       } else {
         onStatus?.('error: ' + event.error)
       }
@@ -197,8 +199,16 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         await rec.start()
         setListening(true)
         onStatus?.('listening')
-      } catch {
-        setUnsupported(true)
+      } catch (err: any) {
+        // Edge and some browsers throw 'language-not-supported' even though
+        // the SpeechRecognition constructor exists. Don't hide the button
+        // for recoverable errors — show the status so the user knows why.
+        const msg = err?.message || String(err)
+        if (msg.includes('language-not-supported')) {
+          onStatus?.('unsupported browser')
+        } else {
+          setUnsupported(true)
+        }
       }
     }
   }
