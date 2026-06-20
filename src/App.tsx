@@ -530,7 +530,7 @@ export default function App() {
                 <button
                   onClick={handleSuggest}
                   disabled={suggesting}
-                  className="text-[0.75rem] px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700
+                  className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700
                     bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
                     hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all
                     active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0"
