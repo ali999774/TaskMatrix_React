@@ -26,5 +26,10 @@ dist-ssr
 # Environment
 .env
 
+# Playwright auth state — contains session tokens, never commit
+tests/.auth/
+playwright-report/
+test-results/
+
 # Volta (accidentally committed)
 .volta

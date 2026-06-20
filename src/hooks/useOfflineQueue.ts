@@ -113,10 +113,16 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
       try {
         const ck = item.conflictKey ?? 'id'
         switch (item.operation) {
-          case 'create':
-          case 'update': {
+          case 'create': {
+            // Full payload — upsert is safe because user_id is included
             const record = { [ck]: item.recordId, ...(item.payload || {}) }
             await supabase.from(item.table).upsert(record, { onConflict: ck })
+            break
+          }
+          case 'update': {
+            // Partial payload — use update().eq() to avoid the INSERT branch of
+            // upsert, which would fail RLS when user_id is absent from the payload
+            await supabase.from(item.table).update(item.payload || {}).eq(ck, item.recordId)
             break
           }
           case 'delete':
