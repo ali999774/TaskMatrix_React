@@ -1,38 +1,18 @@
 // AI-powered voice transcript → structured task parser.
-// Uses DeepSeek API (OpenAI-compatible) to extract task fields from
-// natural language voice transcripts.
+// Routes through a Supabase Edge Function to avoid CORS issues with
+// calling LLM APIs directly from the browser.
 
 interface ParsedTask {
   title: string
-  due_date?: string | null  // YYYY-MM-DD
-  due_time?: string | null  // HH:MM
-  category?: string | null   // matched to existing categories if possible
-  importance?: number        // 1-5
-  urgency?: number           // 1-5
-  notes?: string | null      // any extra context not fitting the fields above
+  due_date?: string | null
+  due_time?: string | null
+  category?: string | null
+  importance?: number
+  urgency?: number
+  notes?: string | null
 }
 
-const SYSTEM_PROMPT = `You are a task parser. Extract structured fields from voice transcripts.
-Return ONLY valid JSON — no markdown, no code fences, no explanation.
-
-Rules:
-- title: the main task (required, concise, 1-8 words)
-- due_date: YYYY-MM-DD if a date is mentioned. Today is ${new Date().toISOString().split('T')[0]}. "tomorrow", "next Monday", "Friday" etc should be resolved relative to today.
-- due_time: HH:MM (24h) if a specific time is mentioned
-- category: infer from context. Suggest one of: Work, Personal, Health, Learning, Clinic, Dev, Finance, Errands, Home. Return null if unclear.
-- importance: 1-5 (3 = normal). Higher if they say "urgent", "critical", "important", "priority". Lower if "whenever", "no rush", "low priority".
-- urgency: 1-5 (3 = normal). Higher if deadline is soon or they sound pressed. Lower if no deadline mentioned.
-- notes: any extra detail, context, or subtasks they mentioned. Return null if none.
-
-Examples:
-"follow up with the Smiths about the vaccination schedule next Tuesday morning" →
-{"title":"Follow up with Smiths re: vaccination","due_date":"<next Tuesday's date>","due_time":"09:00","category":"Clinic","importance":3,"urgency":4,"notes":"Vaccination schedule discussion"}
-
-"remind me to buy groceries tomorrow evening, high priority" →
-{"title":"Buy groceries","due_date":"<tomorrow's date>","due_time":"18:00","category":"Personal","importance":5,"urgency":4,"notes":null}
-
-"submit quarterly report by Friday" →
-{"title":"Submit quarterly report","due_date":"<next Friday's date>","due_time":null,"category":"Work","importance":4,"urgency":3,"notes":null}`
+const EDGE_FN = 'https://xulnxwwwjpvgsaqnsllo.supabase.co/functions/v1/ai-parse'
 
 export async function parseVoiceTranscript(
   transcript: string,
@@ -42,43 +22,26 @@ export async function parseVoiceTranscript(
 ): Promise<ParsedTask | null> {
   if (!transcript.trim() || !apiKey.trim()) return null
 
-  // Update the system prompt with today's date for relative date resolution
-  const today = new Date().toISOString().split('T')[0]
-  const prompt = SYSTEM_PROMPT.replace(/\$\{new Date\(\)\.toISOString\(\)\.split\('T'\)\[0\]\}/g, today)
-
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch(EDGE_FN, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: prompt },
-          { role: 'user', content: transcript },
-        ],
-        temperature: 0.1,
-        max_tokens: 512,
-        response_format: { type: 'json_object' },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript, apiKey, model, baseUrl }),
     })
 
     if (!response.ok) {
       const err = await response.text()
-      console.error('[AI Parse] API error:', response.status, err)
+      console.error('[AI Parse] Edge function error:', response.status, err)
       return null
     }
 
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
+    const content = await response.text()
     if (!content) {
-      console.error('[AI Parse] Empty response')
+      console.error('[AI Parse] Empty response from edge function')
       return null
     }
 
-    // Parse and validate
+    // Edge function returns the raw JSON from the LLM
     const parsed = JSON.parse(content)
 
     return {

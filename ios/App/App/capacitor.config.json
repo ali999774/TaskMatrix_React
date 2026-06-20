@@ -1,0 +1,15 @@
+{
+	"appId": "com.milestonepediatrics.taskmatrix",
+	"appName": "TaskMatrix",
+	"webDir": "dist",
+	"ios": {
+		"scheme": "taskmatrix",
+		"path": "ios"
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"CAPBrowserPlugin",
+		"HapticsPlugin",
+		"SpeechRecognitionPlugin"
+	]
+}

@@ -397,8 +397,14 @@ export default function App() {
           setTimeout(() => setVoiceTaskStatus(''), 2500)
           return
         }
+        // parsed is null — API call succeeded but returned unusable data
+        console.warn('[Voice Task AI] Parsing returned null for:', transcript.slice(0, 80))
+        setVoiceTaskStatus('parse failed')
+        setTimeout(() => setVoiceTaskStatus(''), 2000)
       } catch (err) {
         console.error('[Voice Task AI] Parse failed, falling back to quick-add:', err)
+        setVoiceTaskStatus('parse failed')
+        setTimeout(() => setVoiceTaskStatus(''), 2000)
       }
     }
 
@@ -434,8 +440,9 @@ export default function App() {
           setTimeout(() => setVoiceStatus(''), 2500)
           return
         }
+        console.warn('[Voice Note AI] Parsing returned null for:', transcript.slice(0, 80))
       } catch (err) {
-        console.error('[Voice AI] Parse failed, falling back to note:', err)
+        console.error('[Voice Note AI] Parse failed, falling back to note:', err)
       }
     }
 

@@ -6,13 +6,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Register Home Screen Quick Actions (force-touch / long-press app icon)
-        let newTask = UIApplicationShortcutItem(
-            type: "com.milestonepediatrics.taskmatrix.new-task",
-            localizedTitle: "New Task",
-            localizedSubtitle: nil,
-            icon: UIApplicationShortcutIcon(systemImageName: "plus.circle"),
-            userInfo: nil
-        )
         let newNote = UIApplicationShortcutItem(
             type: "com.milestonepediatrics.taskmatrix.new-note",
             localizedTitle: "New Note",
@@ -20,21 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             icon: UIApplicationShortcutIcon(systemImageName: "note.text.badge.plus"),
             userInfo: nil
         )
-        let voiceTask = UIApplicationShortcutItem(
-            type: "com.milestonepediatrics.taskmatrix.voice-task",
-            localizedTitle: "Voice Task",
-            localizedSubtitle: nil,
-            icon: UIApplicationShortcutIcon(systemImageName: "mic.circle"),
-            userInfo: nil
-        )
-        let voiceNote = UIApplicationShortcutItem(
-            type: "com.milestonepediatrics.taskmatrix.voice-note",
-            localizedTitle: "Voice Note",
-            localizedSubtitle: nil,
-            icon: UIApplicationShortcutIcon(systemImageName: "waveform.circle"),
-            userInfo: nil
-        )
-        application.shortcutItems = [voiceTask, newNote, voiceNote]
+        application.shortcutItems = [newNote]
         return true
     }
 
