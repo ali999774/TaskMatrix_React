@@ -377,34 +377,28 @@ export default function App() {
 
     // AI path: parse transcript into structured task
     if (aiSettings.enabled && aiSettings.apiKey) {
-      try {
-        setVoiceTaskStatus('parsing...')
-        const parsed = await parseVoiceTranscript(
-          transcript,
-          aiSettings.apiKey,
-          aiSettings.model,
-          getAIBaseUrl()
+      setVoiceTaskStatus('parsing...')
+      const result = await parseVoiceTranscript(
+        transcript,
+        aiSettings.apiKey,
+        aiSettings.model,
+        getAIBaseUrl()
+      )
+      if ('error' in result) {
+        setVoiceTaskStatus(result.error)
+        setTimeout(() => setVoiceTaskStatus(''), 3000)
+      } else {
+        const p = result.parsed
+        await addTask(
+          p.title,
+          p.importance || 3,
+          p.urgency || 3,
+          p.category || undefined,
+          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined }
         )
-        if (parsed) {
-          await addTask(
-            parsed.title,
-            parsed.importance || 3,
-            parsed.urgency || 3,
-            parsed.category || undefined,
-            { due_date: parsed.due_date || undefined, due_time: parsed.due_time || undefined, notes: parsed.notes || undefined }
-          )
-          setVoiceTaskStatus('task created!')
-          setTimeout(() => setVoiceTaskStatus(''), 2500)
-          return
-        }
-        // parsed is null — API call succeeded but returned unusable data
-        console.warn('[Voice Task AI] Parsing returned null for:', transcript.slice(0, 80))
-        setVoiceTaskStatus('parse failed')
-        setTimeout(() => setVoiceTaskStatus(''), 2000)
-      } catch (err) {
-        console.error('[Voice Task AI] Parse failed, falling back to quick-add:', err)
-        setVoiceTaskStatus('parse failed')
-        setTimeout(() => setVoiceTaskStatus(''), 2000)
+        setVoiceTaskStatus('task created!')
+        setTimeout(() => setVoiceTaskStatus(''), 2500)
+        return
       }
     }
 
@@ -419,30 +413,28 @@ export default function App() {
 
     // AI path: parse transcript into structured task
     if (aiSettings.enabled && aiSettings.apiKey) {
-      try {
-        setVoiceStatus('parsing...')
-        const parsed = await parseVoiceTranscript(
-          transcript,
-          aiSettings.apiKey,
-          aiSettings.model,
-          getAIBaseUrl()
+      setVoiceStatus('parsing...')
+      const result = await parseVoiceTranscript(
+        transcript,
+        aiSettings.apiKey,
+        aiSettings.model,
+        getAIBaseUrl()
+      )
+      if ('error' in result) {
+        // AI failed — fall through to note path
+        console.warn('[Voice Note AI]', result.error)
+      } else {
+        const p = result.parsed
+        await addTask(
+          p.title,
+          p.importance || 3,
+          p.urgency || 3,
+          p.category || undefined,
+          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined }
         )
-        if (parsed) {
-          // Create task from parsed fields
-          await addTask(
-            parsed.title,
-            parsed.importance || 3,
-            parsed.urgency || 3,
-            parsed.category || undefined,
-            { due_date: parsed.due_date || undefined, due_time: parsed.due_time || undefined, notes: parsed.notes || undefined }
-          )
-          setVoiceStatus('task created!')
-          setTimeout(() => setVoiceStatus(''), 2500)
-          return
-        }
-        console.warn('[Voice Note AI] Parsing returned null for:', transcript.slice(0, 80))
-      } catch (err) {
-        console.error('[Voice Note AI] Parse failed, falling back to note:', err)
+        setVoiceStatus('task created!')
+        setTimeout(() => setVoiceStatus(''), 2500)
+        return
       }
     }
 
