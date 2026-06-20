@@ -200,6 +200,7 @@ export default function App() {
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
+  const [undoIsDoneDismiss, setUndoIsDoneDismiss] = useState(false)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleDeleteTask = (id: string) => {
@@ -214,8 +215,38 @@ export default function App() {
 
   const handleUndoDelete = () => {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-    if (undoTask) restoreTask(undoTask)
+    if (undoTask) {
+      if (undoIsDoneDismiss) {
+        // Undo a done-dismiss: set task back to 'todo' instead of restoring from delete
+        updateStatus(undoTask.id, 'todo')
+      } else {
+        restoreTask(undoTask)
+      }
+    }
+    setUndoIsDoneDismiss(false)
     setUndoTask(null)
+  }
+
+  // When a task is marked done, auto-dismiss it after a short delay with undo
+  const doneDismissRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const handleStatusChange = (id: string, status: string) => {
+    updateStatus(id, status)
+    if (status === 'done') {
+      // Clear any existing dismiss timer for this task
+      const existing = doneDismissRef.current.get(id)
+      if (existing) clearTimeout(existing)
+      // Auto-delete after 3s
+      const timer = setTimeout(() => {
+        doneDismissRef.current.delete(id)
+        setUndoIsDoneDismiss(true)
+        handleDeleteTask(id)
+      }, 3000)
+      doneDismissRef.current.set(id, timer)
+    } else {
+      // If task is un-done (via undo or manual cycle), cancel the dismiss
+      const existing = doneDismissRef.current.get(id)
+      if (existing) { clearTimeout(existing); doneDismissRef.current.delete(id) }
+    }
   }
 
   // Persist context filter across sessions
@@ -502,7 +533,7 @@ export default function App() {
                   key={q}
                   quadrant={q}
                   tasks={quadrantTasks(q)}
-                  onStatusChange={updateStatus}
+                  onStatusChange={handleStatusChange}
                   onDelete={handleDeleteTask}
                   onMove={handleMove}
                   onTaskClick={setSelectedTask}
@@ -583,7 +614,7 @@ export default function App() {
             flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
             rounded-xl shadow-lg pl-4 pr-1 py-1 max-w-[calc(100vw-2rem)]"
         >
-          <span className="text-[0.875rem] truncate">Deleted “{undoTask.title}”</span>
+          <span className="text-[0.875rem] truncate">{undoIsDoneDismiss ? 'Completed' : 'Deleted'} “{undoTask.title}”</span>
           <button
             onClick={handleUndoDelete}
             className="text-[0.875rem] font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"

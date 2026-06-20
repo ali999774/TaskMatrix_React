@@ -30,7 +30,6 @@ interface Props {
 
 const STATUS_ICONS: Record<string, string> = {
   todo: '○',
-  in_progress: '◐',
   done: '●',
 }
 
@@ -63,7 +62,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
 
   const cycleStatus = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const next: Record<string, string> = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
+    const next: Record<string, string> = { todo: 'done', done: 'todo' }
     const newStatus = next[task.status] || 'todo'
     onStatusChange(task.id, newStatus)
     if (newStatus === 'done') haptics('success')
@@ -144,7 +143,6 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           onClick={cycleStatus}
           className={`mt-0.5 text-[1.125rem] flex-shrink-0 transition-colors active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
             ${task.status === 'done' ? 'text-emerald-500 dark:text-emerald-400' 
-              : task.status === 'in_progress' ? 'text-amber-500 dark:text-amber-400' 
               : 'text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300'}`}
           title={`Status: ${task.status}`}
           aria-label={`Cycle status: ${task.status}`}
