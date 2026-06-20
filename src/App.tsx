@@ -189,6 +189,7 @@ export default function App() {
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
   const [suggestion, setSuggestion] = useState('')
   const [suggesting, setSuggesting] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
@@ -502,7 +503,7 @@ export default function App() {
 
             {/* Right actions */}
             <div className="flex items-center gap-0.5 shrink-0">
-              {/* Sync indicator — visible when offline or flushing */}
+              {/* Sync indicator */}
               {(!offlineQueue.online || offlineQueue.isFlushing || offlineQueue.pendingCount > 0) && (
                 <span className={`text-[0.75rem] px-2 py-1 rounded-full font-medium min-h-[44px] inline-flex items-center ${
                   !offlineQueue.online
@@ -518,44 +519,44 @@ export default function App() {
                     : `${offlineQueue.pendingCount} pending`}
                 </span>
               )}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
-                title="Settings"
-                aria-label="Settings"
-              >
-                ⚙️
-              </button>
-              {aiSettings.enabled && (
-                <button
-                  onClick={handleSuggest}
-                  disabled={suggesting}
-                  className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700
-                    bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
-                    hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all
-                    active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0"
-                  title="AI suggests the best task to work on right now"
-                >
-                  <span className="hidden sm:inline">🎯 What next?</span>
-                  <span className="sm:hidden">🎯</span>
-                </button>
-              )}
-              <button
-                onClick={() => window.location.reload()}
-                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
-                title="Refresh"
-                aria-label="Refresh"
-              >
-                ↻
-              </button>
-              <button
-                onClick={signOut}
-                className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
-                title="Sign out"
-                aria-label="Sign out"
-              >
-                ⏻
-              </button>
+
+              {/* Desktop: inline buttons (sm+) */}
+              <div className="hidden sm:flex items-center gap-0.5">
+                <button onClick={() => setShowSettings(true)} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Settings" aria-label="Settings">⚙️</button>
+                {aiSettings.enabled && (
+                  <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
+                    🎯 What next?
+                  </button>
+                )}
+                <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh">↻</button>
+                <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out">⏻</button>
+              </div>
+
+              {/* Mobile: dropdown menu (below sm) */}
+              <div className="sm:hidden relative">
+                <button onClick={() => setShowMenu(!showMenu)} className="text-[1.125rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" aria-label="Menu">⋮</button>
+                {showMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[160px]">
+                      {aiSettings.enabled && (
+                        <button onClick={() => { handleSuggest(); setShowMenu(false) }} disabled={suggesting} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                          🎯 What next?
+                        </button>
+                      )}
+                      <button onClick={() => { setShowSettings(true); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        ⚙️ Settings
+                      </button>
+                      <button onClick={() => { window.location.reload() }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        ↻ Refresh
+                      </button>
+                      <button onClick={() => { signOut(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        ⏻ Sign out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </header>
