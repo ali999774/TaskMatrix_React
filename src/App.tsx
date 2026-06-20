@@ -67,6 +67,7 @@ export default function App() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceTaskQuickAction, setVoiceTaskQuickAction] = useState(false)
+  const [voiceNoteQuickAction, setVoiceNoteQuickAction] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -82,6 +83,7 @@ export default function App() {
         const action = launch.url.replace('taskmatrix://quick-action/', '')
         if (action === 'new-note') setQuickAction('new-note')
         if (action === 'voice-task') setVoiceTaskQuickAction(true)
+        if (action === 'voice-note') setVoiceNoteQuickAction(true)
       }
     }).catch(err => {
       console.error('[App] getSession failed', err)
@@ -147,6 +149,9 @@ export default function App() {
         }
         if (action === 'voice-task') {
           setVoiceTaskQuickAction(true)
+        }
+        if (action === 'voice-note') {
+          setVoiceNoteQuickAction(true)
         }
         return
       }
@@ -440,6 +445,7 @@ export default function App() {
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceStatus('saving')
+    setVoiceNoteQuickAction(false)  // consumed
 
     // AI path: parse transcript into structured task
     if (aiSettings.enabled) {
@@ -733,6 +739,7 @@ export default function App() {
               <VoiceButton
                 onTranscript={handleVoiceNote}
                 onStatus={setVoiceStatus}
+                autoStart={voiceNoteQuickAction}
                 icon="🎙️"
                 className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               />

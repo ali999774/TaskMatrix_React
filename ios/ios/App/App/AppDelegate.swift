@@ -20,7 +20,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             icon: UIApplicationShortcutIcon(systemImageName: "mic.fill"),
             userInfo: nil
         )
-        application.shortcutItems = [voiceTask, newNote]
+        let voiceNote = UIApplicationShortcutItem(
+            type: "com.milestonepediatrics.taskmatrix.voice-note",
+            localizedTitle: "Voice Note",
+            localizedSubtitle: "Quick sticky note",
+            icon: UIApplicationShortcutIcon(systemImageName: "note.text.badge.plus"),
+            userInfo: nil
+        )
+        application.shortcutItems = [voiceTask, voiceNote, newNote]
         return true
     }
 
