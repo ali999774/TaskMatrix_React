@@ -4,7 +4,8 @@
 	"webDir": "dist",
 	"ios": {
 		"scheme": "taskmatrix",
-		"path": "ios"
+		"path": "ios",
+		"keyboardResize": "none"
 	},
 	"packageClassList": [
 		"AppPlugin",
