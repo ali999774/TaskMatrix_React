@@ -36,3 +36,10 @@ test-results/
 
 # iOS build backup — created during ios/ios → ios/App move, safe to delete
 ios/ios.bak/
+
+# Supabase CLI local state
+supabase/.temp/
+
+# Xcode per-user state
+xcuserdata/
+*.xcuserstate
