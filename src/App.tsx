@@ -533,8 +533,8 @@ export default function App() {
               </div>
 
               {/* Mobile: dropdown menu (below sm) */}
-              <div className="sm:hidden relative">
-                <button onClick={() => setShowMenu(!showMenu)} className="text-[1.125rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" aria-label="Menu">⋮</button>
+              <div className="sm:hidden relative shrink-0">
+                <button onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }} className="text-[1.125rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" aria-label="Menu">☰</button>
                 {showMenu && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
