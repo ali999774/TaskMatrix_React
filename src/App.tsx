@@ -493,7 +493,7 @@ export default function App() {
                   onKeyDown={handleQuickAddKeyDown}
                   placeholder={suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task...'}
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
-                    dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.875rem] text-slate-700 
+                    dark:border-slate-700 rounded-lg px-3 py-1.5 text-[1rem] text-slate-700 
                     dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 placeholder:truncate
                     outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors min-w-0"
                 />
