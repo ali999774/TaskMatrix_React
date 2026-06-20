@@ -191,9 +191,6 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium text-transparent" title={`Importance: ${task.importance}/5 · Urgency: ${task.urgency}/5`}>
-            I{task.importance}U{task.urgency}
-          </span>
           <button
             onClick={handleDelete}
             className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-[0.75rem] px-1.5 py-1 active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"

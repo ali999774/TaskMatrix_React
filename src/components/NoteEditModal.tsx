@@ -70,8 +70,16 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const [content, setContent] = useState(note.content || '')
   const [color, setColor] = useState(note.color || 'yellow')
   const [pinned, setPinned] = useState(!!note.pinned)
+  const [error, setError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const haptics = useHaptics()
+
+  const handleClose = () => {
+    setConfirmingDelete(false)
+    setError('')
+    onClose()
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
@@ -79,11 +87,20 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     setContent(note.content || '')
     setColor(note.color || 'yellow')
     setPinned(!!note.pinned)
+    setConfirmingDelete(false)
+    setError('')
   }, [note])
+
+  useEffect(() => {
+    return () => {
+      setConfirmingDelete(false)
+      setError('')
+    }
+  }, [])
 
   const handleSave = () => {
     if (!title.trim() && !content.trim()) {
-      alert('Please add a title or content')
+      setError('Please add a title or content')
       return
     }
     haptics('success')
@@ -93,19 +110,21 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       color,
       pinned,
     })
-    onClose()
+    handleClose()
   }
 
   const handleDelete = () => {
-    if (confirm('Delete this note?')) {
-      haptics('medium')
-      onDelete(note.id)
-      onClose()
+    if (!confirmingDelete) {
+      setConfirmingDelete(true)
+      return
     }
+    haptics('medium')
+    onDelete(note.id)
+    handleClose()
   }
 
   const handleOverlay = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onClose()
+    if (e.target === e.currentTarget) handleClose()
   }
 
   const fmt = (wrapper: string) => {
@@ -174,7 +193,8 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             {note.id ? 'Edit Note' : 'New Note'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
+            aria-label="Close note editor"
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
           >
             ✕
@@ -186,7 +206,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setError('') }}
             placeholder="📌 Note title (with emoji)..."
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[0.875rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
           />
@@ -214,9 +234,13 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => { setContent(e.target.value); setError('') }}
             onKeyDown={handleContentKeyDown}
-            placeholder="Write your note here...\n\n**bold** ~~strikethrough~~\n- bullet\n1. numbered"
+            placeholder={`Write your note here...
+
+**bold** ~~strikethrough~~
+- bullet
+1. numbered`}
             rows={6}
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[0.875rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono"
           />
@@ -258,17 +282,42 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           </div>
         </div>
 
+        {/* Validation error */}
+        {error && (
+          <p role="alert" className="px-6 -mt-1 pb-1 text-[0.75rem] text-red-500 dark:text-red-400">
+            {error}
+          </p>
+        )}
+
         {/* Footer */}
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <button
-            onClick={handleDelete}
-            className="text-[0.875rem] text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors min-h-[44px] px-2"
-          >
-            Delete
-          </button>
+          {confirmingDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[0.875rem] text-slate-500 dark:text-slate-400">Delete note?</span>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="text-[0.875rem] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] px-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-[0.875rem] font-medium px-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px]"
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleDelete}
+              className="text-[0.875rem] text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors min-h-[44px] px-2"
+            >
+              Delete
+            </button>
+          )}
           <div className="flex gap-2">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 rounded-lg text-[0.875rem] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
             >
               Cancel

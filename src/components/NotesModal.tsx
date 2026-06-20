@@ -63,6 +63,7 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
             <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
             <button
               onClick={onClose}
+              aria-label="Close notes"
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             >
               ✕
@@ -108,7 +109,10 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
               {filtered.map((note) => (
                 <div
                   key={note.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onEdit(note)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(note) } }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
                     ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}`}
                 >
