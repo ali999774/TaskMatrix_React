@@ -7,12 +7,13 @@ interface Props {
   onStatus?: (status: string) => void
   className?: string
   icon?: string
+  autoStart?: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionLike = any
 
-export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤' }: Props) {
+export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤', autoStart = false }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
@@ -214,6 +215,15 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   }
 
   if (unsupported) return null
+
+  // Auto-start recording (used by iOS home screen quick action)
+  const autoStarted = useRef(false)
+  useEffect(() => {
+    if (autoStart && !autoStarted.current && recognitionRef.current && !listening) {
+      autoStarted.current = true
+      toggle()
+    }
+  }, [autoStart, listening])
 
   return (
     <button

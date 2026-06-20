@@ -66,6 +66,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
   const [quickAction, setQuickAction] = useState<string | null>(null)
+  const [voiceTaskQuickAction, setVoiceTaskQuickAction] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -80,6 +81,7 @@ export default function App() {
       if (launch?.url?.startsWith('taskmatrix://quick-action/')) {
         const action = launch.url.replace('taskmatrix://quick-action/', '')
         if (action === 'new-note') setQuickAction('new-note')
+        if (action === 'voice-task') setVoiceTaskQuickAction(true)
       }
     }).catch(err => {
       console.error('[App] getSession failed', err)
@@ -142,6 +144,9 @@ export default function App() {
         const action = callbackUrl.replace('taskmatrix://quick-action/', '')
         if (action === 'new-note') {
           setQuickAction('new-note')
+        }
+        if (action === 'voice-task') {
+          setVoiceTaskQuickAction(true)
         }
         return
       }
@@ -399,6 +404,7 @@ export default function App() {
   const handleVoiceTask = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceTaskStatus('saving')
+    setVoiceTaskQuickAction(false)  // consumed
 
     // AI path: parse transcript into structured task
     if (aiSettings.enabled) {
@@ -493,7 +499,7 @@ export default function App() {
             {/* Quick-add input */}
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} />
+                <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} autoStart={voiceTaskQuickAction} />
                 <input
                   type="text"
                   value={quickAdd}
