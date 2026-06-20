@@ -60,20 +60,6 @@ function useTheme(): [boolean, () => void] {
   return [dark, () => setDark((d) => !d)]
 }
 
-const QUADRANT_COLORS: Record<Quadrant, string> = {
-  1: 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20',
-  2: 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20',
-  3: 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20',
-  4: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20',
-}
-
-const QUADRANT_LABELS_SHORT: Record<Quadrant, string> = {
-  1: 'Do First',
-  2: 'Schedule',
-  3: 'Delegate',
-  4: "Don't Do",
-}
-
 export default function App() {
   const [dark, toggleTheme] = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
@@ -494,21 +480,6 @@ export default function App() {
                     outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
                 />
               </div>
-              {/* Dropdown: appears when input has text */}
-              {quickAdd.trim() && (
-                <div className="absolute top-full left-0 right-0 mt-1 flex gap-1.5 z-50">
-                  {quadrants.map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => handleQuickAdd(q)}
-                      className={`shrink-0 text-[0.75rem] font-medium px-3 py-2 rounded-lg border min-h-[44px]
-                        transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 ${QUADRANT_COLORS[q]} shadow-sm`}
-                    >
-                      {QUADRANT_LABELS_SHORT[q]}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Right actions */}

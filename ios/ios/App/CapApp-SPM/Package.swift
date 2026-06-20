@@ -12,10 +12,10 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.4.0"),
-        .package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app"),
-        .package(name: "CapacitorBrowser", path: "../../../node_modules/@capacitor/browser"),
-        .package(name: "CapacitorHaptics", path: "../../../node_modules/@capacitor/haptics"),
-        .package(name: "CapgoCapacitorSpeechRecognition", path: "../../../node_modules/@capgo/capacitor-speech-recognition")
+        .package(name: "CapacitorApp", path: "../../../../node_modules/@capacitor/app"),
+        .package(name: "CapacitorBrowser", path: "../../../../node_modules/@capacitor/browser"),
+        .package(name: "CapacitorHaptics", path: "../../../../node_modules/@capacitor/haptics"),
+        .package(name: "CapgoCapacitorSpeechRecognition", path: "../../../../node_modules/@capgo/capacitor-speech-recognition")
     ],
     targets: [
         .target(
