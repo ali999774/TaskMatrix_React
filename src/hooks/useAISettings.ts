@@ -13,14 +13,19 @@ const DEFAULTS: AISettings = {
   enabled: false,
   apiKey: '',
   provider: 'deepseek',
-  model: 'deepseek-chat',
+  model: 'deepseek-v4-pro',
 }
 
 export function useAISettings() {
   const [settings, setSettings] = useState<AISettings>(() => {
     try {
       const stored = localStorage.getItem(LS_KEY)
-      if (stored) return { ...DEFAULTS, ...JSON.parse(stored) }
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // Migrate old model name
+        if (parsed.model === 'deepseek-chat') parsed.model = 'deepseek-v4-pro'
+        return { ...DEFAULTS, ...parsed }
+      }
     } catch { /* ignore corrupt data */ }
     return DEFAULTS
   })

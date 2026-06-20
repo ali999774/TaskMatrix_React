@@ -21,7 +21,7 @@ const EDGE_FN = 'https://xulnxwwwjpvgsaqnsllo.supabase.co/functions/v1/ai-parse'
 export async function parseVoiceTranscript(
   transcript: string,
   apiKey: string,
-  model: string = 'deepseek-chat',
+  model: string = 'deepseek-v4-pro',
   baseUrl: string = 'https://api.deepseek.com/v1'
 ): Promise<{ parsed: ParsedTask } | { error: string }> {
   if (!transcript.trim() || !apiKey.trim()) return { error: 'AI not configured — check Settings' }
