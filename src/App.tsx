@@ -385,7 +385,7 @@ export default function App() {
       )
       if ('error' in result) {
         setVoiceTaskStatus(result.error)
-        setTimeout(() => setVoiceTaskStatus(''), 3000)
+        return
       } else {
         const p = result.parsed
         await addTask(
