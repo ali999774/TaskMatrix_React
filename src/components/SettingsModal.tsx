@@ -1,18 +1,21 @@
 import { useState, useRef } from 'react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX } from '../lib/categories'
+import type { AISettings } from '../hooks/useAISettings'
 
 interface Props {
   categories: CategoryDef[]
   onSave: (categories: CategoryDef[]) => void
   onClose: () => void
+  aiSettings: AISettings
+  onAISettingsChange: (update: Partial<AISettings>) => void
 }
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export default function SettingsModal({ categories, onSave, onClose }: Props) {
+export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange }: Props) {
   const [items, setItems] = useState<CategoryDef[]>(() =>
     categories.map(c => ({ ...c }))
   )
@@ -112,6 +115,68 @@ export default function SettingsModal({ categories, onSave, onClose }: Props) {
 
         {/* Body */}
         <div className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto">
+          {/* AI Settings */}
+          <div>
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+              🤖 AI Task Parsing
+            </label>
+            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+              When enabled, voice transcripts are parsed by an LLM to create structured
+              tasks with dates, categories, and priority. Your API key is stored locally.
+            </p>
+
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={aiSettings.enabled}
+                  onChange={(e) => onAISettingsChange({ enabled: e.target.checked })}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-[0.875rem] text-slate-700 dark:text-slate-300">Enable AI parsing</span>
+              </label>
+
+              {aiSettings.enabled && (
+                <>
+                  <div>
+                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Provider</label>
+                    <select
+                      value={aiSettings.provider}
+                      onChange={(e) => onAISettingsChange({ provider: e.target.value as 'deepseek' | 'openai' })}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none"
+                    >
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="openai">OpenAI</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">API Key</label>
+                    <input
+                      type="password"
+                      value={aiSettings.apiKey}
+                      onChange={(e) => onAISettingsChange({ apiKey: e.target.value })}
+                      placeholder="sk-..."
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Model</label>
+                    <input
+                      type="text"
+                      value={aiSettings.model}
+                      onChange={(e) => onAISettingsChange({ model: e.target.value })}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-700" />
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
               Categories

@@ -18,6 +18,8 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
+import { parseVoiceTranscript } from './lib/ai-parse'
+import { useAISettings } from './hooks/useAISettings'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
 
@@ -184,6 +186,8 @@ export default function App() {
   }, [])
 
   const offlineQueue = useOfflineQueue(userId, supabase)
+
+  const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
@@ -370,6 +374,35 @@ export default function App() {
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceStatus('saving')
+
+    // AI path: parse transcript into structured task
+    if (aiSettings.enabled && aiSettings.apiKey) {
+      try {
+        setVoiceStatus('parsing...')
+        const parsed = await parseVoiceTranscript(
+          transcript,
+          aiSettings.apiKey,
+          aiSettings.model,
+          getAIBaseUrl()
+        )
+        if (parsed) {
+          // Create task from parsed fields
+          await addTask(
+            parsed.title,
+            parsed.importance || 3,
+            parsed.urgency || 3,
+            parsed.category || undefined
+          )
+          setVoiceStatus('task created!')
+          setTimeout(() => setVoiceStatus(''), 2500)
+          return
+        }
+      } catch (err) {
+        console.error('[Voice AI] Parse failed, falling back to note:', err)
+      }
+    }
+
+    // Fallback: save as sticky note (original behavior)
     try {
       const note = await addNote(formatVoiceNote(transcript))
       if (note) {
@@ -602,6 +635,8 @@ export default function App() {
           categories={categories}
           onSave={updateCategories}
           onClose={() => setShowSettings(false)}
+          aiSettings={aiSettings}
+          onAISettingsChange={updateAISettings}
         />
       )}
 
