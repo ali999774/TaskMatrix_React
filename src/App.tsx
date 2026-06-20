@@ -371,6 +371,41 @@ export default function App() {
     updateTask(taskId, { importance: defaults.importance, urgency: defaults.urgency })
   }
 
+  const handleVoiceTask = async (transcript: string) => {
+    if (!transcript.trim()) return
+    setVoiceTaskStatus('saving')
+
+    // AI path: parse transcript into structured task
+    if (aiSettings.enabled && aiSettings.apiKey) {
+      try {
+        setVoiceTaskStatus('parsing...')
+        const parsed = await parseVoiceTranscript(
+          transcript,
+          aiSettings.apiKey,
+          aiSettings.model,
+          getAIBaseUrl()
+        )
+        if (parsed) {
+          await addTask(
+            parsed.title,
+            parsed.importance || 3,
+            parsed.urgency || 3,
+            parsed.category || undefined
+          )
+          setVoiceTaskStatus('task created!')
+          setTimeout(() => setVoiceTaskStatus(''), 2500)
+          return
+        }
+      } catch (err) {
+        console.error('[Voice Task AI] Parse failed, falling back to quick-add:', err)
+      }
+    }
+
+    // Fallback: fill quick-add input with raw transcript
+    setQuickAdd(transcript.trim())
+    setVoiceTaskStatus('')
+  }
+
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceStatus('saving')
@@ -434,7 +469,7 @@ export default function App() {
             {/* Quick-add input */}
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={setQuickAdd} onStatus={setVoiceTaskStatus} />
+                <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} />
                 <input
                   type="text"
                   value={quickAdd}
