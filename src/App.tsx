@@ -17,7 +17,7 @@ import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
-import { speechSupported } from './lib/speech'
+import { speechSupported, formatVoiceNote } from './lib/speech'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
 
@@ -340,7 +340,7 @@ export default function App() {
     if (!transcript.trim()) return
     setVoiceStatus('saving')
     try {
-      const note = await addNote(transcript.trim())
+      const note = await addNote(formatVoiceNote(transcript))
       if (note) {
         setEditingNote(note)
         setTimeout(() => setEditingNote(null), 2000)

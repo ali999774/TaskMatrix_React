@@ -28,3 +28,11 @@ export function speechSupported(): boolean {
 export function isNativeSpeech(): boolean {
   return isNativePlatformSafe()
 }
+
+// Format a voice transcript as a sticky note with mic icon + timestamp header.
+export function formatVoiceNote(transcript: string): string {
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return `🎙️ *${dateStr} at ${timeStr}*  \n${transcript.trim()}`
+}

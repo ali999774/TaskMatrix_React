@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown } from '../lib/markdown'
+import { formatVoiceNote } from '../lib/speech'
 import VoiceButton from './VoiceButton'
 import { useHaptics } from '../hooks/useHaptics'
 
@@ -135,7 +136,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
           <>
             {onAdd && (
               <div className="flex gap-1.5 mb-3">
-                <VoiceButton onTranscript={setInput} />
+                <VoiceButton onTranscript={(t) => setInput(formatVoiceNote(t))} />
                 <input
                   type="text"
                   value={input}
