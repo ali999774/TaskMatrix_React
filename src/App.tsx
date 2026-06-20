@@ -352,12 +352,25 @@ export default function App() {
   const quadrantTasks = (q: Quadrant) =>
     filteredTasks.filter((t) => importanceUrgencyToQuadrant(t.importance, t.urgency) === q)
 
-  const handleQuickAdd = (q: Quadrant) => {
+  const handleQuickAdd = async (q: Quadrant) => {
     const title = quickAdd.trim()
     if (!title) return
+    setQuickAdd('')
+
+    // AI path: parse typed text like voice
+    if (aiSettings.enabled) {
+      const result = await parseVoiceTranscript(title, aiSettings.model, getAIBaseUrl())
+      if (!('error' in result)) {
+        const p = result.parsed
+        addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
+          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined })
+        return
+      }
+    }
+
+    // Fallback: use quadrant defaults
     const defaults = QUADRANT_DEFAULTS[q]
     addTask(title, defaults.importance, defaults.urgency, context !== 'all' ? context : undefined)
-    setQuickAdd('')
   }
 
   const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
