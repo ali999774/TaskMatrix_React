@@ -107,6 +107,7 @@ This codebase punches above its weight in three areas:
 1. **`aria-label` on remaining icon buttons** — sticky note ×, TaskDetail close ×, pomodoro controls, subtask ×. Systematically label every button that has no visible text.
 2. **`prefers-reduced-motion` gate** — wrap animations in a hook or use Tailwind's `motion-reduce:` variants. Add `motion-reduce:transition-none` to all animated elements.
 3. **`focus-visible:` migration** — replace bare `focus:` with `focus-visible:` on interactive elements so focus rings don't appear on mouse clicks.
+4. **Keyboard-operable reordering for categories** — Implement a keyboard path for reordering settings category rows (native drag-and-drop lacks a keyboard path).
 
 ### Phase 4 — Capacitor native feel
 1. **Safe-area insets** — add `env(safe-area-inset-top/bottom)` padding so content doesn't disappear under the notch/home indicator.

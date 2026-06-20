@@ -1,3 +1,4 @@
+// SECURITY INVARIANT: escape-first is sufficient ONLY because every emitted tag is attribute-free and URL-free. Adding link/image syntax (<a>, <img>) requires URL-scheme validation (block javascript:), not just text escaping.
 const BOLD = /\*\*(.+?)\*\*/g
 const STRIKETHROUGH = /~~(.+?)~~/g
 
@@ -16,8 +17,18 @@ export function stripMarkdown(text: string): string {
     .trim()
 }
 
-function renderInline(text: string): string {
+// Escape HTML before formatting so note text can't inject markup via
+// dangerouslySetInnerHTML, and so literal <, >, & render correctly.
+// Only touches &<> — leaves ** and ~~ intact for the substitutions below.
+function escapeHtml(text: string): string {
   return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function renderInline(text: string): string {
+  return escapeHtml(text)
     .replace(BOLD, '<strong>$1</strong>')
     .replace(STRIKETHROUGH, '<del>$1</del>')
 }

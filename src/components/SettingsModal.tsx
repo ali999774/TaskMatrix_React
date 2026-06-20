@@ -63,6 +63,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
     onClose()
   }
 
+  // TODO(a11y): keyboard reorder for category rows
   // Drag reorder
   const handleDragStart = (e: React.DragEvent, idx: number) => {
     draggedIdx.current = idx
@@ -189,6 +190,15 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, idx)}
                     onClick={() => setEditingIdx(idx === editingIdx ? null : idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setEditingIdx(idx === editingIdx ? null : idx)
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Category: ${cat.display || 'new category'}`}
                     className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all
                       ${idx === editingIdx
                         ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/30'

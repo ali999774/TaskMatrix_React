@@ -103,13 +103,15 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   }, [durations, session, stopTimer, haptics])
 
   const adjustDuration = useCallback((type: SessionType, delta: number) => {
+    if (type === session && running) return
     const min = type === 'short' ? 1 : 5
     const max = type === 'work' ? 60 : type === 'short' ? 15 : 30
-    setDurations((prev) => {
-      const newVal = Math.max(min, Math.min(max, prev[type] + delta))
-      return { ...prev, [type]: newVal }
-    })
-  }, [])
+    const newVal = Math.max(min, Math.min(max, durations[type] + delta))
+    setDurations((prev) => ({ ...prev, [type]: newVal }))
+    // Reflect the change immediately when adjusting the current idle session —
+    // otherwise the displayed time stays stale until reset/switch.
+    if (type === session && !running) setTimeLeft(newVal * 60)
+  }, [durations, session, running])
 
   // Drag handlers
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -267,9 +269,11 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
+                    disabled={type === session && running}
                     className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
                       text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
+                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100
+                      disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label={`Decrease ${type} duration`}
                   >
                     −
@@ -279,9 +283,11 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                   </span>
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? 1 : 5)}
+                    disabled={type === session && running}
                     className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
                       text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100"
+                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100
+                      disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label={`Increase ${type} duration`}
                   >
                     +
