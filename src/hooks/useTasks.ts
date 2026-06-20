@@ -56,13 +56,15 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
 
   const loadTasks = useCallback(async () => {
     if (!userId) return
+    // Active-matrix filter: only todo tasks (done tasks live in CompletedSection).
+    // Switched from neq('status','completed') to eq('status','todo') in
+    // feat/completed-history — CompletedSection now owns status='done' tasks.
     const { data } = await supabase
       .from('tasks')
       .select('*')
       .eq('user_id', userId)
+      .eq('status', 'todo')
       .is('deleted_at', null)
-      .neq('status', 'completed')
-      .neq('status', 'archived')
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) {
@@ -98,7 +100,8 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const row = payload.new as Task
-            if (row.status !== 'completed' && row.status !== 'archived' && !row.deleted_at) {
+            // Only surface todo tasks in the active matrix.
+            if (row.status === 'todo' && !row.deleted_at) {
               setTasks((prev) => {
                 if (prev.some((t) => t.id === row.id)) return prev
                 return [row, ...prev]
@@ -106,7 +109,8 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             }
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as Task
-            if (row.deleted_at || row.status === 'completed' || row.status === 'archived') {
+            // Remove from matrix if soft-deleted or no longer todo.
+            if (row.deleted_at || row.status !== 'todo') {
               setTasks((prev) => prev.filter((t) => t.id !== row.id))
             } else {
               setTasks((prev) =>
@@ -209,5 +213,32 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     }
   }, [offlineQueue])
 
-  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, reload: loadTasks }
+  // Batch soft-delete all status='done' tasks — used by "Clear completed".
+  // Reuses the existing deleted_at soft-delete column and offline-queue path;
+  // no schema migration required.
+  const clearCompleted = useCallback(async () => {
+    if (!userId) return
+
+    // Fetch IDs of all done, non-deleted tasks for this user.
+    const { data } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'done')
+      .is('deleted_at', null)
+
+    if (!data || data.length === 0) return
+
+    const now = new Date().toISOString()
+
+    for (const { id } of data as { id: string }[]) {
+      if (offlineQueue && !offlineQueue.online) {
+        await offlineQueue.enqueue('tasks', 'update', id, { deleted_at: now })
+      } else {
+        await supabase.from('tasks').update({ deleted_at: now }).eq('id', id)
+      }
+    }
+  }, [userId, offlineQueue])
+
+  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload: loadTasks }
 }
