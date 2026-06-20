@@ -374,18 +374,15 @@ export default function App() {
   const handleVoiceTask = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceTaskStatus('saving')
-    console.log('[Voice Task] Starting. AI enabled:', aiSettings.enabled, 'model:', aiSettings.model)
 
     // AI path: parse transcript into structured task
     if (aiSettings.enabled) {
       setVoiceTaskStatus('parsing...')
-      console.log('[Voice Task] Calling edge function...')
       const result = await parseVoiceTranscript(
         transcript,
         aiSettings.model,
         getAIBaseUrl()
       )
-      console.log('[Voice Task] Result:', result)
       if ('error' in result) {
         setVoiceTaskStatus(result.error)
         return
