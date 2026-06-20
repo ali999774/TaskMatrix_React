@@ -191,6 +191,13 @@ export default function App() {
   const [suggesting, setSuggesting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
 
+  // Auto-close mobile menu after 5s
+  useEffect(() => {
+    if (!showMenu) return
+    const t = setTimeout(() => setShowMenu(false), 5000)
+    return () => clearTimeout(t)
+  }, [showMenu])
+
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
   const [undoIsDoneDismiss, setUndoIsDoneDismiss] = useState(false)
