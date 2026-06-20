@@ -185,7 +185,7 @@ export default function App() {
 
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask } = useTasks(userId, offlineQueue)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const { categories, updateCategories } = useUserSettings(userId)
   const [quickAdd, setQuickAdd] = useState('')
@@ -213,6 +213,9 @@ export default function App() {
   const [undoIsDoneDismiss, setUndoIsDoneDismiss] = useState(false)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Increment to signal CompletedSection to re-fetch
+  const [reloadTrigger, setReloadTrigger] = useState(0)
+
   const handleDeleteTask = (id: string) => {
     const task = tasks.find((t) => t.id === id)
     deleteTask(id)
@@ -227,7 +230,7 @@ export default function App() {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
     if (undoTask) {
       if (undoIsDoneDismiss) {
-        // Undo a done-dismiss: set task back to 'todo' instead of restoring from delete
+        // Undo a completion: flip back to todo, returning the task to the matrix.
         updateStatus(undoTask.id, 'todo')
       } else {
         restoreTask(undoTask)
@@ -237,26 +240,38 @@ export default function App() {
     setUndoTask(null)
   }
 
-  // When a task is marked done, auto-dismiss it after a short delay with undo
-  const doneDismissRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  // When a task is marked done, show an undo snackbar for 5s.
+  // The task leaves the active matrix immediately (matrix filters status='todo').
+  // No auto-delete timer — done tasks persist in CompletedSection until manually cleared.
   const handleStatusChange = (id: string, status: string) => {
     updateStatus(id, status)
     if (status === 'done') {
-      // Clear any existing dismiss timer for this task
-      const existing = doneDismissRef.current.get(id)
-      if (existing) clearTimeout(existing)
-      // Auto-delete after 3s
-      const timer = setTimeout(() => {
-        doneDismissRef.current.delete(id)
+      const task = tasks.find((t) => t.id === id)
+      if (task) {
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
         setUndoIsDoneDismiss(true)
-        handleDeleteTask(id)
-      }, 3000)
-      doneDismissRef.current.set(id, timer)
+        setUndoTask(task)
+        undoTimerRef.current = setTimeout(() => {
+          setUndoTask(null)
+          setUndoIsDoneDismiss(false)
+        }, 5000)
+      }
+      // Signal CompletedSection to re-fetch so the newly done task appears.
+      setReloadTrigger((n) => n + 1)
     } else {
-      // If task is un-done (via undo or manual cycle), cancel the dismiss
-      const existing = doneDismissRef.current.get(id)
-      if (existing) { clearTimeout(existing); doneDismissRef.current.delete(id) }
+      // Task un-completed — cancel any pending snackbar for this task.
+      if (undoTask?.id === id) {
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+        setUndoTask(null)
+        setUndoIsDoneDismiss(false)
+      }
     }
+  }
+
+  const handleClearCompleted = async () => {
+    if (!window.confirm('Clear all completed tasks? This cannot be undone.')) return
+    await clearCompleted()
+    setReloadTrigger((n) => n + 1)
   }
 
   // Persist context filter across sessions
@@ -664,6 +679,9 @@ export default function App() {
         <CompletedSection
           userId={userId}
           context={context}
+          reloadTrigger={reloadTrigger}
+          onUncomplete={(id) => { updateStatus(id, 'todo'); setReloadTrigger((n) => n + 1) }}
+          onClearCompleted={handleClearCompleted}
           onTaskClick={setSelectedTask}
         />
       </div>
