@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Task } from '../types'
 import type { CategoryDef } from '../lib/categories'
+import { breakDownTask } from '../lib/ai-parse'
+import { useHaptics } from '../hooks/useHaptics'
 
 interface Props {
   task: Task
@@ -19,6 +21,8 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const [newSubtask, setNewSubtask] = useState('')
   const overlayRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
+  const haptics = useHaptics()
+  const [breakingDown, setBreakingDown] = useState(false)
 
   useEffect(() => {
     // Autofocus only with a fine pointer (mouse/trackpad). On touch it
@@ -105,6 +109,19 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   }
 
   const completed = subtasks.filter((s) => s.done).length
+
+  const handleBreakdown = async () => {
+    haptics('light')
+    setBreakingDown(true)
+    const result = await breakDownTask(task.title, task.notes || undefined)
+    setBreakingDown(false)
+    if ('subtasks' in result && result.subtasks.length > 0) {
+      const newItems = result.subtasks.map(t => ({ title: t, done: false }))
+      const updated = [...subtasks, ...newItems]
+      setSubtasks(updated)
+      save({ subtasks: updated })
+    }
+  }
 
   return (
     <div
@@ -248,6 +265,16 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                   outline-none focus:border-slate-400 dark:focus:border-slate-500 
                   transition-colors"
               />
+              <button
+                onClick={handleBreakdown}
+                disabled={breakingDown}
+                className="shrink-0 text-[0.75rem] font-medium px-3 py-2 rounded-lg border
+                  border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20
+                  text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30
+                  transition-all active:scale-95 min-h-[44px] disabled:opacity-50"
+              >
+                {breakingDown ? '...' : '✨ Break down'}
+              </button>
             </div>
           </div>
 

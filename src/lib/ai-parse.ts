@@ -1,5 +1,6 @@
 // AI-powered voice transcript → structured task parser.
 // Routes through a Supabase Edge Function (server-side API key).
+// Supports three modes: parse (task parsing), breakdown (subtask generation), suggest (next task).
 
 interface ParsedTask {
   title: string
@@ -11,11 +12,40 @@ interface ParsedTask {
   notes?: string | null
 }
 
-export interface ParseError {
-  error: string
-}
-
 const EDGE_FN = 'https://xulnxwwwjpvgsaqnsllo.supabase.co/functions/v1/ai-parse'
+
+async function callEdgeFn(body: Record<string, unknown>): Promise<{ data: Record<string, unknown> } | { error: string }> {
+  try {
+    const response = await fetch(EDGE_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    const text = await response.text()
+
+    if (!response.ok) {
+      try {
+        const errData = JSON.parse(text)
+        console.error('[AI] Edge function error:', response.status, errData)
+        return { error: errData?.error || `API error ${response.status}` }
+      } catch {
+        console.error('[AI] Edge function error:', response.status, text)
+        return { error: `API error ${response.status}` }
+      }
+    }
+
+    if (!text) return { error: 'empty response' }
+
+    const parsed = JSON.parse(text)
+    if (parsed.error) return { error: parsed.error }
+
+    return { data: parsed }
+  } catch (err) {
+    console.error('[AI] Failed:', err)
+    return { error: 'network error' }
+  }
+}
 
 export async function parseVoiceTranscript(
   transcript: string,
@@ -24,51 +54,40 @@ export async function parseVoiceTranscript(
 ): Promise<{ parsed: ParsedTask } | { error: string }> {
   if (!transcript.trim()) return { error: 'empty transcript' }
 
-  try {
-    const response = await fetch(EDGE_FN, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcript, model, baseUrl }),
-    })
+  const result = await callEdgeFn({ transcript, model, baseUrl })
+  if ('error' in result) return result
 
-    const body = await response.text()
-
-    if (!response.ok) {
-      try {
-        const errData = JSON.parse(body)
-        console.error('[AI Parse] Edge function error:', response.status, errData)
-        return { error: errData?.error || `API error ${response.status}` }
-      } catch {
-        console.error('[AI Parse] Edge function error:', response.status, body)
-        return { error: `API error ${response.status}` }
-      }
-    }
-
-    if (!body) {
-      console.error('[AI Parse] Empty response from edge function')
-      return { error: 'empty response' }
-    }
-
-    const parsed = JSON.parse(body)
-
-    if (parsed.error) {
-      console.error('[AI Parse] LLM error:', parsed.error)
-      return { error: 'LLM error' }
-    }
-
-    return {
-      parsed: {
-        title: parsed.title?.trim() || transcript.trim().slice(0, 60),
-        due_date: parsed.due_date || null,
-        due_time: parsed.due_time || null,
-        category: parsed.category || null,
-        importance: typeof parsed.importance === 'number' ? Math.min(5, Math.max(1, parsed.importance)) : 3,
-        urgency: typeof parsed.urgency === 'number' ? Math.min(5, Math.max(1, parsed.urgency)) : 3,
-        notes: parsed.notes || null,
-      },
-    }
-  } catch (err) {
-    console.error('[AI Parse] Failed:', err)
-    return { error: 'network error' }
+  const d = result.data
+  return {
+    parsed: {
+      title: d.title as string || transcript.trim().slice(0, 60),
+      due_date: (d.due_date as string) || null,
+      due_time: (d.due_time as string) || null,
+      category: (d.category as string) || null,
+      importance: typeof d.importance === 'number' ? Math.min(5, Math.max(1, d.importance)) : 3,
+      urgency: typeof d.urgency === 'number' ? Math.min(5, Math.max(1, d.urgency)) : 3,
+      notes: (d.notes as string) || null,
+    },
   }
+}
+
+export async function breakDownTask(
+  title: string,
+  notes?: string
+): Promise<{ subtasks: string[] } | { error: string }> {
+  if (!title.trim()) return { error: 'empty title' }
+  const transcript = notes ? `${title}\nNotes: ${notes}` : title
+  const result = await callEdgeFn({ transcript, mode: 'breakdown' })
+  if ('error' in result) return result
+  const subtasks = Array.isArray(result.data.subtasks) ? result.data.subtasks as string[] : []
+  return { subtasks }
+}
+
+export async function suggestNextTask(
+  taskList: string
+): Promise<{ suggested: string } | { error: string }> {
+  if (!taskList.trim()) return { error: 'empty task list' }
+  const result = await callEdgeFn({ transcript: taskList, mode: 'suggest' })
+  if ('error' in result) return result
+  return { suggested: (result.data.suggested as string) || 'No suggestion' }
 }

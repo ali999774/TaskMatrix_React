@@ -18,7 +18,7 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
-import { parseVoiceTranscript } from './lib/ai-parse'
+import { parseVoiceTranscript, suggestNextTask } from './lib/ai-parse'
 import { useAISettings } from './hooks/useAISettings'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
@@ -187,6 +187,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
+  const [suggestion, setSuggestion] = useState('')
+  const [suggesting, setSuggesting] = useState(false)
 
   // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
   const [undoTask, setUndoTask] = useState<Task | null>(null)
@@ -263,6 +265,22 @@ export default function App() {
     document.body.style.overflow = hasModal ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [hasModal])
+
+  const handleSuggest = async () => {
+    if (!aiSettings.enabled || filteredTasks.length === 0) return
+    setSuggesting(true)
+    const list = filteredTasks
+      .filter(t => t.status !== 'done')
+      .slice(0, 20)
+      .map(t => `- [${t.importance},${t.urgency}] ${t.title}${t.due_date ? ` (due ${t.due_date})` : ''}`)
+      .join('\n')
+    const result = await suggestNextTask(list)
+    setSuggesting(false)
+    if ('suggested' in result) {
+      setSuggestion(result.suggested)
+      setTimeout(() => setSuggestion(''), 5000)
+    }
+  }
 
   const filteredTasks = context === 'all' ? tasks : tasks.filter((t) => t.category === context)
 
@@ -473,7 +491,7 @@ export default function App() {
                   value={quickAdd}
                   onChange={(e) => setQuickAdd(e.target.value)}
                   onKeyDown={handleQuickAddKeyDown}
-                  placeholder={voiceTaskStatus || 'Quick add task...'}
+                  placeholder={suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task...'}
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
                     dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.875rem] text-slate-700 
                     dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
@@ -508,6 +526,19 @@ export default function App() {
               >
                 ⚙️
               </button>
+              {aiSettings.enabled && (
+                <button
+                  onClick={handleSuggest}
+                  disabled={suggesting}
+                  className="text-[0.75rem] px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700
+                    bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
+                    hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all
+                    active:scale-90 min-h-[44px] disabled:opacity-50 whitespace-nowrap"
+                  title="AI suggests the best task to work on right now"
+                >
+                  {suggesting ? '...' : '🧠 What next?'}
+                </button>
+              )}
               <button
                 onClick={() => window.location.reload()}
                 className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
