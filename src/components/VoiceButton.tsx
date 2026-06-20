@@ -21,14 +21,20 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listenerRef = useRef<any>(null) // native plugin listener handle
   const partialRef = useRef('') // accumulated partial results for fallback
   const onTranscriptRef = useRef(onTranscript)
-  onTranscriptRef.current = onTranscript
+
+  // Keep callback ref in sync without triggering re-renders
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript
+  })
 
   // --- Native (iOS) path using Capacitor plugin bridge ---
   const setupNative = useCallback(async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SpeechRecognition = NativeSpeech as any
 
       // Request permissions
@@ -55,13 +61,15 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           }
 
           // Register partial results listener
-          listenerRef.current = await SpeechRecognition.addListener('partialResults', (event: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const handlePartial = (event: any) => {
             const match = event.matches?.[0]
             if (match) {
               partialRef.current = match
               onStatus?.('hearing: ' + match)
             }
-          })
+          }
+          listenerRef.current = await SpeechRecognition.addListener('partialResults', handlePartial)
 
           await SpeechRecognition.start({
             language: 'en-US',
@@ -116,6 +124,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
   // --- Web path using Web Speech API ---
   const setupWeb = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
     const SpeechRecognitionAPI = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
@@ -170,11 +179,13 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   }, [onStatus])
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (isNativeSpeech()) {
       setupNative()
     } else {
       setupWeb()
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     return () => {
       const rec = recognitionRef.current
@@ -201,6 +212,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         await rec.start()
         setListening(true)
         onStatus?.('listening')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         // Edge and some browsers throw 'language-not-supported' even though
         // the SpeechRecognition constructor exists. Don't hide the button
@@ -215,8 +227,6 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
   }
 
-  if (unsupported) return null
-
   // Auto-start recording (used by iOS home screen quick action)
   const autoStarted = useRef(false)
   useEffect(() => {
@@ -224,7 +234,11 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       autoStarted.current = true
       toggle()
     }
+    // toggle intentionally omitted — including it would re-fire on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, listening])
+
+  if (unsupported) return null
 
   return (
     <button
