@@ -33,3 +33,6 @@ test-results/
 
 # Volta (accidentally committed)
 .volta
+
+# iOS build backup — created during ios/ios → ios/App move, safe to delete
+ios/ios.bak/
