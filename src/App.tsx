@@ -390,7 +390,8 @@ export default function App() {
             parsed.title,
             parsed.importance || 3,
             parsed.urgency || 3,
-            parsed.category || undefined
+            parsed.category || undefined,
+            { due_date: parsed.due_date || undefined, due_time: parsed.due_time || undefined, notes: parsed.notes || undefined }
           )
           setVoiceTaskStatus('task created!')
           setTimeout(() => setVoiceTaskStatus(''), 2500)
@@ -426,7 +427,8 @@ export default function App() {
             parsed.title,
             parsed.importance || 3,
             parsed.urgency || 3,
-            parsed.category || undefined
+            parsed.category || undefined,
+            { due_date: parsed.due_date || undefined, due_time: parsed.due_time || undefined, notes: parsed.notes || undefined }
           )
           setVoiceStatus('task created!')
           setTimeout(() => setVoiceStatus(''), 2500)

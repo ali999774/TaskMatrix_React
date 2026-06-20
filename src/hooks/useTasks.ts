@@ -127,7 +127,13 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     }
   }, [userId])
 
-  const addTask = useCallback(async (title: string, importance: number, urgency: number, category?: string) => {
+  const addTask = useCallback(async (
+    title: string,
+    importance: number,
+    urgency: number,
+    category?: string,
+    opts?: { due_date?: string; due_time?: string; notes?: string }
+  ) => {
     if (!userId) return
     const newTask: Partial<Task> = {
       id: crypto.randomUUID(),
@@ -141,6 +147,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       tags: [],
       pinned: false,
       recurring: false,
+      due_date: opts?.due_date || null,
+      due_time: opts?.due_time || null,
+      notes: opts?.notes || null,
     }
     setTasks((prev) => [newTask as Task, ...prev])
     if (offlineQueue && !offlineQueue.online) {
