@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ios: {
     scheme: 'taskmatrix',
-    path: 'ios/ios',
+    path: 'ios',
     keyboardResize: 'none',
   },
 };

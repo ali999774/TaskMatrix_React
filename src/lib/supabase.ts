@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Vite replaces these at build time. If empty (local Capacitor build),
-// fall back to public values that are already exposed in client-side JS.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  || 'https://xulnxwwwjpvgsaqnsllo.supabase.co'
+if (!supabaseUrl) {
+  throw new Error('VITE_SUPABASE_URL is required — check your .env file')
+}
+
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  || 'sb_publishable_PHuC0kENMdy-Qdfd3iAKnQ_AKpnpwo4'
+if (!supabaseAnonKey) {
+  throw new Error('VITE_SUPABASE_ANON_KEY is required — check your .env file')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
