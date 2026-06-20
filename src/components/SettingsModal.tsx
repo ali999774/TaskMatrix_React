@@ -152,12 +152,18 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
                   <div>
                     <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Model</label>
-                    <input
-                      type="text"
+                    <select
                       value={aiSettings.model}
                       onChange={(e) => onAISettingsChange({ model: e.target.value })}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors"
-                    />
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors appearance-none
+                        bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] 
+                        bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                    >
+                      <option value="deepseek-v4-flash">deepseek-v4-flash (fastest)</option>
+                      <option value="deepseek-v4-pro">deepseek-v4-pro (reasoning)</option>
+                      <option value="gpt-4o-mini">gpt-4o-mini (OpenAI)</option>
+                      <option value="gpt-4o">gpt-4o (OpenAI)</option>
+                    </select>
                   </div>
                 </>
               )}

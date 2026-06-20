@@ -494,8 +494,8 @@ export default function App() {
                   placeholder={suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task...'}
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
                     dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.875rem] text-slate-700 
-                    dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
-                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+                    dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 placeholder:truncate
+                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors min-w-0"
                 />
               </div>
             </div>
@@ -533,10 +533,11 @@ export default function App() {
                   className="text-[0.75rem] px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700
                     bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400
                     hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all
-                    active:scale-90 min-h-[44px] disabled:opacity-50 whitespace-nowrap"
+                    active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0"
                   title="AI suggests the best task to work on right now"
                 >
-                  {suggesting ? '...' : '🧠 What next?'}
+                  <span className="hidden sm:inline">🧠 What next?</span>
+                  <span className="sm:hidden">🧠</span>
                 </button>
               )}
               <button
