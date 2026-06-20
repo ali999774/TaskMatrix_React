@@ -536,8 +536,8 @@ export default function App() {
                     active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0"
                   title="AI suggests the best task to work on right now"
                 >
-                  <span className="hidden sm:inline">🧠 What next?</span>
-                  <span className="sm:hidden">🧠</span>
+                  <span className="hidden sm:inline">🎯 What next?</span>
+                  <span className="sm:hidden">🎯</span>
                 </button>
               )}
               <button
