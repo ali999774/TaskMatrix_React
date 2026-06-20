@@ -8,7 +8,6 @@ const config: CapacitorConfig = {
     scheme: 'taskmatrix',
     path: 'ios/ios',
     keyboardResize: 'none',
-    scrollEnabled: false,
   },
 };
 
