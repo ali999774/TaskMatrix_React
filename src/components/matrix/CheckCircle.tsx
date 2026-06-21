@@ -26,19 +26,23 @@ export default function CheckCircle({ status, onToggle }: CheckCircleProps) {
       haptics('success')
       // Play a subtle completion chime
       try {
-        // Reuse context if available (Chrome limits concurrent AudioContexts)
+        // Reuse context if available (Chrome limits concurrent AudioContexts).
+        // Always resume before scheduling: iOS suspends audio contexts when
+        // idle, so a cached context may be in 'suspended' state on re-tap.
         const ctx = audioRef.current ?? new AudioContext()
         audioRef.current = ctx
-        const o = ctx.createOscillator()
-        const g = ctx.createGain()
-        o.connect(g); g.connect(ctx.destination)
-        o.type = 'sine'
-        o.frequency.setValueAtTime(880, ctx.currentTime)
-        o.frequency.setValueAtTime(1100, ctx.currentTime + 0.08)
-        g.gain.setValueAtTime(0.15, ctx.currentTime)
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-        o.start(ctx.currentTime)
-        o.stop(ctx.currentTime + 0.3)
+        ctx.resume().then(() => {
+          const o = ctx.createOscillator()
+          const g = ctx.createGain()
+          o.connect(g); g.connect(ctx.destination)
+          o.type = 'sine'
+          o.frequency.setValueAtTime(880, ctx.currentTime)
+          o.frequency.setValueAtTime(1100, ctx.currentTime + 0.08)
+          g.gain.setValueAtTime(0.15, ctx.currentTime)
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+          o.start(ctx.currentTime)
+          o.stop(ctx.currentTime + 0.3)
+        })
       } catch { /* AudioContext may not be available */ }
     } else {
       haptics('light')
