@@ -24,12 +24,26 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listenerRef = useRef<any>(null) // native plugin listener handle
   const partialRef = useRef('') // accumulated partial results for fallback
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const maxDurationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onTranscriptRef = useRef(onTranscript)
 
   // Keep callback ref in sync without triggering re-renders
   useEffect(() => {
     onTranscriptRef.current = onTranscript
   })
+
+  // --- Helper: clear all auto-stop timers ---
+  const clearTimers = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+    if (maxDurationTimerRef.current) {
+      clearTimeout(maxDurationTimerRef.current)
+      maxDurationTimerRef.current = null
+    }
+  }
 
   // --- Native (iOS) path using Capacitor plugin bridge ---
   const setupNative = useCallback(async () => {
@@ -60,6 +74,9 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             listenerRef.current = null
           }
 
+          // Clear any stale timers
+          clearTimers()
+
           // Register partial results listener
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const handlePartial = (event: any) => {
@@ -67,6 +84,18 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             if (match) {
               partialRef.current = match
               onStatus?.('hearing: ' + match)
+              // Reset silence timer on every recognized phrase
+              if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+              silenceTimerRef.current = setTimeout(() => {
+                onStatus?.('auto-stop in 1s...')
+                silenceTimerRef.current = setTimeout(() => {
+                  silenceTimerRef.current = null
+                  const rec = recognitionRef.current
+                  if (rec) {
+                    try { rec.stop() } catch { /* ignore */ }
+                  }
+                }, 1000)
+              }, 4000) // 5s total: 4s silence → 1s warning → auto-stop
             }
           }
           listenerRef.current = await SpeechRecognition.addListener('partialResults', handlePartial)
@@ -76,8 +105,19 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             maxResults: 1,
             partialResults: true,
           })
+
+          // Max duration safety net: 5 minutes
+          maxDurationTimerRef.current = setTimeout(() => {
+            maxDurationTimerRef.current = null
+            const rec = recognitionRef.current
+            if (rec) {
+              try { rec.stop() } catch { /* ignore */ }
+            }
+          }, 5 * 60 * 1000)
         },
         stop: async () => {
+          // Clear silence + max-duration timers
+          clearTimers()
           try {
             await SpeechRecognition.stop()
           } catch { /* ignore */ }
@@ -109,6 +149,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           }
         },
         abort: async () => {
+          clearTimers()
           try { await SpeechRecognition.stop() } catch { /* ignore */ }
           if (listenerRef.current) {
             try { await listenerRef.current.remove() } catch { /* ignore */ }
@@ -188,6 +229,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     /* eslint-enable react-hooks/set-state-in-effect */
 
     return () => {
+      clearTimers()
       const rec = recognitionRef.current
       if (rec) {
         try { rec.abort() } catch { /* ignore */ }
@@ -203,6 +245,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     if (!rec) return
 
     if (listening) {
+      clearTimers()
       try {
         await rec.stop()
       } catch { /* ignore */ }
