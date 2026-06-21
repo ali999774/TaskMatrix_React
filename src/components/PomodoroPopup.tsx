@@ -127,21 +127,6 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             </div>
           </div>
 
-          {/* Round dots — filled = completed this cycle */}
-          <div className="flex gap-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="w-2.5 h-2.5 rounded-full transition-colors duration-300"
-                style={{
-                  backgroundColor:
-                    i < sessionCount % 4
-                      ? 'var(--color-pomodoro-dot-done)'
-                      : 'var(--color-pomodoro-dot-empty)',
-                }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Transport controls: reset | pause | skip */}
