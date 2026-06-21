@@ -11,6 +11,7 @@ export interface Task {
   status: string
   due_date?: string | null
   due_time?: string | null
+  reminder?: string | null
   estimated_duration?: number | null
   recurring?: boolean
   tags?: string[]

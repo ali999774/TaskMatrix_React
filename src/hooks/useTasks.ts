@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
+import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
 
 const DEBOUNCE_MS = 400
 
@@ -13,6 +14,28 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  // Track previous task IDs to cancel reminders for removed tasks
+  const prevTaskIdsRef = useRef<Set<string>>(new Set())
+
+  // Reactively schedule/cancel local notifications when tasks change
+  useEffect(() => {
+    const currentIds = new Set(tasks.map((t) => t.id))
+
+    // Cancel reminders for tasks no longer in the active list (deleted/completed)
+    for (const id of prevTaskIdsRef.current) {
+      if (!currentIds.has(id)) {
+        cancelTaskReminder(id)
+      }
+    }
+
+    // Schedule/re-schedule for all current tasks
+    for (const task of tasks) {
+      scheduleTaskReminder(task)
+    }
+
+    prevTaskIdsRef.current = currentIds
+  }, [tasks])
 
   // Dirty-flag + debounce for updateTask (title edits, position changes, etc.)
   const dirtyRef = useRef<Map<string, Partial<Task>>>(new Map())
@@ -136,7 +159,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     importance: number,
     urgency: number,
     category?: string,
-    opts?: { due_date?: string; due_time?: string; notes?: string }
+    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string }
   ) => {
     if (!userId) return
     const newTask: Partial<Task> = {
@@ -153,6 +176,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       recurring: false,
       due_date: opts?.due_date || null,
       due_time: opts?.due_time || null,
+      reminder: opts?.reminder || null,
       notes: opts?.notes || null,
     }
     setTasks((prev) => [newTask as Task, ...prev])

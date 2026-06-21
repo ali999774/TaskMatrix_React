@@ -3,6 +3,7 @@ import type { Task } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { breakDownTask } from '../lib/ai-parse'
 import { useHaptics } from '../hooks/useHaptics'
+import { REMINDER_OPTIONS, type ReminderPreset } from '../lib/notifications'
 
 interface Props {
   task: Task
@@ -16,6 +17,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const [notes, setNotes] = useState(task.notes || '')
   const [dueDate, setDueDate] = useState(task.due_date || '')
   const [dueTime, setDueTime] = useState(task.due_time || '')
+  const [reminder, setReminder] = useState<ReminderPreset>((task.reminder as ReminderPreset) || null)
   const [category, setCategory] = useState(task.category || '')
   const [subtasks, setSubtasks] = useState(task.subtasks || [])
   const [newSubtask, setNewSubtask] = useState('')
@@ -39,6 +41,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     setNotes(task.notes || '')
     setDueDate(task.due_date || '')
     setDueTime(task.due_time || '')
+    setReminder((task.reminder as ReminderPreset) || null)
     setCategory(task.category || '')
     setSubtasks(task.subtasks || [])
   }, [task])
@@ -70,6 +73,12 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const handleDueTimeChange = (val: string) => {
     setDueTime(val)
     save({ due_time: val || null })
+  }
+
+  const handleReminderChange = (val: string) => {
+    const preset: ReminderPreset = val === 'null' ? null : val as ReminderPreset
+    setReminder(preset)
+    save({ reminder: preset })
   }
 
   const handleCategoryChange = (val: string) => {
@@ -213,6 +222,31 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
               />
             </div>
           </div>
+
+          {/* Reminder */}
+          {dueDate && (
+            <div>
+              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                Reminder
+              </label>
+              <select
+                value={reminder ?? 'null'}
+                onChange={(e) => handleReminderChange(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
+                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
+                  dark:text-slate-300 outline-none focus:border-slate-400 
+                  dark:focus:border-slate-500 transition-colors appearance-none
+                  bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E")` }}
+              >
+                {REMINDER_OPTIONS.map((opt) => (
+                  <option key={opt.value ?? 'null'} value={opt.value ?? 'null'}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Subtasks */}
           <div>

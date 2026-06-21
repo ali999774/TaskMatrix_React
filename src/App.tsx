@@ -20,6 +20,7 @@ import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent } from './lib/ai-parse'
+import { listenForReminderTaps, defaultReminder } from './lib/notifications'
 import { useAISettings } from './hooks/useAISettings'
 import { QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
@@ -347,6 +348,9 @@ export default function App() {
     return () => window.removeEventListener('tm:open-task', handler)
   }, [tasks])
 
+  // Initialize local notification tap listener (runs once on mount)
+  useEffect(() => { listenForReminderTaps() }, [])
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
@@ -415,7 +419,9 @@ export default function App() {
       if (!('error' in result)) {
         const p = result.parsed
         addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
-          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined })
+          { due_date: p.due_date || undefined, due_time: p.due_time || undefined,
+            notes: p.notes || undefined,
+            reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined })
         return
       }
     }
@@ -459,7 +465,8 @@ export default function App() {
           p.importance || 3,
           p.urgency || 3,
           p.category || undefined,
-          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined }
+          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined,
+            reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined }
         )
         setVoiceTaskStatus('task created!')
         setTimeout(() => setVoiceTaskStatus(''), 2500)
