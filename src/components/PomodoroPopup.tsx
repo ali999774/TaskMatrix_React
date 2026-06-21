@@ -171,25 +171,13 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <div className="font-bold text-[1rem] text-slate-800 dark:text-white">
             ⏱ Pomodoro
           </div>
-          <div className="flex gap-2 items-center">
-            <select
-              value={session}
-              onChange={(e) => switchSession(e.target.value as SessionType)}
-              className="text-[0.75rem] border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1
-                bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
-            >
-              <option value="work">Work</option>
-              <option value="short">Short Break</option>
-              <option value="long">Long Break</option>
-            </select>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-              aria-label="Close pomodoro timer"
-            >
-              ×
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            aria-label="Close pomodoro timer"
+          >
+            ×
+          </button>
         </div>
 
         {/* Circular timer */}
@@ -263,9 +251,17 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <div className="flex flex-col gap-2">
             {(['work', 'short', 'long'] as SessionType[]).map((type) => (
               <div key={type} className="flex justify-between items-center">
-                <span className="text-[0.875rem] text-slate-500 dark:text-slate-400">
+                <button
+                  onClick={() => switchSession(type)}
+                  className={`text-[0.875rem] px-2 py-1 rounded-md transition-colors min-h-[36px] text-left
+                    ${type === session
+                      ? 'text-blue-600 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-blue-900/30'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
+                  aria-label={`Switch to ${SESSION_LABELS[type]}`}
+                >
                   {type === 'work' ? 'Work' : type === 'short' ? 'Short break' : 'Long break'}
-                </span>
+                </button>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
