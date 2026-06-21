@@ -193,6 +193,7 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
+  const cameFromNotesModal = useRef(false)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
@@ -691,6 +692,7 @@ export default function App() {
           onClose={() => setShowNotesModal(false)}
           onAdd={addNote}
           onEdit={(note) => {
+            cameFromNotesModal.current = true
             setShowNotesModal(false)
             setEditingNote(note)
           }}
@@ -702,7 +704,13 @@ export default function App() {
           note={editingNote}
           onSave={updateNote}
           onDelete={deleteNote}
-          onClose={() => setEditingNote(null)}
+          onClose={() => {
+            setEditingNote(null)
+            if (cameFromNotesModal.current) {
+              cameFromNotesModal.current = false
+              setShowNotesModal(true)
+            }
+          }}
         />
       )}
 
