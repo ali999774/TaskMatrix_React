@@ -48,6 +48,20 @@
   --line-height-subtitle:  1.3;
   --font-weight-subtitle:  500;
 
+  /* ── Pomodoro / Focus ───────────────────────────────────────────────────── */
+  /* bg is intentionally always dark — immersive "cinema" mode regardless of  */
+  /* the app's light/dark setting.                                             */
+  --color-pomodoro-bg:         #0A0A0F;
+  --color-pomodoro-track:      #E5E7EB;   /* ring track — light mode          */
+  --color-pomodoro-work:       #FF3B30;   /* work arc — iOS system red        */
+  --color-pomodoro-short:      #34C759;   /* short-break arc — iOS green      */
+  --color-pomodoro-long:       #FF9500;   /* long-break arc — iOS amber       */
+  --color-pomodoro-dot-done:   #FF3B30;   /* filled completed-round dot       */
+  --color-pomodoro-dot-empty:  #D1D5DB;   /* empty round dot — light mode     */
+  --color-pomodoro-btn-calm:   #2C2C2E;   /* pause btn bg (on dark immersive) */
+  --color-pomodoro-text-hero:  #FFFFFF;   /* large time display (on dark bg)  */
+  --color-pomodoro-text-label: #8E8E93;   /* mode label muted (on dark bg)    */
+
   /* ── Radius scale ───────────────────────────────────────────────────────── */
   --radius-card:           15px;
   --radius-chip:           16px;
@@ -93,6 +107,14 @@
     --color-surface:        #1C1C1E;
     --color-text-primary:   #FFFFFF;
     --color-text-muted:     #98989F;
+
+    /* Pomodoro dark overrides */
+    --color-pomodoro-track:     #3A3A3C;
+    --color-pomodoro-work:      #FF453A;
+    --color-pomodoro-short:     #30D158;
+    --color-pomodoro-long:      #FF9F0A;
+    --color-pomodoro-dot-done:  #FF453A;
+    --color-pomodoro-dot-empty: #48484A;
   }
 
   /* System-level dark preference as a fallback (no JS required) */
@@ -107,6 +129,14 @@
       --color-surface:        #1C1C1E;
       --color-text-primary:   #FFFFFF;
       --color-text-muted:     #98989F;
+
+      /* Pomodoro dark overrides */
+      --color-pomodoro-track:     #3A3A3C;
+      --color-pomodoro-work:      #FF453A;
+      --color-pomodoro-short:     #30D158;
+      --color-pomodoro-long:      #FF9F0A;
+      --color-pomodoro-dot-done:  #FF453A;
+      --color-pomodoro-dot-empty: #48484A;
     }
   }
 }
