@@ -91,3 +91,14 @@ export async function suggestNextTask(
   if ('error' in result) return result
   return { suggested: (result.data.suggested as string) || 'No suggestion' }
 }
+
+export async function formatNoteContent(
+  transcript: string,
+  model: string = 'deepseek-v4-flash',
+  baseUrl: string = 'https://api.deepseek.com/v1'
+): Promise<{ formatted: string } | { error: string }> {
+  if (!transcript.trim()) return { error: 'empty transcript' }
+  const result = await callEdgeFn({ transcript, model, baseUrl, mode: 'format' })
+  if ('error' in result) return result
+  return { formatted: (result.data.formatted as string) || transcript.trim() }
+}

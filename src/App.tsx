@@ -18,7 +18,7 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
-import { parseVoiceTranscript, suggestNextTask } from './lib/ai-parse'
+import { parseVoiceTranscript, suggestNextTask, formatNoteContent } from './lib/ai-parse'
 import { useAISettings } from './hooks/useAISettings'
 import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
@@ -462,9 +462,25 @@ export default function App() {
     setVoiceStatus('saving')
     setVoiceNoteQuickAction(false)  // consumed
 
-    // Always save as sticky note — this is the notes button
+    let content = transcript.trim()
+
+    // AI formatting pass — clean up speech artifacts, structure the note
+    if (aiSettings.enabled) {
+      setVoiceStatus('formatting...')
+      const result = await formatNoteContent(
+        transcript,
+        aiSettings.model,
+        getAIBaseUrl()
+      )
+      if (!('error' in result)) {
+        content = result.formatted
+      }
+      // On error, fall through with raw transcript
+    }
+
+    // Save as sticky note
     try {
-      const note = await addNote(formatVoiceNote(transcript))
+      const note = await addNote(formatVoiceNote(content))
       if (note) {
         setEditingNote(note)
         setTimeout(() => setEditingNote(null), 2000)
