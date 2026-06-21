@@ -169,10 +169,16 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status } : t))
     )
-    if (offlineQueue && !offlineQueue.online) {
-      await offlineQueue.enqueue('tasks', 'update', id, { status })
+    const payload: Record<string, unknown> = { status }
+    if (status === 'done') {
+      payload.completed_at = new Date().toISOString()
     } else {
-      await supabase.from('tasks').update({ status }).eq('id', id)
+      payload.completed_at = null
+    }
+    if (offlineQueue && !offlineQueue.online) {
+      await offlineQueue.enqueue('tasks', 'update', id, payload)
+    } else {
+      await supabase.from('tasks').update(payload).eq('id', id)
     }
   }, [offlineQueue])
 

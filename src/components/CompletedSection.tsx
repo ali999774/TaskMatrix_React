@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 
-// TODO(completed_at): precise completion sort + age-based purge — requires Supabase migration.
-// Currently sorts by updated_at desc (good proxy; tasks are updated when status changes).
+// Completed tasks sorted by completed_at (set by updateStatus when status → done).
+// Backfilled existing done tasks from updated_at via migration add_completed_at_to_tasks.
 
 interface Props {
   userId: string | null
@@ -40,7 +40,7 @@ export default function CompletedSection({
       // status='done' — the only live completion value (phantom 'completed' removed in feat/completed-history)
       .eq('status', 'done')
       .is('deleted_at', null)
-      .order('updated_at', { ascending: false })
+      .order('completed_at', { ascending: false, nullsFirst: false })
       .limit(50)
 
     if (context !== 'all') {

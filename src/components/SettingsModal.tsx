@@ -63,7 +63,33 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
     onClose()
   }
 
-  // TODO(a11y): keyboard reorder for category rows
+  // Keyboard reorder for category rows
+  const moveItem = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= items.length) return
+    const updated = [...items]
+    const [moved] = updated.splice(fromIdx, 1)
+    updated.splice(toIdx, 0, moved)
+    setItems(updated)
+  }
+
+  const handleCategoryKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      const target = e.key === 'ArrowUp' ? idx - 1 : idx + 1
+      moveItem(idx, target)
+      // Re-focus the moved row after React re-render
+      requestAnimationFrame(() => {
+        const rows = (e.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLElement>('[role="button"][tabindex="0"]')
+        rows?.[Math.max(0, Math.min(target, rows.length - 1))]?.focus()
+      })
+      return
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      setEditingIdx(idx === editingIdx ? null : idx)
+    }
+  }
+
   // Drag reorder
   const handleDragStart = (e: React.DragEvent, idx: number) => {
     draggedIdx.current = idx
@@ -190,12 +216,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, idx)}
                     onClick={() => setEditingIdx(idx === editingIdx ? null : idx)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        setEditingIdx(idx === editingIdx ? null : idx)
-                      }
-                    }}
+                    onKeyDown={(e) => handleCategoryKeyDown(e, idx)}
                     role="button"
                     tabIndex={0}
                     aria-label={`Category: ${cat.display || 'new category'}`}
