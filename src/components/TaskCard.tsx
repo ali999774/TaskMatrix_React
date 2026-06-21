@@ -1,23 +1,11 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
+import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { getCategoryDef, CATEGORY_BORDER, CATEGORY_BADGE } from '../lib/categories'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
-
-const QUADRANT_ICONS: Record<Quadrant, string> = {
-  1: '🔥',
-  2: '📅',
-  3: '🤝',
-  4: '🗑️',
-}
-
-const QUADRANT_LABELS: Record<Quadrant, string> = {
-  1: 'Do First',
-  2: 'Schedule',
-  3: 'Delegate',
-  4: "Don't Do",
-}
+import CheckCircle from './matrix/CheckCircle'
 
 interface Props {
   task: Task
@@ -28,10 +16,7 @@ interface Props {
   categories?: CategoryDef[]
 }
 
-const STATUS_ICONS: Record<string, string> = {
-  todo: '○',
-  done: '●',
-}
+// Status icons moved into CheckCircle component
 
 function dueLabel(dateStr: string): { text: string; urgent: boolean } {
   const due = parseLocalDate(dateStr) // local midnight — new Date('YYYY-MM-DD') is UTC and shifts a day in US timezones
@@ -60,29 +45,10 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
     setShowMove(true)
   }, [])
 
-  const cycleStatus = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const cycleStatus = () => {
     const next: Record<string, string> = { todo: 'done', done: 'todo' }
     const newStatus = next[task.status] || 'todo'
     onStatusChange(task.id, newStatus)
-    if (newStatus === 'done') {
-      haptics('success')
-      // Play a subtle completion chime
-      try {
-        const ctx = new AudioContext()
-        const o = ctx.createOscillator()
-        const g = ctx.createGain()
-        o.connect(g); g.connect(ctx.destination)
-        o.type = 'sine'
-        o.frequency.setValueAtTime(880, ctx.currentTime)
-        o.frequency.setValueAtTime(1100, ctx.currentTime + 0.08)
-        g.gain.setValueAtTime(0.15, ctx.currentTime)
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-        o.start(ctx.currentTime)
-        o.stop(ctx.currentTime + 0.3)
-      } catch { /* AudioContext may not be available */ }
-    }
-    else haptics('light')
   }
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -155,16 +121,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         ${catDef ? `border-l-4 ${CATEGORY_BORDER[catDef.color] || ''}` : ''}`}
     >
       <div className="flex items-start gap-2">
-        <button
-          onClick={cycleStatus}
-          className={`mt-0.5 text-[1.125rem] flex-shrink-0 transition-colors active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
-            ${task.status === 'done' ? 'text-emerald-500 dark:text-emerald-400' 
-              : 'text-slate-300 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300'}`}
-          title={`Status: ${task.status}`}
-          aria-label={`Cycle status: ${task.status}`}
-        >
-          {STATUS_ICONS[task.status] || '○'}
-        </button>
+        <CheckCircle status={task.status} onToggle={cycleStatus} />
         <div className="flex-1 min-w-0">
           <span className={`text-[0.875rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
             {task.title}

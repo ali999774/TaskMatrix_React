@@ -54,9 +54,16 @@ export const QUADRANT_DEFAULTS: Record<Quadrant, { importance: number; urgency: 
 
 export const QUADRANT_LABELS: Record<Quadrant, string> = {
   1: 'Do First',
-  2: 'Schedule',
+  2: 'Invest',
   3: 'Delegate',
   4: "Don't Do",
+}
+
+export const QUADRANT_SUBTITLES: Record<Quadrant, string> = {
+  1: 'urgent · important',
+  2: 'important · not urgent',
+  3: 'urgent · not important',
+  4: 'not urgent · not important',
 }
 
 export const QUADRANT_ICONS: Record<Quadrant, string> = {
@@ -71,4 +78,21 @@ export const QUADRANT_DESCRIPTIONS: Record<Quadrant, string> = {
   2: 'Important, Not Urgent',
   3: 'Urgent, Not Important',
   4: 'Neither Urgent Nor Important',
+}
+
+/** Semantic string identifiers for quadrants — used in the grouped-data contract. */
+export type QuadrantId = 'do-first' | 'invest' | 'delegate' | 'dont-do'
+
+export const QUADRANT_ID_MAP: Record<Quadrant, QuadrantId> = {
+  1: 'do-first',
+  2: 'invest',
+  3: 'delegate',
+  4: 'dont-do',
+}
+
+export const QUADRANT_FROM_ID: Record<QuadrantId, Quadrant> = {
+  'do-first': 1,
+  'invest': 2,
+  'delegate': 3,
+  'dont-do': 4,
 }

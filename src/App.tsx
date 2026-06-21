@@ -7,7 +7,7 @@ import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { useUserSettings } from './hooks/useUserSettings'
-import QuadrantPanel from './components/QuadrantPanel'
+import MatrixScreen from './components/matrix/MatrixScreen'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
 import NoteEditModal from './components/NoteEditModal'
@@ -20,7 +20,7 @@ import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent } from './lib/ai-parse'
 import { useAISettings } from './hooks/useAISettings'
-import { importanceUrgencyToQuadrant, QUADRANT_DEFAULTS } from './types'
+import { QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
 
 
@@ -386,9 +386,7 @@ export default function App() {
     )
   }
 
-  const quadrants: Quadrant[] = [1, 2, 3, 4]
-  const quadrantTasks = (q: Quadrant) =>
-    filteredTasks.filter((t) => importanceUrgencyToQuadrant(t.importance, t.urgency) === q)
+
 
   const handleQuickAdd = async (q: Quadrant) => {
     const title = quickAdd.trim()
@@ -636,20 +634,14 @@ export default function App() {
             {/* Today strip */}
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start w-full">
-              {quadrants.map((q) => (
-                <QuadrantPanel
-                  key={q}
-                  quadrant={q}
-                  tasks={quadrantTasks(q)}
-                  onStatusChange={handleStatusChange}
-                  onDelete={handleDeleteTask}
-                  onMove={handleMove}
-                  onTaskClick={setSelectedTask}
-                  categories={categories}
-                />
-              ))}
-            </div>
+            <MatrixScreen
+              tasks={filteredTasks}
+              onMove={handleMove}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDeleteTask}
+              onTaskClick={setSelectedTask}
+              categories={categories}
+            />
           </div>
 
           {/* Sticky notes sidebar */}

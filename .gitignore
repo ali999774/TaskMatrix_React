@@ -43,3 +43,6 @@ supabase/.temp/
 # Xcode per-user state
 xcuserdata/
 *.xcuserstate
+
+# Claude Cowork session state
+.claude/
