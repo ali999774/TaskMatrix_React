@@ -1,15 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { useHaptics } from '../hooks/useHaptics'
+import { useRef, useCallback, useState } from 'react'
+import { usePomodoro, SESSION_LABELS } from '../hooks/usePomodoro'
+import type { SessionType } from '../hooks/usePomodoro'
 
-type SessionType = 'work' | 'short' | 'long'
-
-const SESSION_LABELS: Record<SessionType, string> = {
-  work: 'Work',
-  short: 'Short Break',
-  long: 'Long Break',
-}
-
-const CIRCUMFERENCE = 439.8 // 2 * PI * 70
+// Ring geometry constants
+const MODAL_CIRCUMFERENCE = 439.8  // 2π × 70  (idle compact ring)
+const FOCUS_CIRCUMFERENCE = 753.98 // 2π × 120 (full-screen ring)
 
 interface Props {
   show: boolean
@@ -17,107 +12,23 @@ interface Props {
 }
 
 export default function PomodoroPopup({ show, onClose }: Props) {
-  const [durations, setDurations] = useState({ work: 25, short: 5, long: 15 })
-  const [session, setSession] = useState<SessionType>('work')
-  const [timeLeft, setTimeLeft] = useState(25 * 60)
-  const [running, setRunning] = useState(false)
-  const [sessionCount, setSessionCount] = useState(0)
+  const {
+    durations, session, timeLeft, running, sessionCount,
+    toggleTimer, resetTimer, skipSession, switchSession, adjustDuration,
+  } = usePomodoro(show)
+
+  // Drag state (idle modal only)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const dragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0 })
   const popupRef = useRef<HTMLDivElement>(null)
   const posRef = useRef(pos)
-  const haptics = useHaptics()
   // eslint-disable-next-line react-hooks/refs -- keep ref in sync for pointer event callbacks
   posRef.current = pos
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  // Request notification permission on first open
-  useEffect(() => {
-    if (show && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-  }, [show])
-
-  const stopTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [])
-
-  // Cleanup on unmount
-  useEffect(() => () => stopTimer(), [stopTimer])
-
-  const switchSession = useCallback((type: SessionType) => {
-    stopTimer()
-    setRunning(false)
-    setSession(type)
-    setTimeLeft(durations[type] * 60)
-  }, [durations, stopTimer])
-
-  const toggleTimer = () => {
-    haptics(running ? 'light' : 'medium')
-    if (running) {
-      stopTimer()
-      setRunning(false)
-    } else {
-      setRunning(true)
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            stopTimer()
-            setRunning(false)
-            // Auto-advance after completion
-            setSessionCount((sc) => {
-              const newCount = sc + 1
-              // Notification
-              if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('Pomodoro complete!', {
-                  body: session === 'work' ? 'Time for a break.' : 'Back to work!',
-                })
-              }
-              // Advance session
-              if (session === 'work') {
-                const next: SessionType = newCount % 4 === 0 ? 'long' : 'short'
-                switchSession(next)
-              } else {
-                switchSession('work')
-              }
-              return newCount
-            })
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-  }
-
-  const resetTimer = useCallback(() => {
-    haptics('medium')
-    stopTimer()
-    setRunning(false)
-    setTimeLeft(durations[session] * 60)
-  }, [durations, session, stopTimer, haptics])
-
-  const adjustDuration = useCallback((type: SessionType, delta: number) => {
-    if (type === session && running) return
-    const min = type === 'short' ? 1 : 5
-    const max = type === 'work' ? 60 : type === 'short' ? 15 : 30
-    const newVal = Math.max(min, Math.min(max, durations[type] + delta))
-    setDurations((prev) => ({ ...prev, [type]: newVal }))
-    // Reflect the change immediately when adjusting the current idle session —
-    // otherwise the displayed time stays stale until reset/switch.
-    if (type === session && !running) setTimeLeft(newVal * 60)
-  }, [durations, session, running])
-
-  // Drag handlers
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const target = e.target as HTMLElement
     if (target.closest('button, select')) return
-    // Seed actual screen position on first grab
     if (posRef.current.x === 0 && posRef.current.y === 0 && popupRef.current) {
       const rect = popupRef.current.getBoundingClientRect()
       setPos({ x: rect.left, y: rect.top })
@@ -140,101 +51,259 @@ export default function PomodoroPopup({ show, onClose }: Props) {
 
   if (!show) return null
 
+  // Derived display values
   const mins = Math.floor(timeLeft / 60)
   const secs = timeLeft % 60
   const total = durations[session] * 60
   const progress = total > 0 ? 1 - timeLeft / total : 0
-  const offset = CIRCUMFERENCE * (1 - progress)
+  const modalOffset = MODAL_CIRCUMFERENCE * (1 - progress)
+  const focusOffset = FOCUS_CIRCUMFERENCE * (1 - progress)
+  const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 
+  // Session arc color via CSS variable — no hardcoded hex in JSX
+  const arcColor =
+    session === 'work'
+      ? 'var(--color-pomodoro-work)'
+      : session === 'short'
+      ? 'var(--color-pomodoro-short)'
+      : 'var(--color-pomodoro-long)'
+
+  // ── RUNNING: full-screen immersive ──────────────────────────────────────
+  if (running) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-between
+          animate-[fadeIn_0.2s_ease] motion-reduce:animate-none"
+        style={{ backgroundColor: 'var(--color-pomodoro-bg)' }}
+      >
+        {/* Top: safe area + session label */}
+        <div
+          className="flex flex-col items-center pt-safe mt-8 text-[0.75rem] font-semibold
+            uppercase tracking-widest"
+          style={{ color: arcColor }}
+        >
+          {SESSION_LABELS[session]}
+        </div>
+
+        {/* Hero: ring + time */}
+        <div className="flex flex-col items-center gap-7">
+          <div className="relative w-[280px] h-[280px]">
+            <svg
+              width="280"
+              height="280"
+              viewBox="0 0 280 280"
+              style={{ transform: 'rotate(-90deg)' }}
+            >
+              {/* Neutral track */}
+              <circle
+                cx="140" cy="140" r="120"
+                fill="none"
+                stroke="var(--color-pomodoro-track)"
+                strokeWidth="10"
+              />
+              {/* Accent progress arc */}
+              <circle
+                cx="140" cy="140" r="120"
+                fill="none"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={FOCUS_CIRCUMFERENCE}
+                strokeDashoffset={focusOffset}
+                style={{
+                  stroke: arcColor,
+                  transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
+                }}
+              />
+            </svg>
+
+            {/* Time display */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span
+                className="text-[4.5rem] font-bold tabular-nums tracking-tighter leading-none"
+                style={{ color: 'var(--color-pomodoro-text-hero)' }}
+              >
+                {timeStr}
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Transport controls: reset | pause | skip */}
+        <div
+          className="flex items-center justify-center gap-10 pb-safe mb-10"
+        >
+          {/* Reset */}
+          <button
+            onClick={resetTimer}
+            className="w-14 h-14 rounded-full flex items-center justify-center
+              transition-opacity active:opacity-50 motion-reduce:transition-none"
+            style={{ color: 'var(--color-pomodoro-text-label)' }}
+            aria-label="Reset timer"
+          >
+            {/* Circular-arrow icon */}
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+
+          {/* Pause — calm dark/neutral, NOT accent */}
+          <button
+            onClick={toggleTimer}
+            className="w-20 h-20 rounded-full flex items-center justify-center
+              transition-opacity active:opacity-70 motion-reduce:transition-none"
+            style={{
+              backgroundColor: 'var(--color-pomodoro-btn-calm)',
+              color: 'var(--color-pomodoro-text-hero)',
+            }}
+            aria-label="Pause timer"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          </button>
+
+          {/* Skip */}
+          <button
+            onClick={skipSession}
+            className="w-14 h-14 rounded-full flex items-center justify-center
+              transition-opacity active:opacity-50 motion-reduce:transition-none"
+            style={{ color: 'var(--color-pomodoro-text-label)' }}
+            aria-label="Skip to next session"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" y1="5" x2="19" y2="19" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── IDLE / SETUP: compact draggable modal ────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className="fixed inset-0 z-50"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div
         ref={popupRef}
         className="absolute bg-white dark:bg-slate-900 rounded-2xl shadow-xl
-          border border-slate-200 dark:border-slate-700 min-w-[280px] overflow-hidden
-          animate-[slideUp_0.3s_ease] motion-reduce:animate-none select-none"
+          border border-slate-200 dark:border-slate-800 min-w-[280px] overflow-hidden
+          animate-[slideUp_0.25s_ease] motion-reduce:animate-none select-none"
         style={{
-          right: pos.x ? undefined : '24px',
+          right:  pos.x ? undefined : '24px',
           bottom: pos.y ? undefined : '100px',
-          left: pos.x ? `${pos.x}px` : undefined,
-          top: pos.y ? `${pos.y}px` : undefined,
+          left:   pos.x ? `${pos.x}px` : undefined,
+          top:    pos.y ? `${pos.y}px` : undefined,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header — drag handle */}
+        {/* Header / drag handle */}
         <div
           className="px-4 pt-4 pb-2 flex justify-between items-center cursor-grab active:cursor-grabbing"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         >
-          <div className="font-bold text-[1rem] text-slate-800 dark:text-white">
-            ⏱ Pomodoro
-          </div>
+          <span className="font-bold text-[1rem] text-slate-800 dark:text-white">
+            ⏱ Focus
+          </span>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] leading-none min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200
+              text-[1.25rem] leading-none min-h-[44px] min-w-[44px]
+              inline-flex items-center justify-center"
             aria-label="Close pomodoro timer"
           >
             ×
           </button>
         </div>
 
-        {/* Circular timer */}
+        {/* Ring + time */}
         <div className="flex flex-col items-center py-5">
           <div className="relative w-40 h-40">
-            <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx="80" cy="80" r="70" fill="none" stroke="currentColor"
-                className="text-slate-200 dark:text-slate-700" strokeWidth="8" />
-              <circle cx="80" cy="80" r="70" fill="none" strokeWidth="8"
+            <svg
+              width="160"
+              height="160"
+              viewBox="0 0 160 160"
+              style={{ transform: 'rotate(-90deg)' }}
+            >
+              {/* Neutral track */}
+              <circle
+                cx="80" cy="80" r="70"
+                fill="none"
+                stroke="var(--color-pomodoro-track)"
+                strokeWidth="7"
+              />
+              {/* Accent progress arc */}
+              <circle
+                cx="80" cy="80" r="70"
+                fill="none"
+                strokeWidth="7"
                 strokeLinecap="round"
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={offset}
+                strokeDasharray={MODAL_CIRCUMFERENCE}
+                strokeDashoffset={modalOffset}
                 style={{
+                  stroke: arcColor,
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
-                  stroke: session === 'work' ? '#ef4444' : session === 'short' ? '#22c55e' : '#f59e0b',
                 }}
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold text-slate-800 dark:text-white tabular-nums tracking-tight">
-                {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
-              </div>
-              <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 mt-0.5">
+
+            {/* Time + mode label */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+              <span
+                className="text-[2.5rem] font-bold tabular-nums tracking-tight leading-none
+                  text-slate-800 dark:text-white"
+              >
+                {timeStr}
+              </span>
+              <span className="text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500">
                 {SESSION_LABELS[session]}
-              </div>
+              </span>
             </div>
           </div>
 
-          {/* Session dots */}
+          {/* Round dots */}
           <div className="flex gap-2 mt-4">
             {[0, 1, 2, 3].map((i) => (
               <div
                 key={i}
                 className="w-2 h-2 rounded-full transition-colors duration-300"
                 style={{
-                  background: i < (sessionCount % 4)
-                    ? '#3b82f6'
-                    : 'var(--border-color, #d1d5db)',
+                  backgroundColor:
+                    i < sessionCount % 4
+                      ? 'var(--color-pomodoro-dot-done)'
+                      : 'var(--color-pomodoro-dot-empty)',
                 }}
               />
             ))}
           </div>
         </div>
 
-        {/* Controls */}
+        {/* Primary + reset controls */}
         <div className="flex gap-2 justify-center pb-4">
           <button
             onClick={toggleTimer}
-            className="px-8 py-2.5 rounded-lg text-[0.875rem] font-semibold tracking-wide text-white
-              bg-blue-600 dark:bg-blue-500 text-white hover:opacity-90 active:scale-95 motion-reduce:scale-100 active:opacity-80 transition-all min-h-[44px]"
-            aria-label={running ? 'Pause timer' : timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'}
+            className="px-8 py-2.5 rounded-xl text-[0.875rem] font-semibold tracking-wide
+              text-white active:scale-95 motion-reduce:scale-100 active:opacity-80
+              transition-all min-h-[44px]"
+            style={{ backgroundColor: arcColor }}
+            aria-label={
+              timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'
+            }
           >
-            {running ? 'PAUSE' : timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
+            {timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
           </button>
           <button
             onClick={resetTimer}
-            className="px-4 py-2.5 rounded-lg text-[0.875rem] text-slate-500 dark:text-slate-400
+            className="px-4 py-2.5 rounded-xl text-[0.875rem] text-slate-500 dark:text-slate-400
               bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700
               hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
             aria-label="Reset timer"
@@ -243,46 +312,53 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           </button>
         </div>
 
-        {/* Duration settings */}
-        <div className="border-t border-slate-200 dark:border-slate-700 px-4 py-3">
-          <div className="text-[0.75rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+        {/* Duration stepper panel */}
+        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3">
+          <div className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500
+            uppercase tracking-wider mb-2">
             Durations
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {(['work', 'short', 'long'] as SessionType[]).map((type) => (
               <div key={type} className="flex justify-between items-center">
                 <button
                   onClick={() => switchSession(type)}
-                  className={`text-[0.875rem] px-2 py-1 rounded-md transition-colors min-h-[36px] text-left
+                  className={`text-[0.875rem] px-2 py-1 rounded-lg transition-colors min-h-[36px]
+                    text-left font-medium
                     ${type === session
-                      ? 'text-blue-600 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-blue-900/30'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      ? 'bg-slate-100 dark:bg-slate-800'
+                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                     }`}
+                  style={type === session ? { color: arcColor } : undefined}
                   aria-label={`Switch to ${SESSION_LABELS[type]}`}
                 >
                   {type === 'work' ? 'Work' : type === 'short' ? 'Short break' : 'Long break'}
                 </button>
+
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
                     disabled={type === session && running}
-                    className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
+                      text-slate-400 dark:text-slate-500 text-[1rem]
+                      hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                      transition-colors active:scale-90 motion-reduce:scale-100
                       disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label={`Decrease ${type} duration`}
                   >
                     −
                   </button>
-                  <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-300 w-9 text-center tabular-nums">
+                  <span className="text-[0.8125rem] font-semibold text-slate-700 dark:text-slate-300
+                    w-9 text-center tabular-nums">
                     {durations[type]}m
                   </span>
                   <button
                     onClick={() => adjustDuration(type, type === 'short' ? 1 : 5)}
                     disabled={type === session && running}
-                    className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-600
-                      text-slate-500 dark:text-slate-400 text-[1.125rem] hover:bg-slate-100 dark:hover:bg-slate-800
-                      flex items-center justify-center transition-colors active:scale-90 motion-reduce:scale-100
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
+                      text-slate-400 dark:text-slate-500 text-[1rem]
+                      hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                      transition-colors active:scale-90 motion-reduce:scale-100
                       disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label={`Increase ${type} duration`}
                   >
