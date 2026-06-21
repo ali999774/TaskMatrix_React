@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { LocalNotifications } from '@capacitor/local-notifications'
 import { useHaptics } from './useHaptics'
 
 export type SessionType = 'work' | 'short' | 'long'
@@ -52,6 +54,55 @@ export function usePomodoro(show: boolean): UsePomodoroReturn {
     }
   }, [show])
 
+  /**
+   * Fire completion alert: haptic pattern → chime → local notification.
+   * On native: Capacitor local-notifications (works in background).
+   * On web: Web Notification API fallback.
+   */
+  const fireCompletionAlert = useCallback((completedSession: SessionType) => {
+    const isWork = completedSession === 'work'
+    const title = isWork ? 'Focus complete! 🎉' : 'Break over'
+    const body = isWork ? 'Time for a break.' : 'Ready to focus?'
+
+    // 1. Haptic pattern: three quick pulses
+    haptics('light')
+    setTimeout(() => haptics('light'), 100)
+    setTimeout(() => haptics('medium'), 200)
+
+    // 2. Completion chime (Web Audio API — works in foreground)
+    try {
+      const ctx = new AudioContext()
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.connect(g); g.connect(ctx.destination)
+      o.type = 'sine'
+      // Ascending two-tone chime (different from task-complete ding)
+      o.frequency.setValueAtTime(660, ctx.currentTime)
+      o.frequency.setValueAtTime(880, ctx.currentTime + 0.1)
+      o.frequency.setValueAtTime(1100, ctx.currentTime + 0.2)
+      g.gain.setValueAtTime(0.12, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+      o.start(ctx.currentTime)
+      o.stop(ctx.currentTime + 0.5)
+    } catch { /* AudioContext unavailable */ }
+
+    // 3. Local notification (native) or Web Notification (fallback)
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.schedule({
+        notifications: [{
+          id: 9999, // fixed ID for pomodoro timer
+          title,
+          body,
+          schedule: { at: new Date(Date.now() + 500) },
+          sound: 'default',
+          extra: { type: 'pomodoro' },
+        }],
+      })
+    } else if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, { body })
+    }
+  }, [haptics])
+
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -90,12 +141,8 @@ export function usePomodoro(show: boolean): UsePomodoroReturn {
             // Auto-advance after completion
             setSessionCount((sc) => {
               const newCount = sc + 1
-              // Notification
-              if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('Pomodoro complete!', {
-                  body: session === 'work' ? 'Time for a break.' : 'Back to work!',
-                })
-              }
+              // Fire completion alert (haptics + chime + notification)
+              fireCompletionAlert(session)
               // Advance session
               if (session === 'work') {
                 const next: SessionType = newCount % 4 === 0 ? 'long' : 'short'
