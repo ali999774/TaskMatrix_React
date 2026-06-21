@@ -462,33 +462,7 @@ export default function App() {
     setVoiceStatus('saving')
     setVoiceNoteQuickAction(false)  // consumed
 
-    // AI path: parse transcript into structured task
-    if (aiSettings.enabled) {
-      setVoiceStatus('parsing...')
-      const result = await parseVoiceTranscript(
-        transcript,
-        aiSettings.model,
-        getAIBaseUrl()
-      )
-      if ('error' in result) {
-        // AI failed — fall through to note path
-        console.warn('[Voice Note AI]', result.error)
-      } else {
-        const p = result.parsed
-        await addTask(
-          p.title,
-          p.importance || 3,
-          p.urgency || 3,
-          p.category || undefined,
-          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined }
-        )
-        setVoiceStatus('task created!')
-        setTimeout(() => setVoiceStatus(''), 2500)
-        return
-      }
-    }
-
-    // Fallback: save as sticky note (original behavior)
+    // Always save as sticky note — this is the notes button
     try {
       const note = await addNote(formatVoiceNote(transcript))
       if (note) {
