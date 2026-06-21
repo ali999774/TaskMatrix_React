@@ -6,6 +6,7 @@ import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
+import { usePushNotifications } from './hooks/usePushNotifications'
 import { useUserSettings } from './hooks/useUserSettings'
 import MatrixScreen from './components/matrix/MatrixScreen'
 import StickyWall from './components/StickyWall'
@@ -183,6 +184,9 @@ export default function App() {
 
   const offlineQueue = useOfflineQueue(userId, supabase)
 
+  // Register push notifications on iOS native
+  usePushNotifications(userId)
+
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
@@ -330,6 +334,18 @@ export default function App() {
       }
     }
   }, [tasks, selectedTask])
+
+  // Handle push notification taps — open the referenced task
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { task_id } = (e as CustomEvent).detail || {}
+      if (!task_id || !tasks.length) return
+      const task = tasks.find((t) => t.id === task_id)
+      if (task) setSelectedTask(task)
+    }
+    window.addEventListener('tm:open-task', handler)
+    return () => window.removeEventListener('tm:open-task', handler)
+  }, [tasks])
 
   if (authLoading) {
     return (

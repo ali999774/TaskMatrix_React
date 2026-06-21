@@ -10,6 +10,11 @@ const config: CapacitorConfig = {
   ios: {
     scheme: 'taskmatrix',
   },
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'banner', 'list'],
+    },
+  },
 };
 
 export default config;
