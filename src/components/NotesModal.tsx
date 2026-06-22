@@ -2,13 +2,13 @@ import { useState, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 
-const COLOR_MAP: Record<string, string> = {
-  yellow: 'bg-yellow-50 dark:bg-yellow-400/10 border-yellow-200 dark:border-yellow-400/20 text-yellow-800 dark:text-yellow-100',
-  green: 'bg-green-50 dark:bg-green-400/10 border-green-200 dark:border-green-400/20 text-green-800 dark:text-green-100',
-  blue: 'bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-400/20 text-blue-800 dark:text-blue-100',
-  pink: 'bg-pink-50 dark:bg-pink-400/10 border-pink-200 dark:border-pink-400/20 text-pink-800 dark:text-pink-100',
-  purple: 'bg-purple-50 dark:bg-purple-400/10 border-purple-200 dark:border-purple-400/20 text-purple-800 dark:text-purple-100',
-  orange: 'bg-orange-50 dark:bg-orange-400/10 border-orange-200 dark:border-orange-400/20 text-orange-800 dark:text-orange-100',
+const COLOR_ACCENT: Record<string, string> = {
+  yellow: 'border-l-yellow-300 dark:border-l-yellow-400/50',
+  green: 'border-l-green-300 dark:border-l-green-400/50',
+  blue: 'border-l-blue-300 dark:border-l-blue-400/50',
+  pink: 'border-l-pink-300 dark:border-l-pink-400/50',
+  purple: 'border-l-purple-300 dark:border-l-purple-400/50',
+  orange: 'border-l-orange-300 dark:border-l-orange-400/50',
 }
 
 interface Props {
@@ -158,7 +158,8 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit, onNewBlank }
                   onClick={() => onEdit(note)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(note) } }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                    ${COLOR_MAP[note.color || 'yellow'] || COLOR_MAP.yellow}`}
+                    bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
+                    ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
                 >
                   {note.title && (
                     <p className="font-semibold text-[0.875rem] mb-1 opacity-80">{note.title}</p>
