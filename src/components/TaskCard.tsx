@@ -113,9 +113,10 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
       onContextMenu={handleContextMenu}
-      className={`py-3 transition-all relative
+      className={`py-3 px-3 transition-all relative
+        bg-white dark:bg-slate-800 rounded-lg
         select-none [-webkit-touch-callout:none]
-        active:bg-slate-100 dark:active:bg-slate-800/50 active:scale-[0.985]
+        active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
         group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
         ${catDef ? `border-l-[3px] pl-3 ${CATEGORY_BORDER[catDef.color] || ''}` : 'pl-0'}`}
