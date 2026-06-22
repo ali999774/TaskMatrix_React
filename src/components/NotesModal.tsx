@@ -3,12 +3,12 @@ import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 
 const COLOR_MAP: Record<string, string> = {
-  yellow: 'bg-yellow-100 dark:bg-yellow-400/20 border-yellow-300 dark:border-yellow-400/40 text-yellow-800 dark:text-yellow-100',
-  green: 'bg-green-100 dark:bg-green-400/20 border-green-300 dark:border-green-400/40 text-green-800 dark:text-green-100',
-  blue: 'bg-blue-100 dark:bg-blue-400/20 border-blue-300 dark:border-blue-400/40 text-blue-800 dark:text-blue-100',
-  pink: 'bg-pink-100 dark:bg-pink-400/20 border-pink-300 dark:border-pink-400/40 text-pink-800 dark:text-pink-100',
-  purple: 'bg-purple-100 dark:bg-purple-400/20 border-purple-300 dark:border-purple-400/40 text-purple-800 dark:text-purple-100',
-  orange: 'bg-orange-100 dark:bg-orange-400/20 border-orange-300 dark:border-orange-400/40 text-orange-800 dark:text-orange-100',
+  yellow: 'bg-yellow-50 dark:bg-yellow-400/10 border-yellow-200 dark:border-yellow-400/20 text-yellow-800 dark:text-yellow-100',
+  green: 'bg-green-50 dark:bg-green-400/10 border-green-200 dark:border-green-400/20 text-green-800 dark:text-green-100',
+  blue: 'bg-blue-50 dark:bg-blue-400/10 border-blue-200 dark:border-blue-400/20 text-blue-800 dark:text-blue-100',
+  pink: 'bg-pink-50 dark:bg-pink-400/10 border-pink-200 dark:border-pink-400/20 text-pink-800 dark:text-pink-100',
+  purple: 'bg-purple-50 dark:bg-purple-400/10 border-purple-200 dark:border-purple-400/20 text-purple-800 dark:text-purple-100',
+  orange: 'bg-orange-50 dark:bg-orange-400/10 border-orange-200 dark:border-orange-400/20 text-orange-800 dark:text-orange-100',
 }
 
 interface Props {
