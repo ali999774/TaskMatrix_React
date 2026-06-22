@@ -113,12 +113,11 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
       onContextMenu={handleContextMenu}
-      className={`p-3 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700/50
-        transition-all relative
+      className={`py-2.5 transition-all relative
         select-none [-webkit-touch-callout:none]
         group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
-        ${catDef ? `border-l-4 ${CATEGORY_BORDER[catDef.color] || ''}` : ''}`}
+        ${catDef ? `border-l-[3px] pl-3 ${CATEGORY_BORDER[catDef.color] || ''}` : 'pl-0'}`}
     >
       <div className="flex items-start gap-2">
         <CheckCircle status={task.status} onToggle={cycleStatus} />

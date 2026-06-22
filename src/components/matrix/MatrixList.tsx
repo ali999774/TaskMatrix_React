@@ -192,7 +192,7 @@ function ListQuadrant({
         />
 
         {!collapsed && (
-          <div className="px-3 pb-3 pt-1 space-y-2">
+          <div className="px-3 pb-3 pt-1 space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
             {bucket.tasks.map((task) => (
               <TaskCard
                 key={task.id}

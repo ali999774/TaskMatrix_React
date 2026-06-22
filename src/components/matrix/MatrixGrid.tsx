@@ -199,13 +199,11 @@ function GridCell({
         count={bucket.tasks.length}
         collapsed={collapsed}
         onToggleCollapse={toggleCollapsed}
-        className={`-mx-4 -mt-4 rounded-t-[var(--radius-grid-cell)]
-          ${collapsed ? 'mb-0 rounded-b-[var(--radius-grid-cell)]' : 'mb-3'}
-          ${isInvest ? 'font-bold' : ''}`}
+        className={`${collapsed ? 'mb-0' : 'mb-1'} ${isInvest ? 'font-bold' : ''}`}
       />
 
       {!collapsed && (
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
           {visibleTasks.map((task) => (
             <TaskCard
               key={task.id}
