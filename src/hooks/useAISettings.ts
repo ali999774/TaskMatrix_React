@@ -20,10 +20,6 @@ export function useAISettings() {
       const stored = localStorage.getItem(LS_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        // Migrate old model names to flash (cheapest + fast for task parsing)
-        if (parsed.model === 'deepseek-chat' || parsed.model === 'deepseek-v4-pro') {
-          parsed.model = 'deepseek-v4-flash'
-        }
         return { ...DEFAULTS, ...parsed }
       }
     } catch { /* ignore corrupt data */ }

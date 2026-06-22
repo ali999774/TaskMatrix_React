@@ -113,10 +113,10 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
       onContextMenu={handleContextMenu}
-      className={`p-3 rounded-lg border border-slate-200 dark:border-slate-700
-        bg-white dark:bg-slate-800/60 transition-all relative
+      className={`p-3 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700/50
+        transition-all relative
         select-none [-webkit-touch-callout:none]
-        hover:border-slate-400 dark:hover:border-slate-500 group cursor-grab active:cursor-grabbing
+        group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
         ${catDef ? `border-l-4 ${CATEGORY_BORDER[catDef.color] || ''}` : ''}`}
     >

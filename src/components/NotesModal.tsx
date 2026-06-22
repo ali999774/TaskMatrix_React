@@ -16,9 +16,10 @@ interface Props {
   onClose: () => void
   onAdd: (content: string) => void
   onEdit: (note: StickyNote) => void
+  onNewBlank?: () => void
 }
 
-export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
+export default function NotesModal({ notes, onClose, onAdd, onEdit, onNewBlank }: Props) {
   const [search, setSearch] = useState('')
   const [input, setInput] = useState('')
 
@@ -53,13 +54,22 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit }: Props) {
     >
       <div
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto
-          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh]"
+          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
           <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">📝 Notes</h2>
           <div className="flex items-center gap-3">
+            {onNewBlank && (
+              <button
+                onClick={onNewBlank}
+                aria-label="New blank note"
+                className="text-[0.875rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center font-bold"
+              >
+                +
+              </button>
+            )}
             <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
             <button
               onClick={onClose}
