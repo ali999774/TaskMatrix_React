@@ -18,6 +18,9 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const [dueDate, setDueDate] = useState(task.due_date || '')
   const [dueTime, setDueTime] = useState(task.due_time || '')
   const [reminder, setReminder] = useState<ReminderPreset>((task.reminder as ReminderPreset) || null)
+  const [recurring, setRecurring] = useState(!!task.recurring)
+  const [recurFrequency, setRecurFrequency] = useState(task.recur_frequency || 'daily')
+  const [recurDays, setRecurDays] = useState<number[]>(task.recur_days || [])
   const [category, setCategory] = useState(task.category || '')
   const [subtasks, setSubtasks] = useState(task.subtasks || [])
   const [newSubtask, setNewSubtask] = useState('')
@@ -42,6 +45,9 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     setDueDate(task.due_date || '')
     setDueTime(task.due_time || '')
     setReminder((task.reminder as ReminderPreset) || null)
+    setRecurring(!!task.recurring)
+    setRecurFrequency(task.recur_frequency || 'daily')
+    setRecurDays(task.recur_days || [])
     setCategory(task.category || '')
     setSubtasks(task.subtasks || [])
   }, [task])
@@ -79,6 +85,31 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     const preset: ReminderPreset = val === 'null' ? null : val as ReminderPreset
     setReminder(preset)
     save({ reminder: preset })
+  }
+
+  const handleRecurringToggle = (checked: boolean) => {
+    setRecurring(checked)
+    save({
+      recurring: checked,
+      recur_frequency: checked ? recurFrequency : null,
+      recur_interval: checked ? 1 : null,
+      recur_days: checked ? (recurFrequency === 'weekly' ? recurDays : null) : null,
+    })
+  }
+
+  const handleRecurFrequencyChange = (freq: string) => {
+    setRecurFrequency(freq)
+    const days = freq === 'weekly' ? (recurDays.length > 0 ? recurDays : [new Date().getDay()]) : null
+    if (freq === 'weekly') setRecurDays(days || [])
+    save({ recur_frequency: freq, recur_days: days })
+  }
+
+  const toggleRecurDay = (day: number) => {
+    const next = recurDays.includes(day)
+      ? recurDays.filter(d => d !== day)
+      : [...recurDays, day].sort()
+    setRecurDays(next)
+    save({ recur_days: next.length > 0 ? next : null })
   }
 
   const handleCategoryChange = (val: string) => {
@@ -247,6 +278,58 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
               </select>
             </div>
           )}
+
+          {/* Recurrence */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={recurring}
+                onChange={(e) => handleRecurringToggle(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">🔄 Repeat</span>
+            </label>
+
+            {recurring && (
+              <div className="ml-6 mt-2 space-y-2">
+                <select
+                  value={recurFrequency}
+                  onChange={(e) => handleRecurFrequencyChange(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
+                    dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
+                    dark:text-slate-300 outline-none focus:border-slate-400 
+                    dark:focus:border-slate-500 transition-colors appearance-none
+                    bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E")` }}
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+
+                {recurFrequency === 'weekly' && (
+                  <div className="flex gap-1">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleRecurDay(i)}
+                        className={`w-9 h-9 rounded-full text-[0.75rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
+                          ${recurDays.includes(i)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        aria-label={['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Subtasks */}
           <div>

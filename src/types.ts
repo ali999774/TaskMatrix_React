@@ -14,12 +14,16 @@ export interface Task {
   reminder?: string | null
   estimated_duration?: number | null
   recurring?: boolean
+  recur_frequency?: string | null
+  recur_interval?: number | null
+  recur_days?: number[] | null
   tags?: string[]
   subtasks?: { title: string; done: boolean }[]
   pinned?: boolean
   position?: number
   created_at?: string
   updated_at?: string
+  completed_at?: string | null
   deleted_at?: string | null
 }
 

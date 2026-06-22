@@ -5,6 +5,35 @@ import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
 
 const DEBOUNCE_MS = 400
 
+/** Calculate the next occurrence for a recurring task. */
+function getNextDueDate(
+  dueDate: string | null,
+  dueTime: string | null,
+  frequency: string,
+  recurDays: number[] | null,
+): { date: string | null; time: string | null } {
+  const base = dueDate ? new Date(dueDate + 'T00:00:00') : new Date()
+  base.setHours(0, 0, 0, 0)
+
+  if (frequency === 'daily') {
+    base.setDate(base.getDate() + 1)
+  } else if (frequency === 'weekly') {
+    const targetDays = recurDays && recurDays.length > 0 ? recurDays : [base.getDay()]
+    // Find the next matching day
+    for (let i = 1; i <= 7; i++) {
+      base.setDate(base.getDate() + 1)
+      if (targetDays.includes(base.getDay())) break
+    }
+  } else if (frequency === 'monthly') {
+    base.setMonth(base.getMonth() + 1)
+  }
+
+  const y = base.getFullYear()
+  const m = String(base.getMonth() + 1).padStart(2, '0')
+  const d = String(base.getDate()).padStart(2, '0')
+  return { date: `${y}-${m}-${d}`, time: dueTime }
+}
+
 interface OfflineQueue {
   enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
   online: boolean
@@ -190,9 +219,42 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   // Status changes are user-initiated and infrequent — immediate sync is fine.
   // No debounce needed; these aren't continuous events like drag.
   const updateStatus = useCallback(async (id: string, status: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status } : t))
-    )
+    setTasks((prev) => {
+      const updated = prev.map((t) => (t.id === id ? { ...t, status } : t))
+
+      // Recurring task completed → create the next instance
+      if (status === 'done') {
+        const doneTask = prev.find((t) => t.id === id)
+        if (doneTask?.recurring && doneTask.recur_frequency) {
+          const nextDue = getNextDueDate(
+            doneTask.due_date || null,
+            doneTask.due_time || null,
+            doneTask.recur_frequency,
+            doneTask.recur_days || null
+          )
+          const nextTask: Task = {
+            ...doneTask,
+            id: crypto.randomUUID(),
+            status: 'todo',
+            due_date: nextDue.date,
+            due_time: nextDue.time || doneTask.due_time || null,
+            completed_at: undefined,
+            created_at: undefined,
+            updated_at: undefined,
+          }
+          // Fire-and-forget: save to Supabase in background
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const row = nextTask as any
+          if (offlineQueue && !offlineQueue.online) {
+            offlineQueue.enqueue('tasks', 'create', nextTask.id, row)
+          } else {
+            supabase.from('tasks').upsert(row, { onConflict: 'id' })
+          }
+          updated.push(nextTask)
+        }
+      }
+      return updated
+    })
     const payload: Record<string, unknown> = { status }
     if (status === 'done') {
       payload.completed_at = new Date().toISOString()
