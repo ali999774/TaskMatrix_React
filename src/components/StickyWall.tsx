@@ -17,12 +17,12 @@ interface Props {
 }
 
 const LEFT_ACCENT: Record<string, string> = {
-  yellow: 'border-l-yellow-300',
-  green: 'border-l-green-300',
-  blue: 'border-l-blue-300',
-  pink: 'border-l-pink-300',
-  purple: 'border-l-purple-300',
-  orange: 'border-l-orange-300',
+  yellow: 'border-l-yellow-300 dark:border-l-yellow-400',
+  green: 'border-l-green-300 dark:border-l-green-400',
+  blue: 'border-l-blue-300 dark:border-l-blue-400',
+  pink: 'border-l-pink-300 dark:border-l-pink-400',
+  purple: 'border-l-purple-300 dark:border-l-purple-400',
+  orange: 'border-l-orange-300 dark:border-l-orange-400',
 }
 
 export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder, onNewBlank }: Props) {
