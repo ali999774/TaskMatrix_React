@@ -55,11 +55,11 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
     dragged.current = true
     e.dataTransfer.setData('text/plain', task.id)
     e.dataTransfer.effectAllowed = 'move'
-    ;(e.currentTarget as HTMLElement).classList.add('opacity-40')
+    ;(e.currentTarget as HTMLElement).classList.add('opacity-40', 'scale-105', 'shadow-xl', 'z-10')
   }
 
   const handleDragEnd = (e: React.DragEvent) => {
-    ;(e.currentTarget as HTMLElement).classList.remove('opacity-40')
+    ;(e.currentTarget as HTMLElement).classList.remove('opacity-40', 'scale-105', 'shadow-xl', 'z-10')
     setTimeout(() => { dragged.current = false }, 0)
   }
 
@@ -113,8 +113,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
       onContextMenu={handleContextMenu}
-      className={`py-2.5 transition-all relative
+      className={`py-3 transition-all relative
         select-none [-webkit-touch-callout:none]
+        active:bg-slate-100 dark:active:bg-slate-800/50 active:scale-[0.985]
         group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
         ${catDef ? `border-l-[3px] pl-3 ${CATEGORY_BORDER[catDef.color] || ''}` : 'pl-0'}`}
@@ -122,7 +123,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       <div className="flex items-start gap-2">
         <CheckCircle status={task.status} onToggle={cycleStatus} />
         <div className="flex-1 min-w-0">
-          <span className={`text-[0.875rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
+          <span className={`text-[0.9375rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
             {task.title}
           </span>
           {(task.category || dueInfo) && (

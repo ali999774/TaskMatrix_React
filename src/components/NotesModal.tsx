@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 
@@ -22,6 +22,9 @@ interface Props {
 export default function NotesModal({ notes, onClose, onAdd, onEdit, onNewBlank }: Props) {
   const [search, setSearch] = useState('')
   const [input, setInput] = useState('')
+  const [dragY, setDragY] = useState(0)
+  const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const filtered = search
     ? notes.filter(
@@ -46,15 +49,42 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit, onNewBlank }
     if (e.target === e.currentTarget) onClose()
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const dy = e.touches[0].clientY - touchStart.current.y
+    if (dy > 0) setDragY(dy) // only track downward swipes
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart.current) return
+    const dt = Date.now() - touchStart.current.timestamp
+    // Dismiss if dragged >100px or flicked fast >50px in <200ms
+    if (dragY > 100 || (dragY > 50 && dt < 200)) {
+      onClose()
+    }
+    setDragY(0)
+    touchStart.current = null
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center
-        p-4 max-sm:items-end max-sm:p-0"
+        p-4 max-sm:items-end max-sm:p-0 animate-modal-backdrop"
       onClick={handleOverlay}
     >
       <div
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto
-          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          transition-transform duration-200"
+        style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
