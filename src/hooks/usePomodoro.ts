@@ -36,12 +36,12 @@ export interface UsePomodoroReturn {
  */
 export function usePomodoro(show: boolean): UsePomodoroReturn {
   const [durations, setDurations] = useState<Record<SessionType, number>>({
-    work: 25,
+    work: 20,
     short: 5,
     long: 15,
   })
   const [session, setSession] = useState<SessionType>('work')
-  const [timeLeft, setTimeLeft] = useState(25 * 60)
+  const [timeLeft, setTimeLeft] = useState(20 * 60)
   const [running, setRunning] = useState(false)
   const [sessionCount, setSessionCount] = useState(0)
   const haptics = useHaptics()
