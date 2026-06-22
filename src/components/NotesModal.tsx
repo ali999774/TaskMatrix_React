@@ -87,6 +87,10 @@ export default function NotesModal({ notes, onClose, onAdd, onEdit, onNewBlank }
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
+          <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+        </div>
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
           <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">📝 Notes</h2>

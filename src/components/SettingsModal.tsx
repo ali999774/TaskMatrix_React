@@ -21,7 +21,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   )
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
   const draggedIdx = useRef<number | null>(null)
+  const [dragY, setDragY] = useState(0)
+  const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose()
@@ -29,6 +32,26 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const dy = e.touches[0].clientY - touchStart.current.y
+    if (dy > 0) setDragY(dy)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart.current) return
+    const dt = Date.now() - touchStart.current.timestamp
+    if (dragY > 100 || (dragY > 50 && dt < 200)) {
+      onClose()
+    }
+    setDragY(0)
+    touchStart.current = null
   }
 
   const add = () => {
@@ -120,11 +143,24 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
       ref={overlayRef}
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[max(10vh,env(safe-area-inset-top))]
-        bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center
+        bg-black/50 backdrop-blur-sm p-4 max-sm:items-end max-sm:p-0 animate-modal-backdrop"
     >
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
-        border border-slate-200 dark:border-slate-700 overflow-hidden animate-in motion-reduce:animate-none">
+      <div
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
+          border border-slate-200 dark:border-slate-700 overflow-hidden
+          max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          transition-transform duration-200"
+        style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
+          <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+        </div>
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
           <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">

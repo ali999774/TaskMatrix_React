@@ -153,6 +153,7 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-family-sans);
+  font-size: 17px; /* Apple body type size */
   /* clip, not hidden: hidden creates a scroll container and breaks
      position:sticky on descendants (header was scrolling away on iOS) */
   overflow-x: clip;

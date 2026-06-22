@@ -74,6 +74,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const haptics = useHaptics()
+  const [dragY, setDragY] = useState(0)
+  const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const handleClose = () => {
     setConfirmingDelete(false)
@@ -125,6 +128,26 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
 
   const handleOverlay = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) handleClose()
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const dy = e.touches[0].clientY - touchStart.current.y
+    if (dy > 0) setDragY(dy)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart.current) return
+    const dt = Date.now() - touchStart.current.timestamp
+    if (dragY > 100 || (dragY > 50 && dt < 200)) {
+      handleClose()
+    }
+    setDragY(0)
+    touchStart.current = null
   }
 
   const fmt = (wrapper: string) => {
@@ -183,10 +206,20 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       onClick={handleOverlay}
     >
       <div
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl
-          max-sm:rounded-b-none max-sm:max-h-[85vh] overflow-y-auto max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet"
+          max-sm:rounded-b-none max-sm:max-h-[85vh] overflow-y-auto max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          transition-transform duration-200"
+        style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
+          <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+        </div>
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <h2 className="text-[1.125rem] font-bold text-slate-800 dark:text-white">
