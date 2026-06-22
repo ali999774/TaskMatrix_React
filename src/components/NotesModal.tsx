@@ -146,7 +146,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
                     className="text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
                   />
-                  <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
+                  <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60" aria-hidden="true">
                     {note.pinned && <span>📌</span>}
                     {note.created_at && (
                       <span>{new Date(note.created_at).toLocaleDateString()}</span>

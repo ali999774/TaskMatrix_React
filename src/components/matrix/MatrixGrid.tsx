@@ -223,7 +223,7 @@ function GridCell({
               className="w-full text-center text-[0.6875rem] font-medium
                 text-slate-500 dark:text-slate-400 hover:text-slate-700
                 dark:hover:text-slate-200 py-1.5 transition-colors
-                min-h-[36px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                min-h-[44px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
             >
               +{hiddenCount} more
             </button>
@@ -234,7 +234,7 @@ function GridCell({
               className="w-full text-center text-[0.6875rem] font-medium
                 text-slate-400 dark:text-slate-500 hover:text-slate-600
                 dark:hover:text-slate-300 py-1.5 transition-colors
-                min-h-[36px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                min-h-[44px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
             >
               Show less
             </button>

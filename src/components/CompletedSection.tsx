@@ -73,7 +73,7 @@ export default function CompletedSection({
         <button
           onClick={() => setShow((v) => !v)}
           className="flex items-center gap-2 text-[0.875rem] text-slate-400 dark:text-slate-500
-            hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium"
+            hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium min-h-[44px]"
         >
           <span className={`transition-transform motion-reduce:transition-none ${show ? 'rotate-90' : ''}`}>▸</span>
           Completed
@@ -88,7 +88,7 @@ export default function CompletedSection({
             disabled={clearing}
             className="text-[0.75rem] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700
               text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400
-              hover:border-red-300 dark:hover:border-red-700 transition-colors disabled:opacity-50 min-h-[32px]"
+              hover:border-red-300 dark:hover:border-red-700 transition-colors disabled:opacity-50 min-h-[44px]"
             title="Permanently clear all completed tasks"
           >
             {clearing ? 'Clearing…' : 'Clear completed'}

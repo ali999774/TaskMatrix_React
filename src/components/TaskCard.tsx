@@ -128,7 +128,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             {task.title}
           </span>
           {(task.category || dueInfo) && (
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap" aria-hidden="true">
               {task.category && (
                 <span className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
                   ${catDef ? CATEGORY_BADGE[catDef.color] || '' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}

@@ -625,7 +625,7 @@ export default function App() {
           <button
             key="all"
             onClick={() => setContext('all')}
-            className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
+            className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
               ${context === 'all'
                 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
                 : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
@@ -637,7 +637,7 @@ export default function App() {
             <button
               key={cat.label}
               onClick={() => setContext(cat.label)}
-              className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] inline-flex items-center
+              className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
                 ${context === cat.label
                   ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
                   : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
