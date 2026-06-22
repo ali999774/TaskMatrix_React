@@ -226,7 +226,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         </div>
 
         {/* Ring + time */}
-        <div className="flex flex-col items-center py-5">
+        <div className="flex flex-col items-center py-5 px-4 w-full">
           <div className="relative w-40 h-40">
             <svg
               width="160"
