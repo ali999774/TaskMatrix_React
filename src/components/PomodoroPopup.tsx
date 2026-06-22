@@ -13,7 +13,7 @@ interface Props {
 
 export default function PomodoroPopup({ show, onClose }: Props) {
   const {
-    durations, session, timeLeft, running, sessionCount,
+    durations, session, timeLeft, running,
     toggleTimer, resetTimer, skipSession, switchSession, adjustDuration,
   } = usePomodoro(show)
 
@@ -270,21 +270,6 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             </div>
           </div>
 
-          {/* Round dots */}
-          <div className="flex gap-2 mt-4">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full transition-colors duration-300"
-                style={{
-                  backgroundColor:
-                    i < sessionCount % 4
-                      ? 'var(--color-pomodoro-dot-done)'
-                      : 'var(--color-pomodoro-dot-empty)',
-                }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Primary + reset controls */}
