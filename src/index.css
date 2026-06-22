@@ -176,6 +176,9 @@ body::-webkit-scrollbar {
 ──────────────────────────────────────────────────────────────────────────── */
 
 @layer utilities {
+  .header-safe-top {
+    padding-top: max(env(safe-area-inset-top), 20px);
+  }
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }

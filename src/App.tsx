@@ -523,7 +523,7 @@ export default function App() {
     <ErrorBoundary>
     <div className="min-h-screen bg-slate-50 dark:bg-[#121212] overflow-x-hidden w-full max-w-full">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)' }}>
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#121212]/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 header-safe-top">
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-[1rem] sm:text-[1.125rem] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
