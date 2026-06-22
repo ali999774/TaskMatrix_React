@@ -119,7 +119,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
         group cursor-grab active:cursor-grabbing
         ${task.status === 'done' ? 'opacity-50' : ''}
-        ${catDef ? `border-l-[3px] pl-3 ${CATEGORY_BORDER[catDef.color] || ''}` : 'pl-0'}`}
+        ${catDef ? `border-l-[3px] ${CATEGORY_BORDER[catDef.color] || ''}` : 'border-l-[3px] border-transparent'}`}
     >
       <div className="flex items-start gap-2">
         <CheckCircle status={task.status} onToggle={cycleStatus} />
