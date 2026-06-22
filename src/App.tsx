@@ -708,7 +708,6 @@ export default function App() {
         <NotesModal
           notes={notes}
           onClose={() => setShowNotesModal(false)}
-          onAdd={addNote}
           onNewBlank={handleNewBlankNote}
           onEdit={(note) => {
             cameFromNotesModal.current = true
