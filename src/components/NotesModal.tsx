@@ -3,12 +3,12 @@ import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 
 const COLOR_ACCENT: Record<string, string> = {
-  yellow: 'border-l-yellow-300 dark:border-l-yellow-400',
-  green: 'border-l-green-300 dark:border-l-green-400',
-  blue: 'border-l-blue-300 dark:border-l-blue-400',
-  pink: 'border-l-pink-300 dark:border-l-pink-400',
-  purple: 'border-l-purple-300 dark:border-l-purple-400',
-  orange: 'border-l-orange-300 dark:border-l-orange-400',
+  yellow: 'border-l-yellow-400 dark:border-l-yellow-400',
+  green: 'border-l-green-400 dark:border-l-green-400',
+  blue: 'border-l-blue-400 dark:border-l-blue-400',
+  pink: 'border-l-pink-400 dark:border-l-pink-400',
+  purple: 'border-l-purple-400 dark:border-l-purple-400',
+  orange: 'border-l-orange-400 dark:border-l-orange-400',
 }
 
 interface Props {
@@ -136,7 +136,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
                   onClick={() => onEdit(note)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(note) } }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                    bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
+                    bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[4px]
                     ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
                 >
                   {note.title && (
