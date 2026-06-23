@@ -219,6 +219,7 @@ function GridCell({
           {/* Overflow toggle */}
           {!showAll && hiddenCount > 0 && (
             <button
+              aria-label={`Show all ${bucket.label} tasks`}
               onClick={() => setShowAll(true)}
               className="w-full text-center text-[0.6875rem] font-medium
                 text-slate-500 dark:text-slate-400 hover:text-slate-700
@@ -230,6 +231,7 @@ function GridCell({
           )}
           {showAll && bucket.tasks.length > MAX_VISIBLE && (
             <button
+              aria-label={`Show fewer ${bucket.label} tasks`}
               onClick={() => setShowAll(false)}
               className="w-full text-center text-[0.6875rem] font-medium
                 text-slate-400 dark:text-slate-500 hover:text-slate-600

@@ -571,7 +571,7 @@ export default function App() {
                 <button onClick={() => setShowSettings(true)} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙️</span></button>
                 {aiSettings.enabled && (
                   <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
-                    🎯 What next?
+                    <span aria-hidden="true">🎯 What next?</span>
                   </button>
                 )}
                 <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button>
@@ -587,7 +587,7 @@ export default function App() {
                     <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[160px]">
                       {aiSettings.enabled && (
                         <button onClick={() => { handleSuggest(); setShowMenu(false) }} disabled={suggesting} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                          🎯 What next?
+                          <span aria-hidden="true">🎯 What next?</span>
                         </button>
                       )}
                       <button onClick={() => { setShowSettings(true); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
@@ -624,6 +624,7 @@ export default function App() {
         <div className="flex gap-1.5 overflow-x-auto">
           <button
             key="all"
+            aria-label="Show all categories"
             onClick={() => setContext('all')}
             className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
               ${context === 'all'
@@ -636,6 +637,7 @@ export default function App() {
           {categories.map((cat) => (
             <button
               key={cat.label}
+              aria-label={`Filter by ${cat.display}`}
               onClick={() => setContext(cat.label)}
               className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
                 ${context === cat.label

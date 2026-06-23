@@ -105,6 +105,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
         {/* Quick-add opens full Edit Note modal */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
           <button
+            aria-label="Create new note"
             onClick={onNewBlank}
             className="w-full flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-400 dark:text-slate-500 hover:border-blue-400 dark:hover:border-blue-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors mb-3 min-h-[44px]"
           >
@@ -133,6 +134,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
                   key={note.id}
                   role="button"
                   tabIndex={0}
+                  aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
                   onClick={() => onEdit(note)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(note) } }}
                   className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5

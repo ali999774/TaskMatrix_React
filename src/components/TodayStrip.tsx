@@ -35,6 +35,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
             {overdue.slice(0, 5).map((task) => (
               <button
                 key={task.id}
+                aria-label={`Task: ${task.title}`}
                 onClick={() => onTaskClick(task)}
                 className="w-full text-left px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/30
                   border border-red-200 dark:border-red-800/40 text-[0.875rem] text-slate-700
@@ -64,6 +65,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
             {dueToday.slice(0, 5).map((task) => (
               <button
                 key={task.id}
+                aria-label={`Task: ${task.title}`}
                 onClick={() => onTaskClick(task)}
                 className="w-full text-left px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/30
                   border border-amber-200 dark:border-amber-800/40 text-[0.875rem] text-slate-700

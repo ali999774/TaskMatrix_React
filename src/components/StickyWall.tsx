@@ -199,9 +199,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
             )}
 
             {onShowAll && (
-              <button onClick={onShowAll} className="text-[0.75rem] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center min-h-[44px]">
-                View all notes →
-              </button>
+              <button onClick={onShowAll} aria-label="View all notes" className="text-[0.75rem] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center min-h-[44px]"><span aria-hidden="true">View all notes →</span></button>
             )}
           </>
         )}
