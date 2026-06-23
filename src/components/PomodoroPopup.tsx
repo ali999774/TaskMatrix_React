@@ -188,20 +188,21 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   // ── IDLE / SETUP: compact draggable modal ────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-50"
+      className={`fixed inset-0 z-50 ${pos.x || pos.y ? '' : 'flex items-end justify-center pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         ref={popupRef}
-        className="absolute bg-white dark:bg-slate-900 rounded-2xl shadow-xl
-          border border-slate-200 dark:border-slate-800 min-w-[280px] overflow-hidden
+        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
+          border border-slate-200 dark:border-slate-800 w-[300px] overflow-hidden
           animate-[slideUp_0.25s_ease] motion-reduce:animate-none select-none"
-        style={{
-          right:  pos.x ? undefined : '24px',
-          bottom: pos.y ? undefined : '100px',
+        style={pos.x || pos.y ? {
+          position: 'absolute',
           left:   pos.x ? `${pos.x}px` : undefined,
           top:    pos.y ? `${pos.y}px` : undefined,
-        }}
+          right:  pos.x ? undefined : '16px',
+          bottom: pos.y ? undefined : '92px',
+        } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header / drag handle */}
@@ -277,9 +278,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <button
             onClick={toggleTimer}
             className="px-8 py-2.5 rounded-xl text-[0.875rem] font-semibold tracking-wide
-              text-white active:scale-95 motion-reduce:scale-100 active:opacity-80
-              transition-all min-h-[44px]"
-            style={{ backgroundColor: arcColor }}
+              text-white bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500
+              active:scale-95 motion-reduce:scale-100 active:opacity-90
+              transition-all min-h-[44px] shadow-lg shadow-red-500/20"
             aria-label={
               timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'
             }
