@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
+import SwipeableRow from './SwipeableRow'
+import type { SwipeAction } from './SwipeableRow'
 
 const COLOR_ACCENT: Record<string, string> = {
   yellow: 'border-l-yellow-400 dark:border-l-yellow-400',
@@ -15,10 +17,12 @@ interface Props {
   notes: StickyNote[]
   onClose: () => void
   onEdit: (note: StickyNote) => void
+  onPin?: (id: string, pinned: boolean) => void
+  onDelete?: (id: string) => void
   onNewBlank?: () => void
 }
 
-export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props) {
+export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank }: Props) {
   const [search, setSearch] = useState('')
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
@@ -129,34 +133,63 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((note) => (
-                <div
-                  key={note.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
-                  onClick={() => onEdit(note)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(note) } }}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                    bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[4px]
-                    ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
-                >
-                  {note.title && (
-                    <p className="font-semibold text-[0.875rem] mb-1 opacity-80" aria-hidden="true">{note.title}</p>
-                  )}
-                  <p
-                    className="text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
-                    aria-hidden="true"
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
-                  />
-                  <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60" aria-hidden="true">
-                    {note.pinned && <span>📌</span>}
-                    {note.created_at && (
-                      <span>{new Date(note.created_at).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {filtered.map((note) => {
+                const actions: SwipeAction[] = []
+                if (onEdit) {
+                  actions.push({
+                    label: 'Edit',
+                    icon: 'ℹ️',
+                    className: 'bg-slate-500',
+                    onAction: () => onEdit(note),
+                  })
+                }
+                if (onPin) {
+                  actions.push({
+                    label: note.pinned ? 'Unpin' : 'Pin',
+                    icon: note.pinned ? '📌' : '📍',
+                    className: 'bg-orange-500',
+                    onAction: () => onPin(note.id, !note.pinned),
+                  })
+                }
+                if (onDelete) {
+                  actions.push({
+                    label: 'Delete',
+                    icon: '🗑️',
+                    className: 'bg-red-500',
+                    onAction: () => onDelete(note.id),
+                  })
+                }
+
+                return (
+                  <SwipeableRow
+                    key={note.id}
+                    actions={actions}
+                    onTap={() => onEdit(note)}
+                    aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
+                  >
+                    <div
+                      aria-hidden="true"
+                      className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
+                        bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[4px]
+                        ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
+                    >
+                      {note.title && (
+                        <p className="font-semibold text-[0.875rem] mb-1 opacity-80">{note.title}</p>
+                      )}
+                      <p
+                        className="text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
+                      />
+                      <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
+                        {note.pinned && <span>📌</span>}
+                        {note.created_at && (
+                          <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                  </SwipeableRow>
+                )
+              })}
             </div>
           )}
         </div>

@@ -724,6 +724,8 @@ export default function App() {
             setShowNotesModal(false)
             setEditingNote(note)
           }}
+          onPin={(id, pinned) => updateNote(id, { pinned })}
+          onDelete={deleteNote}
         />
       )}
 
