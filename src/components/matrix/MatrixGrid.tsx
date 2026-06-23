@@ -67,6 +67,7 @@ export default function MatrixGrid({
           <span
             className="[writing-mode:vertical-rl] rotate-180 text-[0.5rem] tracking-widest
               font-semibold text-slate-400/70 dark:text-slate-600 uppercase"
+            aria-hidden="true"
           >
             ↑ Importance
           </span>
@@ -90,7 +91,7 @@ export default function MatrixGrid({
 
           {/* Horizontal: URGENCY → */}
           <div className="flex justify-end pr-1 select-none">
-            <span className="text-[0.5rem] tracking-widest font-semibold text-slate-400/70 dark:text-slate-600 uppercase">
+            <span className="text-[0.5rem] tracking-widest font-semibold text-slate-400/70 dark:text-slate-600 uppercase" aria-hidden="true">
               Urgency →
             </span>
           </div>

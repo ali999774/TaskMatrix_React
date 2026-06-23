@@ -29,7 +29,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
       {overdue.length > 0 && (
         <div>
           <div className="text-[0.75rem] font-semibold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1.5 px-1">
-            ⚠ Overdue ({overdue.length})
+            <span aria-hidden="true">⚠ Overdue ({overdue.length})</span>
           </div>
           <div className="space-y-1">
             {overdue.slice(0, 5).map((task) => (
@@ -59,7 +59,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
       {dueToday.length > 0 && (
         <div>
           <div className="text-[0.75rem] font-semibold text-amber-500 dark:text-amber-400 uppercase tracking-wider mb-1.5 px-1">
-            📅 Today ({dueToday.length})
+            <span aria-hidden="true">📅 Today ({dueToday.length})</span>
           </div>
           <div className="space-y-1">
             {dueToday.slice(0, 5).map((task) => (
