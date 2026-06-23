@@ -88,7 +88,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
                 aria-label="New blank note"
                 className="text-[0.875rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center font-bold"
               >
-                +
+                <span aria-hidden="true">+</span>
               </button>
             )}
             <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
@@ -97,7 +97,7 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
               aria-label="Close notes"
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             >
-              ✕
+              <span aria-hidden="true">✕</span>
             </button>
           </div>
         </div>

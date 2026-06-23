@@ -57,7 +57,7 @@ export default function QuadrantHeader({
         title={collapsed ? 'Expand' : 'Collapse'}
         aria-label={collapsed ? 'Expand quadrant' : 'Collapse quadrant'}
       >
-        {collapsed ? '▶' : '▼'}
+        {collapsed ? <span aria-hidden="true">▶</span> : <span aria-hidden="true">▼</span>}
       </button>
     </div>
   )

@@ -574,8 +574,8 @@ export default function App() {
                     🎯 What next?
                   </button>
                 )}
-                <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh">↻</button>
-                <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out">⏻</button>
+                <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button>
+                <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out"><span aria-hidden="true">⏻</span></button>
               </div>
 
               {/* Mobile: dropdown menu (below sm) */}
@@ -787,7 +787,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
-            <span className="text-[1.125rem]">⏱</span>
+            <span className="text-[1.125rem]" aria-hidden="true">⏱</span>
             <span className="text-[0.75rem] font-medium">Focus</span>
           </button>
           <button
@@ -795,7 +795,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <span className="text-[1.125rem]">{dark ? '☀️' : '🌙'}</span>
+            <span className="text-[1.125rem]" aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
             <span className="text-[0.75rem] font-medium">Theme</span>
           </button>
           <button
@@ -803,7 +803,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
-            <span className="text-[1.125rem]">📌</span>
+            <span className="text-[1.125rem]" aria-hidden="true">📌</span>
             <span className="text-[0.75rem] font-medium">Notes</span>
           </button>
         </div>

@@ -154,7 +154,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             className="text-slate-300 dark:text-slate-500 hover:text-red-500 transition-colors text-[0.75rem] px-1.5 py-1 active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             aria-label="Delete task"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       </div>

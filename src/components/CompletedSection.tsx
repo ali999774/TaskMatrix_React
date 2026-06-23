@@ -75,7 +75,7 @@ export default function CompletedSection({
           className="flex items-center gap-2 text-[0.875rem] text-slate-400 dark:text-slate-500
             hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium min-h-[44px]"
         >
-          <span className={`transition-transform motion-reduce:transition-none ${show ? 'rotate-90' : ''}`}>▸</span>
+          <span className={`transition-transform motion-reduce:transition-none ${show ? 'rotate-90' : ''}`} aria-hidden="true">▸</span>
           Completed
           {tasks.length > 0 && (
             <span className="text-[0.75rem] text-slate-300 dark:text-slate-600">({tasks.length})</span>
@@ -129,7 +129,7 @@ export default function CompletedSection({
                   title="Move back to active tasks"
                   aria-label={`Undo completion: ${task.title}`}
                 >
-                  ↩
+                  <span aria-hidden="true">↩</span>
                 </button>
               </div>
             ))

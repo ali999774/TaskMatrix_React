@@ -66,7 +66,7 @@ export default function CheckCircle({ status, onToggle }: CheckCircleProps) {
       title={`Status: ${status}`}
       aria-label={`Cycle status: ${status}`}
     >
-      {isDone ? '●' : '○'}
+      {isDone ? <span aria-hidden="true">●</span> : <span aria-hidden="true">○</span>}
     </button>
   )
 }
