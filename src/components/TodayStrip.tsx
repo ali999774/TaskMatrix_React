@@ -40,8 +40,8 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
                   border border-red-200 dark:border-red-800/40 text-[0.875rem] text-slate-700
                   dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors min-h-[44px]"
               >
-                <span className="font-medium">{task.title}</span>
-                <span className="ml-2 text-[0.75rem] text-red-400 dark:text-red-500">
+                <span className="font-medium" aria-hidden="true">{task.title}</span>
+                <span className="ml-2 text-[0.75rem] text-red-400 dark:text-red-500" aria-hidden="true">
                   {task.due_date && parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               </button>
@@ -69,7 +69,7 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
                   border border-amber-200 dark:border-amber-800/40 text-[0.875rem] text-slate-700
                   dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors min-h-[44px]"
               >
-                <span className="font-medium">{task.title}</span>
+                <span className="font-medium" aria-hidden="true">{task.title}</span>
               </button>
             ))}
             {dueToday.length > 5 && (

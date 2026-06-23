@@ -225,7 +225,7 @@ function GridCell({
                 dark:hover:text-slate-200 py-1.5 transition-colors
                 min-h-[44px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
             >
-              +{hiddenCount} more
+              <span aria-hidden="true">+{hiddenCount} more</span>
             </button>
           )}
           {showAll && bucket.tasks.length > MAX_VISIBLE && (
@@ -236,7 +236,7 @@ function GridCell({
                 dark:hover:text-slate-300 py-1.5 transition-colors
                 min-h-[44px] rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
             >
-              Show less
+              <span aria-hidden="true">Show less</span>
             </button>
           )}
 

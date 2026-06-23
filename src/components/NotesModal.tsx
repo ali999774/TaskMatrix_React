@@ -108,8 +108,8 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
             onClick={onNewBlank}
             className="w-full flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-400 dark:text-slate-500 hover:border-blue-400 dark:hover:border-blue-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors mb-3 min-h-[44px]"
           >
-            <span className="text-[1.125rem]">+</span>
-            <span>Quick note…</span>
+            <span className="text-[1.125rem]" aria-hidden="true">+</span>
+            <span aria-hidden="true">Quick note…</span>
           </button>
           <input
             type="text"

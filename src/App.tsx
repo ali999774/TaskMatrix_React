@@ -631,7 +631,7 @@ export default function App() {
                 : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
               }`}
           >
-            All
+            <span aria-hidden="true">All</span>
           </button>
           {categories.map((cat) => (
             <button
@@ -643,7 +643,7 @@ export default function App() {
                   : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
             >
-              {cat.icon} {cat.display}
+              <span aria-hidden="true">{cat.icon} {cat.display}</span>
             </button>
           ))}
         </div>
@@ -777,7 +777,7 @@ export default function App() {
                 icon="🎙️"
                 className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               />
-              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">
                 {voiceStatus || 'Voice'}
               </span>
             </div>
@@ -788,7 +788,7 @@ export default function App() {
             aria-label="Pomodoro timer"
           >
             <span className="text-[1.125rem]" aria-hidden="true">⏱</span>
-            <span className="text-[0.75rem] font-medium">Focus</span>
+            <span className="text-[0.75rem] font-medium" aria-hidden="true">Focus</span>
           </button>
           <button
             onClick={toggleTheme}
@@ -796,7 +796,7 @@ export default function App() {
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             <span className="text-[1.125rem]" aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
-            <span className="text-[0.75rem] font-medium">Theme</span>
+            <span className="text-[0.75rem] font-medium" aria-hidden="true">Theme</span>
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
@@ -804,7 +804,7 @@ export default function App() {
             aria-label="View all notes"
           >
             <span className="text-[1.125rem]" aria-hidden="true">📌</span>
-            <span className="text-[0.75rem] font-medium">Notes</span>
+            <span className="text-[0.75rem] font-medium" aria-hidden="true">Notes</span>
           </button>
         </div>
       </nav>

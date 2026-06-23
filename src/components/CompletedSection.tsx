@@ -76,7 +76,7 @@ export default function CompletedSection({
             hover:text-slate-600 dark:hover:text-slate-300 transition-colors font-medium min-h-[44px]"
         >
           <span className={`transition-transform motion-reduce:transition-none ${show ? 'rotate-90' : ''}`} aria-hidden="true">▸</span>
-          Completed
+          <span aria-hidden="true">Completed</span>
           {tasks.length > 0 && (
             <span className="text-[0.75rem] text-slate-300 dark:text-slate-600">({tasks.length})</span>
           )}
@@ -91,7 +91,7 @@ export default function CompletedSection({
               hover:border-red-300 dark:hover:border-red-700 transition-colors disabled:opacity-50 min-h-[44px]"
             title="Permanently clear all completed tasks"
           >
-            {clearing ? 'Clearing…' : 'Clear completed'}
+            {clearing ? <span aria-hidden="true">Clearing…</span> : <span aria-hidden="true">Clear completed</span>}
           </button>
         )}
       </div>
