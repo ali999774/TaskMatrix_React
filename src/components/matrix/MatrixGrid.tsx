@@ -45,6 +45,9 @@ export interface MatrixLayoutProps {
  *
  * Axis labels: ↑ IMPORTANCE (vertical, left) / URGENCY → (horizontal, below)
  * Invest is emphasised by visual weight (ring + shadow), not by repositioning.
+ *
+ * Drop targets use data-drop-id for framer-motion drag hit-testing in TaskCard.
+ * No HTML5 DnD handlers — the drag→move path is zero-render during drag.
  */
 export default function MatrixGrid({
   buckets,
@@ -114,7 +117,7 @@ export default function MatrixGrid({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GridCell
+// GridCell — framer-motion drop zone (data-drop-id only, no HTML5 DnD)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function GridCell({
@@ -132,7 +135,6 @@ function GridCell({
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
 }) {
-  const [dragOver, setDragOver] = useState(false)
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(`tm-q-${bucket.quadrant}`) === 'true',
   )
@@ -146,49 +148,25 @@ function GridCell({
     })
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(true)
-  }
-  const handleDragLeave = (e: React.DragEvent) => {
-    if ((e.currentTarget as HTMLElement).contains(e.relatedTarget as HTMLElement)) return
-    setDragOver(false)
-  }
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const taskId = e.dataTransfer.getData('text/plain')
-    if (taskId) onMove(taskId, bucket.quadrant)
-  }
-
   const isInvest = bucket.quadrant === 2
   const visibleTasks = showAll ? bucket.tasks : bucket.tasks.slice(0, MAX_VISIBLE)
   const hiddenCount = bucket.tasks.length - MAX_VISIBLE
 
   // Namespace this drop zone as 'grid:*' — both grid and list are live in the DOM
   // simultaneously (display:none hides one but does not remove it). The prefix
-  // prevents any future dnd-kit useDroppable registration from colliding with
-  // the list's 'list:*' zones and makes zone attribution unambiguous in DevTools.
+  // prevents collision with the list's 'list:*' zones. TaskCard's framer-motion
+  // onDragEnd hit-tests against all [data-drop-id] elements in the document.
   const dropId = `grid:${QUADRANT_ID_MAP[bucket.quadrant]}`
 
   return (
     <div
       data-drop-id={dropId}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
       className={[
         'rounded-[var(--radius-grid-cell)] border w-full',
         'px-4 py-4 flex flex-col transition-all duration-300',
         QUADRANT_BG[bucket.quadrant],
         collapsed ? 'min-h-0' : 'min-h-[220px]',
-        dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : '',
-        isInvest && !dragOver ? INVEST_EMPHASIS : '',
+        isInvest ? INVEST_EMPHASIS : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -245,11 +223,9 @@ function GridCell({
 
           {bucket.tasks.length === 0 && (
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6" aria-hidden="true">
-              {dragOver
-                ? 'Drop here'
-                : IS_TOUCH
-                  ? 'Long-press a task to move it here'
-                  : 'Drag tasks here'}
+              {IS_TOUCH
+                ? 'Long-press a task to move it here'
+                : 'Drag tasks here'}
             </p>
           )}
         </div>

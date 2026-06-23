@@ -48,8 +48,8 @@ const QUADRANT_ACCENT: Record<Quadrant, string> = {
   4: 'border-l-[var(--color-quad-dont-do)]',
 }
 
-// HTML5 DnD does not fire on iOS touch — empty-state hint must describe the
-// actual interaction there (long-press → "Move to…" popup in TaskCard).
+// Drag now runs through framer-motion in TaskCard; the empty-state hint
+// describes the actual interaction for each pointer type.
 const IS_TOUCH =
   typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
@@ -68,6 +68,8 @@ export interface MatrixLayoutProps {
  * Display order (list-local): Invest → Do First → Delegate → Don't Do.
  * groupTasksByQuadrant is NOT touched — grid consumes its unchanged [1,2,3,4] order.
  * Ordering is a useMemo derivation over LIST_ORDER; no data mutation.
+ *
+ * Drop targets use data-drop-id for framer-motion drag hit-testing in TaskCard.
  */
 export default function MatrixList({
   buckets,
@@ -104,7 +106,7 @@ export default function MatrixList({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ListQuadrant
+// ListQuadrant — framer-motion drop zone (data-drop-id only, no HTML5 DnD)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ListQuadrant({
@@ -125,7 +127,6 @@ function ListQuadrant({
   const qId = QUADRANT_ID_MAP[bucket.quadrant]
   const tierCls = TIER_CLASSES[EMPHASIS[qId]]
 
-  const [dragOver, setDragOver] = useState(false)
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(`tm-q-${bucket.quadrant}`) === 'true',
   )
@@ -138,38 +139,10 @@ function ListQuadrant({
     })
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-  }
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(true)
-  }
-  const handleDragLeave = (e: React.DragEvent) => {
-    if ((e.currentTarget as HTMLElement).contains(e.relatedTarget as HTMLElement)) return
-    setDragOver(false)
-  }
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const taskId = e.dataTransfer.getData('text/plain')
-    if (taskId) onMove(taskId, bucket.quadrant)
-  }
-
   return (
-    // Outer wrapper carries emphasis-tier classes (opacity + spacing).
-    // data-drop-id namespaces this zone as 'list:*' — both list and grid are
-    // live in the DOM simultaneously (CSS display:none hides the grid on narrow
-    // screens, but doesn't remove it). Namespacing prevents conceptual ID
-    // collisions and makes zone attribution unambiguous in DevTools.
     <div
       className={`${tierCls} transition-opacity duration-200`}
       data-drop-id={`list:${qId}`}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       {/* overflow-hidden clips the QuadrantHeader tint to the rounded corners */}
       <div
@@ -177,7 +150,6 @@ function ListQuadrant({
           'rounded-xl border border-l-4 overflow-hidden transition-all duration-300',
           QUADRANT_BG[bucket.quadrant],
           QUADRANT_ACCENT[bucket.quadrant],
-          dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.01]' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -205,7 +177,6 @@ function ListQuadrant({
               />
             ))}
 
-            {/* Compact dashed empty-state — unobtrusive, still a visible drop target */}
             {bucket.tasks.length === 0 && (
               <p
                 className="text-[0.75rem] italic text-center py-3 rounded-lg
@@ -214,11 +185,9 @@ function ListQuadrant({
                   border-slate-300 dark:border-slate-700"
                 aria-hidden="true"
               >
-                {dragOver
-                  ? 'Drop here'
-                  : IS_TOUCH
-                    ? 'Long-press a task to move it here'
-                    : 'Drag tasks here'}
+                {IS_TOUCH
+                  ? 'Long-press a task to move it here'
+                  : 'Drag tasks here'}
               </p>
             )}
           </div>
