@@ -3,7 +3,7 @@ import { usePomodoro, SESSION_LABELS } from '../hooks/usePomodoro'
 import type { SessionType } from '../hooks/usePomodoro'
 
 // Ring geometry constants
-const MODAL_CIRCUMFERENCE = 439.8  // 2π × 70  (idle compact ring)
+const MODAL_CIRCUMFERENCE = 502.65  // 2π × 80  (idle compact ring)
 const FOCUS_CIRCUMFERENCE = 753.98 // 2π × 120 (full-screen ring)
 
 interface Props {
@@ -228,27 +228,27 @@ export default function PomodoroPopup({ show, onClose }: Props) {
 
         {/* Ring + time */}
         <div className="py-5">
-          <div className="relative w-40 h-40" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+          <div className="relative w-44 h-44" style={{ left: '50%', transform: 'translateX(-50%)' }}>
             <svg
-              width="160"
-              height="160"
-              viewBox="0 0 160 160"
+              width="176"
+              height="176"
+              viewBox="0 0 176 176"
               style={{ transform: 'rotate(-90deg)' }}
             >
               {/* Neutral track */}
               <circle
-                cx="80" cy="80" r="70"
+                cx="88" cy="88" r="80"
                 fill="none"
                 stroke="var(--color-pomodoro-track)"
-                strokeWidth="7"
+                strokeWidth="5"
               />
               {/* Accent progress arc */}
               <circle
-                cx="80" cy="80" r="70"
+                cx="88" cy="88" r="80"
                 fill="none"
-                strokeWidth="7"
+                strokeWidth="5"
                 strokeLinecap="round"
-                strokeDasharray={MODAL_CIRCUMFERENCE}
+                strokeDasharray={2 * Math.PI * 80}
                 strokeDashoffset={modalOffset}
                 style={{
                   stroke: arcColor,

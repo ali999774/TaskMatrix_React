@@ -52,7 +52,7 @@
   /* bg is intentionally always dark — immersive "cinema" mode regardless of  */
   /* the app's light/dark setting.                                             */
   --color-pomodoro-bg:         #0A0A0F;
-  --color-pomodoro-track:      #E5E7EB;   /* ring track — light mode          */
+  --color-pomodoro-track:      #E2E8F0;   /* ring track — light mode          */
   --color-pomodoro-work:       #FF3B30;   /* work arc — iOS system red        */
   --color-pomodoro-short:      #34C759;   /* short-break arc — iOS green      */
   --color-pomodoro-long:       #FF9500;   /* long-break arc — iOS amber       */
@@ -109,7 +109,7 @@
     --color-text-muted:     #98989F;
 
     /* Pomodoro dark overrides */
-    --color-pomodoro-track:     #3A3A3C;
+    --color-pomodoro-track:     #48484A;
     --color-pomodoro-work:      #FF453A;
     --color-pomodoro-short:     #30D158;
     --color-pomodoro-long:      #FF9F0A;
@@ -131,7 +131,7 @@
       --color-text-muted:     #98989F;
 
       /* Pomodoro dark overrides */
-      --color-pomodoro-track:     #3A3A3C;
+      --color-pomodoro-track:     #48484A;
       --color-pomodoro-work:      #FF453A;
       --color-pomodoro-short:     #30D158;
       --color-pomodoro-long:      #FF9F0A;
