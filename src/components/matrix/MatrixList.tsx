@@ -212,6 +212,7 @@ function ListQuadrant({
                   border border-dashed
                   text-slate-400 dark:text-slate-600
                   border-slate-300 dark:border-slate-700"
+                aria-hidden="true"
               >
                 {dragOver
                   ? 'Drop here'

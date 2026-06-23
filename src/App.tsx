@@ -774,7 +774,7 @@ export default function App() {
       )}
 
       {/* Mobile bottom action bar */}
-      <nav role="presentation" className="sticky bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+      <nav role="presentation" className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center gap-4 px-3 py-1">
           {/* Hide the whole slot when speech is unsupported (e.g. WKWebView) —
               VoiceButton renders null but the label would remain as a dead item */}

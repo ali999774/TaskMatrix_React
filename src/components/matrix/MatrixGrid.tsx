@@ -244,7 +244,7 @@ function GridCell({
           )}
 
           {bucket.tasks.length === 0 && (
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6">
+            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6" aria-hidden="true">
               {dragOver
                 ? 'Drop here'
                 : IS_TOUCH
