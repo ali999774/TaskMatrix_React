@@ -533,17 +533,23 @@ export default function App() {
             <div className="flex-1 relative">
               <div className="flex items-center gap-1.5">
                 <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} autoStart={voiceTaskQuickAction} />
-                <input
-                  type="text"
-                  value={quickAdd}
-                  onChange={(e) => setQuickAdd(e.target.value)}
-                  onKeyDown={handleQuickAddKeyDown}
-                  placeholder={suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task...'}
-                  className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
-                    dark:border-slate-700 rounded-lg px-3 text-[1rem] text-slate-700 
-                    dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 placeholder:truncate
-                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors min-w-0 h-11 leading-[2.75rem]"
-                />
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={quickAdd}
+                    onChange={(e) => setQuickAdd(e.target.value)}
+                    onKeyDown={handleQuickAddKeyDown}
+                    aria-label="Quick add task"
+                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 
+                      dark:border-slate-700 rounded-lg px-3 text-[1rem] text-slate-700 
+                      dark:text-slate-300 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors h-11"
+                  />
+                  {!quickAdd && (
+                    <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-3" aria-hidden="true">
+                      {suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task…'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
