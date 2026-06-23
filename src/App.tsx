@@ -534,8 +534,10 @@ export default function App() {
               <div className="flex items-center gap-1.5">
                 <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} autoStart={voiceTaskQuickAction} />
                 <div className="flex-1 relative">
+                  <label htmlFor="quick-add-input" className="sr-only">Quick add task</label>
                   <input
-                    type="text"
+                    id="quick-add-input"
+                    type="search"
                     value={quickAdd}
                     onChange={(e) => setQuickAdd(e.target.value)}
                     onKeyDown={handleQuickAddKeyDown}
