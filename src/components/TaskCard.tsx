@@ -124,7 +124,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       <div className="flex items-start gap-2">
         <CheckCircle status={task.status} onToggle={cycleStatus} />
         <div className="flex-1 min-w-0">
-          <span className={`text-[0.9375rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
+          <span className={`text-[0.9375rem] ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`} aria-hidden="true">
             {task.title}
           </span>
           {(task.category || dueInfo) && (

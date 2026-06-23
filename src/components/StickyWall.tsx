@@ -179,18 +179,18 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
                         {note.title && (
-                          <div className="text-[0.75rem] font-semibold text-slate-700 dark:text-slate-200 mb-1 truncate">
+                          <div className="text-[0.75rem] font-semibold text-slate-700 dark:text-slate-200 mb-1 truncate" aria-hidden="true">
                             {note.title}
                           </div>
                         )}
-                        <div className="whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
+                        <div className="whitespace-pre-wrap break-words" aria-hidden="true" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); haptics('medium'); onDelete(note.id) }}
                         className="text-[0.75rem] px-1.5 py-0.5 rounded hover:bg-black/10 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500"
                         aria-label="Delete note"
                       >
-                        ×
+                        <span aria-hidden="true">×</span>
                       </button>
                     </div>
                   </div>

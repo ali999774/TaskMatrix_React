@@ -140,10 +140,11 @@ export default function NotesModal({ notes, onClose, onEdit, onNewBlank }: Props
                     ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
                 >
                   {note.title && (
-                    <p className="font-semibold text-[0.875rem] mb-1 opacity-80">{note.title}</p>
+                    <p className="font-semibold text-[0.875rem] mb-1 opacity-80" aria-hidden="true">{note.title}</p>
                   )}
                   <p
                     className="text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
+                    aria-hidden="true"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
                   />
                   <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60" aria-hidden="true">
