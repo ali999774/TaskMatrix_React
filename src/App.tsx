@@ -542,7 +542,7 @@ export default function App() {
                   className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 
                     dark:border-slate-700 rounded-lg px-3 text-[1rem] text-slate-700 
                     dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 placeholder:truncate
-                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors min-w-0 h-11"
+                    outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors min-w-0 h-11 leading-[2.75rem]"
                 />
               </div>
             </div>
