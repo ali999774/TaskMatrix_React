@@ -2,14 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
 
-const COLORS = ['yellow', 'green', 'blue', 'red', 'orange'] as const
+const COLORS = ['red', 'amber', 'blue', 'green'] as const
 
 const COLOR_BG: Record<string, string> = {
-  yellow: 'bg-yellow-400',
-  green: 'bg-green-400',
-  blue: 'bg-blue-400',
   red: 'bg-red-400',
-  orange: 'bg-orange-400',
+  amber: 'bg-amber-400',
+  blue: 'bg-blue-400',
+  green: 'bg-green-400',
 }
 
 interface Props {
@@ -67,7 +66,7 @@ function insertFormatting(
 export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props) {
   const [title, setTitle] = useState(note.title || '')
   const [content, setContent] = useState(note.content || '')
-  const [color, setColor] = useState(note.color || 'yellow')
+  const [color, setColor] = useState(note.color || 'red')
   const [pinned, setPinned] = useState(!!note.pinned)
   const [error, setError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -87,7 +86,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
     setTitle(note.title || '')
     setContent(note.content || '')
-    setColor(note.color || 'yellow')
+    setColor(note.color || 'red')
     setPinned(!!note.pinned)
     setConfirmingDelete(false)
     setError('')
