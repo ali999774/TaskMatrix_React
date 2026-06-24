@@ -162,19 +162,19 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           actions={[
             {
               label: 'Details',
-              icon: 'ℹ️',
+              icon: 'i',
               className: 'bg-[#8E8E93]',
               onAction: () => onClick(task),
             },
             {
               label: 'Flag',
-              icon: '🏴',
+              icon: '⚑',
               className: 'bg-[#FF9500]',
               onAction: () => haptics('light'),
             },
             {
               label: 'Delete',
-              icon: '🗑️',
+              icon: '✕',
               className: 'bg-[#FF3B30]',
               onAction: () => onDelete(task.id),
             },
