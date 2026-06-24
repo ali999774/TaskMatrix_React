@@ -139,7 +139,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: 'Edit',
                     icon: 'ℹ️',
-                    className: 'bg-slate-500',
+                    className: 'bg-[#007AFF]',
                     onAction: () => onEdit(note),
                   })
                 }
@@ -155,7 +155,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: 'Delete',
                     icon: '🗑️',
-                    className: 'bg-red-500',
+                    className: 'bg-[#FF3B30]',
                     onAction: () => onDelete(note.id),
                   })
                 }

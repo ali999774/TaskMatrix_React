@@ -163,13 +163,13 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             {
               label: isDone ? 'Undo' : 'Done',
               icon: isDone ? '↩' : '✓',
-              className: 'bg-emerald-500',
+              className: 'bg-[#34C759]',
               onAction: cycleStatus,
             },
             {
               label: 'Delete',
               icon: '🗑️',
-              className: 'bg-red-500',
+              className: 'bg-[#FF3B30]',
               onAction: () => onDelete(task.id),
             },
           ]}
