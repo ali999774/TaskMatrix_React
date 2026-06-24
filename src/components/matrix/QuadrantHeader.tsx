@@ -34,7 +34,7 @@ export default function QuadrantHeader({
 }: QuadrantHeaderProps) {
   return (
     <div
-      className={`px-4 py-2 flex items-center gap-2 ${className}`}
+      className={`px-2 py-2 flex items-center gap-2 ${className}`}
     >
       {/* Accent dot */}
       <span className={`w-2 h-2 rounded-full shrink-0 ${HEADER_ACCENT[quadrant]}`} />
