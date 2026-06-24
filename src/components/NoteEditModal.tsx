@@ -233,6 +233,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             placeholder="📌 Note title (with emoji)..."
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
           />
@@ -262,6 +265,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleContentKeyDown}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
             placeholder={`Write your note here...
 
 **bold** ~~strikethrough~~
