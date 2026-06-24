@@ -204,7 +204,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl
-          max-sm:rounded-b-none max-sm:max-h-[85vh] overflow-y-auto max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          max-sm:rounded-b-none max-sm:max-h-[95dvh] overflow-y-auto max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}

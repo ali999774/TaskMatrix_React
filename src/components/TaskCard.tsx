@@ -152,7 +152,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
           group cursor-grab active:cursor-grabbing
           ${isDone ? 'opacity-50' : ''}
-          ${catDef ? `border-l-[3px] ${CATEGORY_BORDER[catDef.color] || ''}` : 'border-l-[3px] border-transparent'}`}
+          border-l-[3px] border-transparent`}
       >
         <SwipeableRow
           actions={[

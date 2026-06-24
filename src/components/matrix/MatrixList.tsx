@@ -34,10 +34,10 @@ const TIER_CLASSES: Record<EmphasisTier, string> = {
 
 // ─── Section background tints per quadrant ────────────────────────────────────
 const QUADRANT_BG: Record<Quadrant, string> = {
-  1: 'bg-red-50    dark:bg-red-950/30    border-red-200/70   dark:border-red-800/40',
-  2: 'bg-amber-50  dark:bg-amber-950/30  border-amber-200/70 dark:border-amber-800/40',
-  3: 'bg-blue-50   dark:bg-blue-950/30   border-blue-200/70  dark:border-blue-800/40',
-  4: 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/50 dark:border-emerald-800/30',
+  1: 'bg-red-50/60    dark:bg-red-950/30    border-red-200/70   dark:border-red-400',
+  2: 'bg-amber-50/60  dark:bg-amber-950/30  border-amber-200/70 dark:border-amber-400',
+  3: 'bg-blue-50/60   dark:bg-blue-950/30   border-blue-200/70  dark:border-blue-400',
+  4: 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200/70 dark:border-emerald-400',
 }
 
 // Left accent uses design tokens from @theme in index.css — flips in dark mode

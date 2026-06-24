@@ -39,14 +39,14 @@ function renderBlock(block: RenderBlock): string {
       .map((l) => l.replace(/^[\s]*[-*]\s/, ''))
       .map((l) => `<li>${renderInline(l)}</li>`)
       .join('')
-    return `<ul style="list-style-type:disc;padding-left:1rem">${items}</ul>`
+    return `<ul style="list-style-type:disc;list-style-position:inside;padding-left:1rem">${items}</ul>`
   }
   if (block.type === 'ol') {
     const items = block.lines
       .map((l) => l.replace(/^[\s]*\d+\.\s/, ''))
-      .map((l) => `<li>${renderInline(l)}</li>`)
+      .map((l) => `<li style="display:list-item">${renderInline(l)}</li>`)
       .join('')
-    return `<ol style="list-style-type:decimal;padding-left:1rem">${items}</ol>`
+    return `<ol style="list-style-type:decimal;list-style-position:inside;padding-left:1rem">${items}</ol>`
   }
   return `<p>${renderInline(block.lines[0])}</p>`
 }
