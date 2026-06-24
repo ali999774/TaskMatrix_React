@@ -14,9 +14,10 @@ interface Props {
   onTap?: () => void
   className?: string
   'aria-label'?: string
+  /** When false, renders icon-only buttons at 44px width (iOS style) */
+  showLabels?: boolean
 }
 
-const ACTION_WIDTH = 56
 const SPRING = { type: 'spring' as const, stiffness: 400, damping: 30, mass: 0.8 }
 
 /**
@@ -29,10 +30,12 @@ export default function SwipeableRow({
   onTap,
   className = '',
   'aria-label': ariaLabel,
+  showLabels = true,
 }: Props) {
   const x = useMotionValue(0)
   const openRef = useRef(false)
-  const maxSwipe = actions.length * ACTION_WIDTH
+  const btnWidth = showLabels ? 56 : 44
+  const maxSwipe = actions.length * btnWidth
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = -maxSwipe * 0.4
@@ -74,18 +77,20 @@ export default function SwipeableRow({
               handleAction(action.onAction)
             }}
             aria-label={action.label}
-            className={`${action.className} w-[56px] h-full flex flex-col items-center justify-center gap-0.5 text-white font-medium min-h-[44px] min-w-[44px]`}
+            className={`${action.className} w-[${btnWidth}px] h-full flex flex-col items-center justify-center gap-0.5 text-white font-medium min-h-[44px] min-w-[44px]`}
             whileTap={{ scale: 0.92 }}
           >
-            <span className="text-[1.25rem] leading-none" aria-hidden="true">
+            <span className={`${showLabels ? 'text-[1.25rem]' : 'text-[1.375rem]'} leading-none`} aria-hidden="true">
               {action.icon}
             </span>
-            <span
-              className="text-[0.625rem] uppercase tracking-wide opacity-90 leading-none"
-              aria-hidden="true"
-            >
-              {action.label}
-            </span>
+            {showLabels && (
+              <span
+                className="text-[0.625rem] uppercase tracking-wide opacity-90 leading-none"
+                aria-hidden="true"
+              >
+                {action.label}
+              </span>
+            )}
           </motion.button>
         ))}
       </div>

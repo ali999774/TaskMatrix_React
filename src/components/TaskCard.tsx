@@ -161,10 +161,16 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         <SwipeableRow
           actions={[
             {
-              label: isDone ? 'Undo' : 'Done',
-              icon: isDone ? '↩' : '✓',
-              className: 'bg-[#34C759]',
-              onAction: cycleStatus,
+              label: 'Details',
+              icon: 'ℹ️',
+              className: 'bg-[#8E8E93]',
+              onAction: () => onClick(task),
+            },
+            {
+              label: 'Flag',
+              icon: '🏴',
+              className: 'bg-[#FF9500]',
+              onAction: () => haptics('light'),
             },
             {
               label: 'Delete',
@@ -176,6 +182,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           onTap={handleClick}
           aria-label={task.title}
           className="bg-white dark:bg-slate-800"
+          showLabels={false}
         >
           {cardInner}
         </SwipeableRow>
