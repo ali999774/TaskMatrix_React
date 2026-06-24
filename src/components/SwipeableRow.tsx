@@ -1,6 +1,9 @@
 import { useRef } from 'react'
 import { motion, useMotionValue, animate, type PanInfo } from 'framer-motion'
 
+const IS_TOUCH =
+  typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 export interface SwipeAction {
   label: string
   icon: string
@@ -106,7 +109,7 @@ export default function SwipeableRow({
 
       {/* Draggable card */}
       <motion.div
-        drag="x"
+        drag={IS_TOUCH ? 'x' : false}
         dragConstraints={{ left: -maxSwipe, right: 0 }}
         dragElastic={0.08}
         dragSnapToOrigin={false}
