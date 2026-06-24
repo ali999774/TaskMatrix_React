@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { StickyNote } from '../types'
+import { persistOrQueue } from '../lib/persist'
 
 const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange']
 const DEBOUNCE_MS = 400
@@ -37,7 +38,8 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
       if (offlineQueue && !offlineQueue.online) {
         await offlineQueue.enqueue('sticky_notes', 'update', id, updates)
       } else {
-        await supabase.from('sticky_notes').update(updates).eq('id', id)
+        await persistOrQueue(offlineQueue, 'sticky_notes', 'update', id,
+          () => supabase.from('sticky_notes').update(updates).eq('id', id), updates)
       }
       syncedSnapshotRef.current.set(id, nextSnapshot)
     }
@@ -136,7 +138,9 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('sticky_notes', 'create', note.id, note as unknown as Record<string, unknown>)
     } else {
-      await supabase.from('sticky_notes').upsert(note, { onConflict: 'id' })
+      await persistOrQueue(offlineQueue, 'sticky_notes', 'create', note.id,
+        () => supabase.from('sticky_notes').upsert(note, { onConflict: 'id' }),
+        note as unknown as Record<string, unknown>)
     }
     return note
   }, [userId, offlineQueue])
@@ -164,7 +168,8 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('sticky_notes', 'delete', id)
     } else {
-      await supabase.from('sticky_notes').delete().eq('id', id)
+      await persistOrQueue(offlineQueue, 'sticky_notes', 'delete', id,
+        () => supabase.from('sticky_notes').delete().eq('id', id))
     }
   }, [offlineQueue])
 

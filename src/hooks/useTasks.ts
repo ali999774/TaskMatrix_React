@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
+import { persistOrQueue } from '../lib/persist'
 
 const DEBOUNCE_MS = 400
 
@@ -86,7 +87,8 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       if (offlineQueue && !offlineQueue.online) {
         await offlineQueue.enqueue('tasks', 'update', id, updates)
       } else {
-        await supabase.from('tasks').update(updates).eq('id', id)
+        await persistOrQueue(offlineQueue, 'tasks', 'update', id,
+          () => supabase.from('tasks').update(updates).eq('id', id), updates)
       }
       syncedSnapshotRef.current.set(id, nextSnapshot)
     }
@@ -212,7 +214,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('tasks', 'create', newTask.id!, newTask)
     } else {
-      await supabase.from('tasks').upsert(newTask, { onConflict: 'id' })
+      await persistOrQueue(offlineQueue, 'tasks', 'create', newTask.id!,
+        () => supabase.from('tasks').upsert(newTask, { onConflict: 'id' }),
+        newTask as Record<string, unknown>)
     }
   }, [userId, offlineQueue])
 
@@ -248,7 +252,8 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
           if (offlineQueue && !offlineQueue.online) {
             offlineQueue.enqueue('tasks', 'create', nextTask.id, row)
           } else {
-            supabase.from('tasks').upsert(row, { onConflict: 'id' })
+            void persistOrQueue(offlineQueue, 'tasks', 'create', nextTask.id,
+              () => supabase.from('tasks').upsert(row, { onConflict: 'id' }), row)
           }
           updated.push(nextTask)
         }
@@ -264,7 +269,8 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('tasks', 'update', id, payload)
     } else {
-      await supabase.from('tasks').update(payload).eq('id', id)
+      await persistOrQueue(offlineQueue, 'tasks', 'update', id,
+        () => supabase.from('tasks').update(payload).eq('id', id), payload)
     }
   }, [offlineQueue])
 
@@ -284,13 +290,16 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   const deleteTask = useCallback(async (id: string) => {
     dirtyRef.current.delete(id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
+    // Soft delete (deleted_at) so the row can be restored. Both the offline and
+    // error-retry paths enqueue the same UPDATE — NOT a hard 'delete', which on
+    // flush would drop the row and break restore/completed-history.
+    const deletedAt = new Date().toISOString()
     if (offlineQueue && !offlineQueue.online) {
-      await offlineQueue.enqueue('tasks', 'delete', id)
+      await offlineQueue.enqueue('tasks', 'update', id, { deleted_at: deletedAt })
     } else {
-      await supabase
-        .from('tasks')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id)
+      await persistOrQueue(offlineQueue, 'tasks', 'update', id,
+        () => supabase.from('tasks').update({ deleted_at: deletedAt }).eq('id', id),
+        { deleted_at: deletedAt })
     }
   }, [offlineQueue])
 
@@ -301,7 +310,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('tasks', 'update', task.id, { deleted_at: null })
     } else {
-      await supabase.from('tasks').update({ deleted_at: null }).eq('id', task.id)
+      await persistOrQueue(offlineQueue, 'tasks', 'update', task.id,
+        () => supabase.from('tasks').update({ deleted_at: null }).eq('id', task.id),
+        { deleted_at: null })
     }
   }, [offlineQueue])
 
@@ -327,7 +338,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       if (offlineQueue && !offlineQueue.online) {
         await offlineQueue.enqueue('tasks', 'update', id, { deleted_at: now })
       } else {
-        await supabase.from('tasks').update({ deleted_at: now }).eq('id', id)
+        await persistOrQueue(offlineQueue, 'tasks', 'update', id,
+          () => supabase.from('tasks').update({ deleted_at: now }).eq('id', id),
+          { deleted_at: now })
       }
     }
   }, [userId, offlineQueue])

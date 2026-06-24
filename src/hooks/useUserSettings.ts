@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { CategoryDef } from '../lib/categories'
 import { DEFAULT_CATEGORIES } from '../lib/categories'
+import { persistOrQueue } from '../lib/persist'
 
 const LS_KEY = 'tm-categories'
 
@@ -91,9 +92,12 @@ export function useUserSettings(userId: string | null, offlineQueue?: OfflineQue
         'user_id',
       )
     } else {
-      await supabase
-        .from('user_settings')
-        .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' })
+      await persistOrQueue(offlineQueue, 'user_settings', 'update', userId,
+        () => supabase
+          .from('user_settings')
+          .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' }),
+        { categories: cats as unknown as Record<string, unknown> },
+        'user_id')
     }
   }, [userId, offlineQueue])
 
