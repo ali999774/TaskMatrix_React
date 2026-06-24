@@ -306,7 +306,16 @@ export default function App() {
   }, [hasModal])
 
   const handleSuggest = async () => {
-    if (!aiSettings.enabled || filteredTasks.length === 0) return
+    if (!aiSettings.enabled) {
+      setSuggestion('AI disabled — enable in Settings ⚙️')
+      setTimeout(() => setSuggestion(''), 4000)
+      return
+    }
+    if (filteredTasks.length === 0) {
+      setSuggestion('No tasks to suggest from')
+      setTimeout(() => setSuggestion(''), 3000)
+      return
+    }
     setSuggesting(true)
     const list = filteredTasks
       .filter(t => t.status !== 'done')
@@ -318,6 +327,9 @@ export default function App() {
     if ('suggested' in result) {
       setSuggestion(result.suggested)
       setTimeout(() => setSuggestion(''), 5000)
+    } else {
+      setSuggestion(result.error || 'Could not reach AI')
+      setTimeout(() => setSuggestion(''), 4000)
     }
   }
 
