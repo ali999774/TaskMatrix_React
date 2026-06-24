@@ -75,7 +75,7 @@ export default function MatrixGrid({
 
         {/* Grid + horizontal axis */}
         <div className="flex flex-col flex-1 gap-1 min-w-0">
-          <div className="grid grid-cols-2 gap-3 items-start w-full">
+          <div className="grid grid-cols-2 gap-2 items-start w-full">
             {buckets.map((bucket) => (
               <GridCell
                 key={bucket.quadrant}
@@ -184,7 +184,7 @@ function GridCell({
       onDrop={handleDrop}
       className={[
         'rounded-[var(--radius-grid-cell)] border w-full',
-        'px-4 py-4 flex flex-col transition-all duration-300',
+        'px-3 py-3 flex flex-col transition-all duration-300',
         QUADRANT_BG[bucket.quadrant],
         collapsed ? 'min-h-0' : 'min-h-[220px]',
         dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : '',
