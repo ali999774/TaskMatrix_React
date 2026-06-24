@@ -587,8 +587,12 @@ export default function App() {
                       >
                         Try: {suggestion}
                       </button>
-                    ) : (...[truncated]
-                </div>
+                    ) : (
+                      <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-3" aria-hidden="true">
+                        {voiceTaskStatus || 'Quick add task…'}
+                      </span>
+                    )
+                  )}
               </div>
             </div>
 
