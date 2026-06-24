@@ -13,20 +13,20 @@ conditions / high impact) · **Medium** (defense-in-depth / data-loss / hardenin
 
 ## Summary
 
-| # | Finding | Severity | Area |
-|---|---------|----------|------|
-| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function |
-| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function |
-| 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **High** | RLS / IaC |
-| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling |
-| 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth |
-| 6 | Auth deep-link token exchange errors silently swallowed | **Medium** | Auth |
-| 7 | `markdown.ts` HTML sink is safe **only** by invariant — fragile | **Medium** | XSS |
-| 8 | Edge function leaks raw APNs error reasons to caller | **Low** | Info disclosure |
-| 9 | Service worker caches opaque cross-origin responses cache-first, unbounded | **Low** | SW / cache |
-| 10 | No length/size limits on task/note input | **Low** | DoS / storage |
-| 11 | `hashTaskId` UUID→int32 collisions can drop a reminder | **Low** | Quality |
-| 12 | `.env.example` documents `service_role` key for Playwright | **Low** | Secret hygiene |
+| # | Finding | Severity | Area | Status |
+|---|---------|----------|------|--------|
+| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **High** | RLS / IaC | ✅ Migration added (apply pending) |
+| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling | Open |
+| 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth | Open |
+| 6 | Auth deep-link token exchange errors silently swallowed | **Medium** | Auth | Open |
+| 7 | `markdown.ts` HTML sink is safe **only** by invariant — fragile | **Medium** | XSS | Open (safe today) |
+| 8 | Edge function leaks raw APNs error reasons to caller | **Low** | Info disclosure | ✅ Fixed in code |
+| 9 | Service worker caches opaque cross-origin responses cache-first, unbounded | **Low** | SW / cache | Open |
+| 10 | No length/size limits on task/note input | **Low** | DoS / storage | Open |
+| 11 | `hashTaskId` UUID→int32 collisions can drop a reminder | **Low** | Quality | Open |
+| 12 | `.env.example` documents `service_role` key for Playwright | **Low** | Secret hygiene | Open |
 
 No hardcoded secrets found in `src/` (the Supabase **anon** key is injected via `VITE_*` env and
 is public by design). `.env` is correctly git-ignored. No `eval`, `new Function`, `.innerHTML`, or
