@@ -175,6 +175,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           ]}
           onTap={handleClick}
           aria-label={task.title}
+          className="bg-white dark:bg-slate-800"
         >
           {cardInner}
         </SwipeableRow>
