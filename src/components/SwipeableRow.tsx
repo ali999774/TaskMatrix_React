@@ -14,7 +14,7 @@ interface Props {
   onTap?: () => void
   className?: string
   'aria-label'?: string
-  /** When false, renders icon-only buttons at 44px width (iOS style) */
+  /** When false, renders iOS-style circular buttons with labels below */
   showLabels?: boolean
 }
 
@@ -34,8 +34,11 @@ export default function SwipeableRow({
 }: Props) {
   const x = useMotionValue(0)
   const openRef = useRef(false)
-  const btnWidth = showLabels ? 56 : 44
-  const maxSwipe = actions.length * btnWidth
+
+  // iOS mode: each column is 44px circle + gap
+  // Classic mode: each button is 56px full-height block
+  const colWidth = showLabels ? 56 : 52 // 44px circle + 8px gap
+  const maxSwipe = actions.length * colWidth
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = -maxSwipe * 0.4
@@ -68,7 +71,7 @@ export default function SwipeableRow({
   return (
     <div className={`relative overflow-hidden rounded-xl ${className}`}>
       {/* Action buttons behind the card */}
-      <div className="absolute inset-y-0 right-0 flex rounded-r-xl overflow-hidden">
+      <div className={`absolute inset-y-0 right-0 flex ${showLabels ? 'rounded-r-xl overflow-hidden' : 'items-center gap-0 pr-2'}`}>
         {actions.map((action, i) => (
           <motion.button
             key={i}
@@ -77,15 +80,19 @@ export default function SwipeableRow({
               handleAction(action.onAction)
             }}
             aria-label={action.label}
-            className={`${action.className} w-[${btnWidth}px] h-full flex flex-col items-center justify-center gap-0.5 text-white font-medium min-h-[44px] min-w-[44px]`}
+            className={`${action.className} ${
+              showLabels
+                ? 'w-[56px] h-full rounded-none'
+                : 'w-11 h-11 rounded-full shadow-md'
+            } flex flex-col items-center justify-center text-white font-medium min-h-[44px] min-w-[44px]`}
             whileTap={{ scale: 0.92 }}
           >
-            <span className={`${showLabels ? 'text-[1.25rem]' : 'text-[1.375rem]'} leading-none`} aria-hidden="true">
+            <span className="text-[1.25rem] leading-none" aria-hidden="true">
               {action.icon}
             </span>
             {showLabels && (
               <span
-                className="text-[0.625rem] uppercase tracking-wide opacity-90 leading-none"
+                className="text-[0.625rem] uppercase tracking-wide opacity-90 leading-none mt-0.5"
                 aria-hidden="true"
               >
                 {action.label}
@@ -93,6 +100,22 @@ export default function SwipeableRow({
             )}
           </motion.button>
         ))}
+
+        {/* Labels below circles (iOS mode only) */}
+        {!showLabels && (
+          <div className="absolute bottom-1.5 right-2 flex gap-0 pointer-events-none">
+            {actions.map((_, i) => (
+              <span
+                key={i}
+                className="text-[0.625rem] text-white/80 font-medium text-center leading-tight"
+                style={{ width: colWidth }}
+                aria-hidden="true"
+              >
+                {actions[i].label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Draggable card */}
