@@ -326,7 +326,7 @@ export default function App() {
     setSuggesting(false)
     if ('suggested' in result) {
       setSuggestion(result.suggested)
-      setTimeout(() => setSuggestion(''), 5000)
+      setTimeout(() => setSuggestion(''), 8000)
     } else {
       setSuggestion(result.error || 'Could not reach AI')
       setTimeout(() => setSuggestion(''), 4000)
@@ -582,7 +582,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setQuickAdd(suggestion)}
-                        className="absolute inset-y-0 left-3 right-3 flex items-center text-[1rem] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors truncate bg-white/0 cursor-pointer"
+                        className="absolute inset-y-0 left-3 right-3 flex items-center text-[1rem] font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors truncate cursor-pointer"
                         aria-label={`Create suggested task: ${suggestion}`}
                       >
                         Try: {suggestion}
@@ -616,7 +616,7 @@ export default function App() {
               )}
 
               {/* Desktop: inline buttons (sm+) */}
-              <div className="hidden sm:flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5">
                 <button onClick={() => setShowSettings(true)} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙️</span></button>
                 {aiSettings.enabled && (
                   <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
