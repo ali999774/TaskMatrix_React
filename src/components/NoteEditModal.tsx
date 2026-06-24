@@ -68,17 +68,40 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const [content, setContent] = useState(note.content || '')
   const [color, setColor] = useState(note.color || 'red')
   const [pinned, setPinned] = useState(!!note.pinned)
-  const [error, setError] = useState('')
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const haptics = useHaptics()
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const hasChangesRef = useRef(false)
+  const noteRef = useRef(note)
+
+  // Track latest note to avoid stale closures in debounce timer
+  useEffect(() => { noteRef.current = note }, [note])
+
+  // Autosave on any change (600ms debounce)
+  useEffect(() => {
+    // Skip initial mount — props haven't changed yet
+    if (!hasChangesRef.current) {
+      hasChangesRef.current = true
+      return
+    }
+    clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      if (!title.trim() && !content.trim()) return
+      onSave(noteRef.current.id, {
+        title: title.trim() || null,
+        content: content.trim(),
+        color,
+        pinned,
+      })
+    }, 600)
+    return () => clearTimeout(saveTimerRef.current)
+  }, [title, content, color, pinned])
+
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
 
   const handleClose = () => {
-    setConfirmingDelete(false)
-    setError('')
     onClose()
   }
 
@@ -88,37 +111,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     setContent(note.content || '')
     setColor(note.color || 'red')
     setPinned(!!note.pinned)
-    setConfirmingDelete(false)
-    setError('')
   }, [note])
 
-  useEffect(() => {
-    return () => {
-      setConfirmingDelete(false)
-      setError('')
-    }
-  }, [])
-
-  const handleSave = () => {
-    if (!title.trim() && !content.trim()) {
-      setError('Please add a title or content')
-      return
-    }
-    haptics('success')
-    onSave(note.id, {
-      title: title.trim() || null,
-      content: content.trim(),
-      color,
-      pinned,
-    })
-    handleClose()
-  }
-
   const handleDelete = () => {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true)
-      return
-    }
     haptics('medium')
     onDelete(note.id)
     handleClose()
@@ -237,7 +232,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           <input
             type="text"
             value={title}
-            onChange={(e) => { setTitle(e.target.value); setError('') }}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="📌 Note title (with emoji)..."
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
           />
@@ -265,7 +260,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => { setContent(e.target.value); setError('') }}
+            onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleContentKeyDown}
             placeholder={`Write your note here...
 
@@ -314,53 +309,15 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           </div>
         </div>
 
-        {/* Validation error */}
-        {error && (
-          <p role="alert" className="px-6 -mt-1 pb-1 text-[0.75rem] text-red-500 dark:text-red-400">
-            {error}
-          </p>
-        )}
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          {confirmingDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[0.875rem] text-slate-500 dark:text-slate-400">Delete note?</span>
-              <button
-                onClick={() => setConfirmingDelete(false)}
-                className="text-[0.875rem] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] px-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="text-[0.875rem] font-medium px-3 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px]"
-              >
-                Delete
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleDelete}
-              className="text-[0.875rem] text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors min-h-[44px] px-2"
-            >
-              Delete
-            </button>
-          )}
-          <div className="flex gap-2">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 rounded-lg text-[0.875rem] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px]"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 rounded-lg bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-[0.875rem] font-medium hover:opacity-90 transition-opacity min-h-[44px]"
-            >
-              Save
-            </button>
-          </div>
+        {/* Footer — Delete only (iOS swipe-style red button) */}
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end">
+          <button
+            onClick={handleDelete}
+            aria-label="Delete note"
+            className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px]"
+          >
+            <span aria-hidden="true" className="text-[1.25rem] leading-none">✕</span>
+          </button>
         </div>
       </div>
     </div>

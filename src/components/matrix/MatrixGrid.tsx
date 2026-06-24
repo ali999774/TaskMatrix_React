@@ -185,7 +185,7 @@ function GridCell({
       onDrop={handleDrop}
       className={[
         'rounded-[var(--radius-grid-cell)] border w-full',
-        'p-2 flex flex-col transition-all duration-300',
+        'px-3 py-2 flex flex-col transition-all duration-300',
         QUADRANT_BG[bucket.quadrant],
         collapsed ? 'min-h-0' : 'min-h-[220px]',
         dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : '',

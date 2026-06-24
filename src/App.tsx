@@ -595,6 +595,7 @@ export default function App() {
                   )}
               </div>
             </div>
+            </div>
 
             {/* Right actions */}
             <div className="flex items-center gap-0.5 shrink-0">
@@ -616,10 +617,14 @@ export default function App() {
               )}
 
               {/* Desktop: inline buttons (sm+) */}
-              <div className="flex items-center gap-0.5">
+              <div className="hidden sm:flex items-center gap-0.5">
                 <button onClick={() => setShowSettings(true)} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙️</span></button>
-                {aiSettings.enabled && (
+                {aiSettings.enabled ? (
                   <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
+                    <span aria-hidden="true">🎯 What next?</span>
+                  </button>
+                ) : (
+                  <button onClick={() => setShowSettings(true)} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] shrink-0" title="Enable AI in Settings to use What's Next?">
                     <span aria-hidden="true">🎯 What next?</span>
                   </button>
                 )}

@@ -28,6 +28,8 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
   return { text: due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), urgent: false }
 }
 
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+
 export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, categories = [] }: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
@@ -138,7 +140,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
     <>
       <div
         ref={cardRef}
-        draggable
+        draggable={!IS_TOUCH}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onContextMenu={handleContextMenu}
