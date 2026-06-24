@@ -35,10 +35,12 @@ export default function SwipeableRow({
   const x = useMotionValue(0)
   const openRef = useRef(false)
 
-  // iOS mode: each column is 44px circle + gap
+  // iOS mode: each circle is 44px with 6px gap + 8px right padding
   // Classic mode: each button is 56px full-height block
   const colWidth = showLabels ? 56 : 44
-  const maxSwipe = actions.length * colWidth
+  const gapWidth = showLabels ? 0 : 6
+  const padWidth = showLabels ? 0 : 8
+  const maxSwipe = actions.length * colWidth + (actions.length - 1) * gapWidth + padWidth
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = -maxSwipe * 0.4
