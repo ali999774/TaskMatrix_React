@@ -175,11 +175,11 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                       {note.title && (
                         <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100">{note.title}</p>
                       )}
-                      <p
-                        className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
-                        style={{ color: '#1C1C1E' }}
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
-                      />
+                      <div
+                        className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4 text-black dark:text-white bg-red-100"
+                      >
+                        {note.content || 'Empty note'}
+                      </div>
                       <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
                         {note.pinned && <span>📌</span>}
                         {note.created_at && (
