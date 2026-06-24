@@ -301,8 +301,20 @@ export default function App() {
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
   useEffect(() => {
-    document.body.style.overflow = hasModal ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    if (hasModal) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+    }
   }, [hasModal])
 
   const handleSuggest = async () => {
