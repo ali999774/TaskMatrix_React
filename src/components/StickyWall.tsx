@@ -181,7 +181,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                             {note.title}
                           </div>
                         )}
-                        <div className="whitespace-pre-wrap break-words" aria-hidden="true" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
+                        <div className="whitespace-pre-wrap break-words text-slate-700 dark:text-slate-300" aria-hidden="true" dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content) }} />
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); haptics('medium'); onDelete(note.id) }}
