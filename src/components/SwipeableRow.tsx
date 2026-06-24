@@ -122,7 +122,7 @@ export default function SwipeableRow({
             handleClick()
           }
         }}
-        className="relative bg-white dark:bg-slate-800 cursor-pointer"
+        className="relative bg-white dark:bg-slate-800 cursor-pointer z-10"
         whileTap={{ cursor: 'grabbing' }}
       >
         {children}

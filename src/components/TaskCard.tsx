@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
-import { getCategoryDef, CATEGORY_BORDER, CATEGORY_BADGE } from '../lib/categories'
+import { getCategoryDef, CATEGORY_BORDER } from '../lib/categories'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
 import CheckCircle from './matrix/CheckCircle'
@@ -103,40 +103,32 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
     >
       <CheckCircle status={task.status} onToggle={cycleStatus} />
       <div className="flex-1 min-w-0">
-        <span
-          className={`text-[0.9375rem] ${
+        <p
+          className={`text-[0.8125rem] font-semibold leading-snug ${
             isDone
               ? 'line-through text-slate-400 dark:text-slate-500'
-              : 'text-slate-700 dark:text-slate-200'
+              : 'text-slate-800 dark:text-slate-100'
           }`}
           aria-hidden="true"
         >
           {task.title}
-        </span>
+        </p>
         {(task.category || dueInfo) && (
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap" aria-hidden="true">
-            {task.category && (
-              <span
-                className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
-                  ${catDef ? CATEGORY_BADGE[catDef.color] || '' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
-              >
-                {catDef ? `${catDef.icon} ${catDef.display}` : task.category}
-              </span>
-            )}
+          <p className="text-[0.6875rem] leading-relaxed mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
             {dueInfo && (
-              <span
-                className={`text-[0.75rem] px-1.5 py-0.5 rounded-full font-medium
-                  ${
-                    dueInfo.urgent
-                      ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'
-                      : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
-                  }`}
-              >
-                {dueInfo.urgent ? '⚠ ' : ''}
+              <span className={dueInfo.urgent ? 'text-red-500 dark:text-red-400 font-medium' : 'text-slate-400 dark:text-slate-500'}>
                 {dueInfo.text}
               </span>
             )}
-          </div>
+            {task.category && dueInfo && (
+              <span className="text-slate-300 dark:text-slate-600">·</span>
+            )}
+            {task.category && (
+              <span className="text-blue-500 dark:text-blue-400">
+                #{catDef?.display || task.category}
+              </span>
+            )}
+          </p>
         )}
       </div>
     </div>
