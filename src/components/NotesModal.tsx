@@ -177,7 +177,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                       )}
                       <p
                         className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4"
-                        style={{ color: 'var(--color-text-primary)' }}
+                        style={{ color: '#1C1C1E' }}
                         dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
                       />
                       <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
