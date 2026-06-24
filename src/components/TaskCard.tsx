@@ -96,7 +96,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
 
   const cardInner = (
     <div
-      className="flex items-start gap-2"
+      className="flex items-start gap-1.5"
       onTouchStart={startLongPress}
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
@@ -142,7 +142,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onContextMenu={handleContextMenu}
-        className={`py-3 px-3 transition-all relative
+        className={`py-2 px-2.5 transition-all relative
           bg-white dark:bg-slate-800 rounded-lg
           select-none [-webkit-touch-callout:none]
           active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
