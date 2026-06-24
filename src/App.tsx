@@ -578,10 +578,16 @@ export default function App() {
                       dark:text-slate-300 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors h-11"
                   />
                   {!quickAdd && (
-                    <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-3" aria-hidden="true">
-                      {suggestion ? `Try: ${suggestion}` : voiceTaskStatus || 'Quick add task…'}
-                    </span>
-                  )}
+                    suggestion ? (
+                      <button
+                        type="button"
+                        onClick={() => setQuickAdd(suggestion)}
+                        className="absolute inset-y-0 left-3 right-3 flex items-center text-[1rem] text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors truncate bg-white/0 cursor-pointer"
+                        aria-label={`Create suggested task: ${suggestion}`}
+                      >
+                        Try: {suggestion}
+                      </button>
+                    ) : (...[truncated]
                 </div>
               </div>
             </div>
