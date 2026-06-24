@@ -9,9 +9,23 @@
  *   - APNS_TEAM_ID     — Apple Developer Team ID (10-char, e.g. D8WS4AUW8R)
  *   - APNS_PRIVATE_KEY  — Contents of the .p8 private key file (PEM string)
  *   - APNS_TOPIC        — Bundle ID (com.milestonepediatrics.taskmatrix)
+ * Plus the auto-injected Supabase env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+ * SUPABASE_ANON_KEY (used for caller authentication / token verification).
  *
  * APNs endpoint: https://api.push.apple.com/3/device/<token>
  * Auth: JWT signed with ES256 using the .p8 key.
+ *
+ * AUTHORIZATION MODEL (see SECURITY-AUDIT #1/#2):
+ *   The caller must present a verifiable bearer token. Two identities:
+ *     1. Service role  — the project service_role key. Trusted backend path
+ *        (e.g. the reminder scheduler). May target any user_id, or a raw device
+ *        token for testing.
+ *     2. User token    — a signed Supabase user JWT, verified via getUser().
+ *        Self-push only: user_id is forced to the verified user; any
+ *        caller-supplied user_id / token in the body is ignored.
+ *   The public anon key is NEITHER, so it can no longer authorize a send.
+ *   A prior version accepted any "Bearer eyJ…" prefix, which the public anon
+ *   key satisfies — that allowed push spoofing to arbitrary users.
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -29,6 +43,14 @@ const ALLOWED_ORIGINS = [
   "capacitor://localhost",
   "taskmatrix://localhost",
 ];
+
+/** Constant-time string compare (length is not secret here). */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return mismatch === 0;
+}
 
 // ── JWT Signing (ES256) ──────────────────────────────────────────────────
 async function signJWT(
@@ -127,6 +149,18 @@ Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") || "";
   const isAllowed = ALLOWED_ORIGINS.some((o) => o === origin || origin.startsWith(o + "/"));
 
+  // CORS-aware JSON responder. Note: Origin is for browser CORS only — it is
+  // NOT an authorization signal (it's trivially spoofable off-browser).
+  const respond = (body: unknown, status: number) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: {
+        ...CORS_HEADERS,
+        "Access-Control-Allow-Origin": isAllowed ? origin : ALLOWED_ORIGINS[0],
+        "content-type": "application/json",
+      },
+    });
+
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -138,40 +172,47 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "POST only" }), {
-      status: 405,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return respond({ error: "POST only" }, 405);
   }
 
-  // Only accept from allowed origins (and authenticated Supabase calls)
-  const authHeader = req.headers.get("authorization");
-  const isServiceRole = authHeader?.startsWith("Bearer eyJ"); // JWT token
-
-  if (!isAllowed && !isServiceRole) {
-    return new Response(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-      headers: CORS_HEADERS,
-    });
-  }
-
-  // ── Get secrets ────────────────────────────────────────────────────
+  // ── Secrets / config ───────────────────────────────────────────────
   const keyId = Deno.env.get("APNS_KEY_ID");
   const teamId = Deno.env.get("APNS_TEAM_ID");
   const privateKey = Deno.env.get("APNS_PRIVATE_KEY");
   const topic = Deno.env.get("APNS_TOPIC");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
   if (!keyId || !teamId || !privateKey || !topic) {
-    return new Response(
-      JSON.stringify({ error: "Missing APNs configuration — check edge function secrets" }),
-      { status: 500, headers: { "content-type": "application/json" } },
-    );
+    return respond({ error: "Missing APNs configuration — check edge function secrets" }, 500);
+  }
+  if (!supabaseUrl || !serviceRoleKey) {
+    return respond({ error: "Missing Supabase configuration" }, 500);
+  }
+
+  // ── Authenticate the caller (real verification, not a prefix check) ──
+  const bearer = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!bearer) return respond({ error: "Unauthorized" }, 401);
+
+  const isService = timingSafeEqual(bearer, serviceRoleKey);
+  let authedUserId: string | null = null;
+
+  if (!isService) {
+    // Verify as a Supabase user access token. The anon key and random JWTs
+    // resolve to no user → rejected.
+    const authClient = createClient(supabaseUrl, anonKey ?? serviceRoleKey, {
+      global: { headers: { Authorization: `Bearer ${bearer}` } },
+    });
+    const { data: { user }, error } = await authClient.auth.getUser(bearer);
+    if (error || !user) return respond({ error: "Unauthorized" }, 401);
+    authedUserId = user.id;
   }
 
   // ── Parse request ──────────────────────────────────────────────────
   let body: {
     user_id?: string;
-    token?: string;       // direct token (bypasses DB lookup)
+    token?: string;       // direct token (service-role path only)
     title?: string;
     subtitle?: string;
     body?: string;
@@ -182,50 +223,45 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
+    return respond({ error: "Invalid JSON" }, 400);
   }
 
-  if (!body.token && !body.user_id) {
-    return new Response(JSON.stringify({ error: "Provide token or user_id" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
-  }
-
-  // ── Resolve tokens ─────────────────────────────────────────────────
+  // ── Resolve target tokens (ownership-scoped) ───────────────────────
+  const admin = createClient(supabaseUrl, serviceRoleKey);
   let tokens: string[] = [];
+  let targetUserId: string | null = null;
 
-  if (body.token) {
-    tokens = [body.token];
+  if (isService) {
+    // Trusted backend: honor body.token (direct) or body.user_id (lookup).
+    if (body.token) {
+      tokens = [body.token];
+    } else if (body.user_id) {
+      targetUserId = body.user_id;
+    } else {
+      return respond({ error: "Provide token or user_id" }, 400);
+    }
   } else {
-    // Look up user's device tokens in Supabase
-    const client = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-    const { data, error } = await client
+    // User path: ignore body.token / body.user_id — only the caller's own
+    // registered devices can be targeted.
+    targetUserId = authedUserId;
+  }
+
+  if (targetUserId) {
+    const { data, error } = await admin
       .from("device_tokens")
       .select("token")
-      .eq("user_id", body.user_id)
+      .eq("user_id", targetUserId)
       .eq("platform", "ios");
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: "DB lookup failed", detail: error.message }),
-        { status: 500, headers: { "content-type": "application/json" } },
-      );
+      console.error("[push-send] device_tokens lookup failed:", error.message);
+      return respond({ error: "Lookup failed" }, 500);
     }
     tokens = (data || []).map((r: { token: string }) => r.token);
   }
 
   if (tokens.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, reason: "No device tokens found" }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    });
+    return respond({ sent: 0, reason: "No device tokens found" }, 200);
   }
 
   // ── Sign JWT once, send to all tokens ───────────────────────────────
@@ -245,31 +281,17 @@ Deno.serve(async (req: Request) => {
 
   const succeeded = results.filter((r) => r.ok).length;
   const failed = results.filter((r) => !r.ok);
-  const badTokens = failed.filter((r) => r.status === 410); // "Unregistered" — token stale
 
-  // Clean up stale tokens
-  if (badTokens.length > 0 && body.user_id) {
-    const client = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+  // Clean up stale tokens (410 "Unregistered"). We know the owning user here.
+  if (failed.some((r) => r.status === 410) && targetUserId) {
     const staleTokens = tokens.filter((_, i) => results[i].status === 410);
-    await client.from("device_tokens").delete().in("token", staleTokens);
+    await admin.from("device_tokens").delete().in("token", staleTokens);
   }
 
-  return new Response(
-    JSON.stringify({
-      sent: succeeded,
-      failed: failed.length,
-      ...(failed.length > 0 && { errors: failed.map((f) => f.reason) }),
-    }),
-    {
-      status: succeeded > 0 ? 200 : 500,
-      headers: {
-        ...CORS_HEADERS,
-        "Access-Control-Allow-Origin": isAllowed ? origin : ALLOWED_ORIGINS[0],
-        "content-type": "application/json",
-      },
-    },
-  );
+  // Log APNs detail server-side only — do NOT leak raw reasons to the caller.
+  if (failed.length > 0) {
+    console.error("[push-send] APNs failures:", failed.map((f) => `${f.status}:${f.reason}`));
+  }
+
+  return respond({ sent: succeeded, failed: failed.length }, succeeded > 0 ? 200 : 502);
 });

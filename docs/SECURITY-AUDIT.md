@@ -13,20 +13,20 @@ conditions / high impact) · **Medium** (defense-in-depth / data-loss / hardenin
 
 ## Summary
 
-| # | Finding | Severity | Area |
-|---|---------|----------|------|
-| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function |
-| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function |
-| 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **High** | RLS / IaC |
-| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling |
-| 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth |
-| 6 | Auth deep-link token exchange errors silently swallowed | **Medium** | Auth |
-| 7 | `markdown.ts` HTML sink is safe **only** by invariant — fragile | **Medium** | XSS |
-| 8 | Edge function leaks raw APNs error reasons to caller | **Low** | Info disclosure |
-| 9 | Service worker caches opaque cross-origin responses cache-first, unbounded | **Low** | SW / cache |
-| 10 | No length/size limits on task/note input | **Low** | DoS / storage |
-| 11 | `hashTaskId` UUID→int32 collisions can drop a reminder | **Low** | Quality |
-| 12 | `.env.example` documents `service_role` key for Playwright | **Low** | Secret hygiene |
+| # | Finding | Severity | Area | Status |
+|---|---------|----------|------|--------|
+| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **Medium** (was High) | RLS / IaC | ✅ Verified enabled in prod; migration captures it as IaC |
+| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling | Open |
+| 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth | Open |
+| 6 | Auth deep-link token exchange errors silently swallowed | **Medium** | Auth | Open |
+| 7 | `markdown.ts` HTML sink is safe **only** by invariant — fragile | **Medium** | XSS | Open (safe today) |
+| 8 | Edge function leaks raw APNs error reasons to caller | **Low** | Info disclosure | ✅ Fixed in code |
+| 9 | Service worker caches opaque cross-origin responses cache-first, unbounded | **Low** | SW / cache | Open |
+| 10 | No length/size limits on task/note input | **Low** | DoS / storage | Open |
+| 11 | `hashTaskId` UUID→int32 collisions can drop a reminder | **Low** | Quality | Open |
+| 12 | `.env.example` documents `service_role` key for Playwright | **Low** | Secret hygiene | Open |
 
 No hardcoded secrets found in `src/` (the Supabase **anon** key is injected via `VITE_*` env and
 is public by design). `.env` is correctly git-ignored. No `eval`, `new Function`, `.innerHTML`, or
@@ -65,15 +65,22 @@ primitive.
 authenticated service-role identity. Only resolve tokens from `device_tokens` scoped to the
 **verified** user.
 
-### 3. Core-table RLS policies are not in the repo — **High (unverifiable)**
+### 3. Core-table RLS policies are not in the repo — **Medium (IaC drift; prod verified safe)**
 Only `supabase/migrations/20260621_device_tokens.sql` defines an RLS policy. There is **no
 migration** creating or enabling RLS for `tasks`, `sticky_notes`, or `user_settings`. The entire
 client security model assumes these tables are RLS-scoped to `auth.uid() = user_id` (the client
-also filters `.eq('user_id', userId)` as defense-in-depth), but that cannot be audited from the
-repo and could silently regress.
+also filters `.eq('user_id', userId)` as defense-in-depth).
+
+**Verified 2026-06-24** via Supabase security advisor (`get_advisors type=security`): it returned
+**no `rls_disabled_in_public` finding** — that lint fires at ERROR level per table when RLS is off,
+so **RLS is already enabled on all three tables in production.** The real issue is therefore *IaC
+drift*: the live policies are unauditable from source and could silently regress, not a live bypass.
+(Downgraded from High → Medium.)
 
 **Fix:** commit migrations that `ENABLE ROW LEVEL SECURITY` and define
-`USING (auth.uid() = user_id)` policies for all three tables. Add a `get_advisors`/lint check in CI.
+`USING/WITH CHECK (auth.uid() = user_id)` policies for all three tables so source matches prod —
+done in `20260624_core_table_rls.sql` (idempotent; re-asserts the existing policy). Add a
+`get_advisors` security check to CI to catch future regressions.
 
 ---
 
