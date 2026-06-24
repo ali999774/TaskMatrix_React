@@ -244,13 +244,16 @@ function GridCell({
           )}
 
           {bucket.tasks.length === 0 && (
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic text-center py-6" aria-hidden="true">
-              {dragOver
-                ? 'Drop here'
-                : IS_TOUCH
-                  ? 'Long-press a task to move it here'
-                  : 'Drag tasks here'}
-            </p>
+            <div className="text-center py-4" aria-hidden="true">
+              <p className="text-[1.5rem] mb-1 opacity-30">✦</p>
+              <p className="text-[0.6875rem] text-slate-300 dark:text-slate-600">
+                {dragOver
+                  ? 'Drop here'
+                  : IS_TOUCH
+                    ? 'Long-press a task to move it here'
+                    : 'Drag tasks here'}
+              </p>
+            </div>
           )}
         </div>
       )}

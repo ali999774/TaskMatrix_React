@@ -523,7 +523,7 @@ export default function App() {
     <ErrorBoundary>
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-hidden w-full max-w-full">
       {/* Top bar */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800 pt-safe">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200/60 dark:border-slate-800/40 pt-safe">
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
             <h1 className="text-[1.125rem] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
@@ -628,7 +628,7 @@ export default function App() {
         </div>
       )}
       {/* Context switcher */}
-      <div className="px-3 sm:px-6 py-2 border-b border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-950/60">
+      <div className="px-3 sm:px-6 py-2 border-b border-slate-200/60 dark:border-slate-800/40 bg-white/60 dark:bg-slate-950/60">
         <div className="flex gap-1.5 overflow-x-auto">
           <button
             key="all"
@@ -776,7 +776,7 @@ export default function App() {
       )}
 
       {/* Mobile bottom action bar */}
-      <nav role="presentation" className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom)]">
+      <nav role="presentation" className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200/60 dark:border-slate-800/40 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around px-3 py-1">
           {/* Hide the whole slot when speech is unsupported (e.g. WKWebView) —
               VoiceButton renders null but the label would remain as a dead item */}

@@ -207,19 +207,16 @@ function ListQuadrant({
 
             {/* Compact dashed empty-state — unobtrusive, still a visible drop target */}
             {bucket.tasks.length === 0 && (
-              <p
-                className="text-[0.75rem] italic text-center py-3 rounded-lg
-                  border border-dashed
-                  text-slate-400 dark:text-slate-600
-                  border-slate-300 dark:border-slate-700"
-                aria-hidden="true"
-              >
-                {dragOver
-                  ? 'Drop here'
-                  : IS_TOUCH
-                    ? 'Long-press a task to move it here'
-                    : 'Drag tasks here'}
-              </p>
+              <div className="text-center py-3" aria-hidden="true">
+                <p className="text-[1.375rem] mb-1 opacity-25">✦</p>
+                <p className="text-[0.6875rem] text-slate-300 dark:text-slate-600">
+                  {dragOver
+                    ? 'Drop here'
+                    : IS_TOUCH
+                      ? 'Long-press a task to move it here'
+                      : 'Drag tasks here'}
+                </p>
+              </div>
             )}
           </div>
         )}
