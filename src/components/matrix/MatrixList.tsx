@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { Quadrant, Task, QuadrantId } from '../../types'
 import { QUADRANT_ID_MAP } from '../../types'
 import type { CategoryDef } from '../../lib/categories'
@@ -191,8 +192,16 @@ function ListQuadrant({
           onToggleCollapse={toggleCollapsed}
         />
 
-        {!collapsed && (
-          <div className="px-3 pb-3 pt-1 space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+            <div className="space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
             {bucket.tasks.map((task) => (
               <TaskCard
                 key={task.id}
@@ -218,8 +227,10 @@ function ListQuadrant({
                 </p>
               </div>
             )}
-          </div>
-        )}
+            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
