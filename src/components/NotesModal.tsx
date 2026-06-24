@@ -5,12 +5,12 @@ import SwipeableRow from './SwipeableRow'
 import type { SwipeAction } from './SwipeableRow'
 
 const COLOR_ACCENT: Record<string, string> = {
-  yellow: 'border-l-yellow-400 dark:border-l-yellow-400',
-  green: 'border-l-green-400 dark:border-l-green-400',
-  blue: 'border-l-blue-400 dark:border-l-blue-400',
-  pink: 'border-l-pink-400 dark:border-l-pink-400',
-  purple: 'border-l-purple-400 dark:border-l-purple-400',
-  orange: 'border-l-orange-400 dark:border-l-orange-400',
+  yellow: 'border-l-yellow-500 dark:border-l-yellow-400',
+  green: 'border-l-green-500 dark:border-l-green-400',
+  blue: 'border-l-blue-500 dark:border-l-blue-400',
+  pink: 'border-l-pink-500 dark:border-l-pink-400',
+  purple: 'border-l-purple-500 dark:border-l-purple-400',
+  orange: 'border-l-orange-500 dark:border-l-orange-400',
 }
 
 interface Props {
