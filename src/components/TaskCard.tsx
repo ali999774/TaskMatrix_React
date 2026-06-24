@@ -143,7 +143,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         onDragEnd={handleDragEnd}
         onContextMenu={handleContextMenu}
         className={`py-2 px-2.5 transition-all relative
-          bg-white dark:bg-slate-800 rounded-lg
+          bg-white dark:bg-slate-800 rounded-xl
+          shadow-sm dark:shadow-none
+          hover:shadow-md hover:-translate-y-px
           select-none [-webkit-touch-callout:none]
           active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
           group cursor-grab active:cursor-grabbing
