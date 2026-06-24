@@ -42,10 +42,10 @@ export default function QuadrantHeader({
       {/* Label + subtitle + count */}
       <div className="flex-1 min-w-0" aria-hidden="true">
         <div className="flex items-baseline gap-1.5">
-          <h3 className="text-[0.6875rem] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">{label}</h3>
-          <span className="text-[0.625rem] font-medium text-slate-300 dark:text-slate-600">· {count}</span>
+          <h3 className="text-[0.71875rem] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">{label}</h3>
+          <span className="text-[0.65625rem] font-medium text-slate-300 dark:text-slate-600">· {count}</span>
         </div>
-        <p className="text-[0.5625rem] text-slate-400/80 dark:text-slate-500/80 leading-tight">{subtitle}</p>
+        <p className="text-[0.59375rem] text-slate-400/80 dark:text-slate-500/80 leading-tight">{subtitle}</p>
       </div>
 
       {/* Collapse toggle */}
