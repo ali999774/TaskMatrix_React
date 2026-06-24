@@ -165,7 +165,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                     style={{ userSelect: 'none' }}
                     className={`group p-3 rounded-lg border text-[0.875rem] cursor-grab active:cursor-grabbing transition-all
                       bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700
-                      border-l-[4px] ${LEFT_ACCENT[note.color ?? 'yellow'] || LEFT_ACCENT.yellow}
+                      border-l-[3px] ${LEFT_ACCENT[note.color ?? 'red'] || LEFT_ACCENT.red}
                       ${draggedId === note.id ? 'opacity-40 scale-[0.97]' : ''}
                       ${dragOverId === note.id
                         ? dropAbove

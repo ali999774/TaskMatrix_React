@@ -25,13 +25,13 @@ export const CATEGORY_COLOR_HEX: Record<string, string> = {
 }
 
 export const CATEGORY_BORDER: Record<string, string> = {
-  slate: 'border-l-slate-400 dark:border-l-slate-500',
-  red: 'border-l-red-400 dark:border-l-red-500',
-  amber: 'border-l-amber-400 dark:border-l-amber-500',
-  emerald: 'border-l-emerald-400 dark:border-l-emerald-500',
-  blue: 'border-l-blue-400 dark:border-l-blue-500',
-  purple: 'border-l-purple-400 dark:border-l-purple-500',
-  pink: 'border-l-pink-400 dark:border-l-pink-500',
+  slate: 'border-l-slate-400 dark:border-l-slate-400',
+  red: 'border-l-red-400 dark:border-l-red-400',
+  amber: 'border-l-amber-400 dark:border-l-amber-400',
+  emerald: 'border-l-emerald-400 dark:border-l-emerald-400',
+  blue: 'border-l-blue-400 dark:border-l-blue-400',
+  purple: 'border-l-purple-400 dark:border-l-purple-400',
+  pink: 'border-l-pink-400 dark:border-l-pink-400',
 }
 
 export const CATEGORY_BADGE: Record<string, string> = {

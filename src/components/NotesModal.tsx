@@ -169,8 +169,8 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                     <div
                       aria-hidden="true"
                       className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                        bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[4px]
-                        ${COLOR_ACCENT[note.color ?? 'yellow'] || COLOR_ACCENT.yellow}`}
+                        bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
+                        ${COLOR_ACCENT[note.color ?? 'red'] || COLOR_ACCENT.red}`}
                     >
                       {note.title && (
                         <p className="font-semibold text-[0.875rem] mb-1 opacity-80">{note.title}</p>
