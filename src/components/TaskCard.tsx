@@ -104,7 +104,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
       <CheckCircle status={task.status} onToggle={cycleStatus} />
       <div className="flex-1 min-w-0">
         <p
-          className="text-[0.8125rem] font-semibold leading-snug ${
+          className={`text-[0.75rem] font-semibold leading-snug ${
             isDone
               ? 'line-through text-slate-400 dark:text-slate-500'
               : 'text-slate-800 dark:text-slate-100'
@@ -114,7 +114,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           {task.title}
         </p>
         {(task.category || dueInfo) && (
-          <p className="text-[0.6875rem] leading-relaxed mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
+          <p className="text-[0.625rem] leading-relaxed mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
             {dueInfo && (
               <span className={dueInfo.urgent ? 'text-red-500 dark:text-red-400 font-medium' : 'text-slate-400 dark:text-slate-500'}>
                 {dueInfo.text}
