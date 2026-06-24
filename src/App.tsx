@@ -353,8 +353,27 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center h-screen text-slate-400 dark:text-slate-500">
-        Loading...
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 pt-[calc(env(safe-area-inset-top)+4rem)] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-lg mx-auto">
+          {/* Header skeleton */}
+          <div className="h-8 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse mb-6" />
+          {/* Filter pills skeleton */}
+          <div className="flex gap-2 mb-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className={`h-10 rounded-full animate-pulse bg-slate-200 dark:bg-slate-800 ${i === 0 ? 'w-12' : 'w-20'}`} />
+            ))}
+          </div>
+          {/* 2×2 grid skeleton */}
+          <div className="grid grid-cols-2 gap-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-xl p-3 h-32 bg-slate-100 dark:bg-slate-800/50 animate-pulse">
+                <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
+                <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
+                <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -525,7 +544,7 @@ export default function App() {
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200/60 dark:border-slate-800/40 pt-safe">
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <h1 className="text-[1.125rem] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
+            <h1 className="text-[var(--font-size-title)] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
               TaskMatrix
             </h1>
 
