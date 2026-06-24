@@ -37,7 +37,7 @@ export default function SwipeableRow({
 
   // iOS mode: each column is 44px circle + gap
   // Classic mode: each button is 56px full-height block
-  const colWidth = showLabels ? 56 : 52 // 44px circle + 8px gap
+  const colWidth = showLabels ? 56 : 44
   const maxSwipe = actions.length * colWidth
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -71,7 +71,7 @@ export default function SwipeableRow({
   return (
     <div className={`relative overflow-hidden rounded-xl ${className}`}>
       {/* Action buttons behind the card */}
-      <div className={`absolute inset-y-0 right-0 flex ${showLabels ? 'rounded-r-xl overflow-hidden' : 'items-center gap-0 pr-2'}`}>
+      <div className={`absolute inset-y-0 right-0 flex ${showLabels ? 'rounded-r-xl overflow-hidden' : 'items-center gap-1.5 pr-2'}`}>
         {actions.map((action, i) => (
           <motion.button
             key={i}
@@ -84,7 +84,7 @@ export default function SwipeableRow({
               showLabels
                 ? 'w-[56px] h-full rounded-none'
                 : 'w-11 h-11 rounded-full shadow-md'
-            } flex flex-col items-center justify-center text-white font-medium min-h-[44px] min-w-[44px]`}
+            } flex items-center justify-center text-white font-medium`}
             whileTap={{ scale: 0.92 }}
           >
             <span className="text-[1.25rem] leading-none" aria-hidden="true">
@@ -100,22 +100,6 @@ export default function SwipeableRow({
             )}
           </motion.button>
         ))}
-
-        {/* Labels below circles (iOS mode only) */}
-        {!showLabels && (
-          <div className="absolute bottom-1.5 right-2 flex gap-0 pointer-events-none">
-            {actions.map((_, i) => (
-              <span
-                key={i}
-                className="text-[0.625rem] text-white/80 font-medium text-center leading-tight"
-                style={{ width: colWidth }}
-                aria-hidden="true"
-              >
-                {actions[i].label}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Draggable card */}
