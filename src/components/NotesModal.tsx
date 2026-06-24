@@ -166,6 +166,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                     actions={actions}
                     onTap={() => onEdit(note)}
                     aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
+                    className="bg-white dark:bg-slate-800"
                   >
                     <div
                       aria-hidden="true"
