@@ -2,14 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import type { StickyNote } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
 
-const COLORS = ['yellow', 'green', 'blue', 'pink', 'purple', 'orange'] as const
+const COLORS = ['yellow', 'green', 'blue', 'red', 'orange'] as const
 
 const COLOR_BG: Record<string, string> = {
   yellow: 'bg-yellow-400',
   green: 'bg-green-400',
   blue: 'bg-blue-400',
-  pink: 'bg-pink-400',
-  purple: 'bg-purple-400',
+  red: 'bg-red-400',
   orange: 'bg-orange-400',
 }
 
