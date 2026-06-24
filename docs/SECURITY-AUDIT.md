@@ -15,8 +15,8 @@ conditions / high impact) · **Medium** (defense-in-depth / data-loss / hardenin
 
 | # | Finding | Severity | Area | Status |
 |---|---------|----------|------|--------|
-| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed in code (deploy pending) |
-| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed & deployed 2026-06-24 |
+| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed & deployed 2026-06-24 |
 | 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **Medium** (was High) | RLS / IaC | ✅ Verified enabled in prod; migration captures it as IaC |
 | 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling | Open |
 | 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth | Open |
