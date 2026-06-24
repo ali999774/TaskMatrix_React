@@ -561,7 +561,7 @@ export default function App() {
             </h1>
 
             {/* Quick-add input */}
-            <div className="flex-1 relative max-w-sm">
+            <div className="flex-1 relative max-w-[280px] sm:max-w-sm">
               <div className="flex items-center gap-1.5">
                 <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} autoStart={voiceTaskQuickAction} />
                 <div className="flex-1 relative">
