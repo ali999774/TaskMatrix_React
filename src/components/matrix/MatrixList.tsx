@@ -201,7 +201,7 @@ function ListQuadrant({
               transition={{ duration: 0.25, ease: 'easeOut' }}
               className="overflow-hidden"
             >
-            <div className="px-2 pb-2 space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
+            <div className="px-2 pb-2 space-y-0.5 divide-y divide-slate-100 dark:divide-slate-800/40">
             {bucket.tasks.map((task) => (
               <TaskCard
                 key={task.id}
