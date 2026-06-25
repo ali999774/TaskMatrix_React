@@ -236,7 +236,7 @@ export default function App() {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
     if (undoTask) {
       if (undoIsDoneDismiss) {
-        handleStatusChange(undoTask.id, 'todo')
+        updateStatus(undoTask.id, 'todo')
       } else {
         restoreTask(undoTask)
       }

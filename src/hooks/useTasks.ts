@@ -161,12 +161,14 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             }
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as Task
-            // Remove from matrix if soft-deleted or no longer todo.
-            if (row.deleted_at || row.status !== 'todo') {
+            // Keep all tasks in the array — the matrix filters by status during render.
+            if (row.deleted_at) {
               setTasks((prev) => prev.filter((t) => t.id !== row.id))
             } else {
               setTasks((prev) =>
-                prev.map((t) => (t.id === row.id ? row : t))
+                prev.some((t) => t.id === row.id)
+                  ? prev.map((t) => (t.id === row.id ? row : t))
+                  : row.status === 'todo' ? [row, ...prev] : prev
               )
             }
           } else if (payload.eventType === 'DELETE') {
