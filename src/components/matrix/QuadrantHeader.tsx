@@ -51,7 +51,7 @@ export default function QuadrantHeader({
       {/* Collapse toggle */}
       <button
         onClick={onToggleCollapse}
-        className="text-[0.75rem] opacity-30 hover:opacity-60 transition-all
+        className="text-[0.75rem] text-slate-500 dark:text-slate-400 opacity-50 hover:opacity-80 transition-all
           active:scale-75 motion-reduce:scale-100
           p-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
         title={collapsed ? 'Expand' : 'Collapse'}
