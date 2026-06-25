@@ -200,17 +200,19 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     >
       <div
         ref={sheetRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-xl
           max-sm:rounded-b-none max-sm:max-h-[95dvh] overflow-y-auto max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
+        {/* Drag handle — touch handlers live here only so editable fields don't trigger the dismiss gesture */}
+        <div
+          className="flex justify-center pt-2 pb-2 max-sm:block hidden touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
         {/* Header */}
@@ -233,9 +235,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
             placeholder="📌 Note title (with emoji)..."
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
           />
@@ -265,9 +264,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleContentKeyDown}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
             placeholder={`Write your note here...
 
 **bold** ~~strikethrough~~

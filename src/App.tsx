@@ -298,22 +298,29 @@ export default function App() {
     handleNewBlankNote()
   }, [userId, quickAction])
 
-  // Lock body scroll when any modal is open (prevents iOS horizontal overscroll)
+  // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
+  // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
+  const savedScrollY = useRef(0)
   useEffect(() => {
     if (hasModal) {
+      savedScrollY.current = window.scrollY
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
+      document.body.style.top = `-${savedScrollY.current}px`
     } else {
       document.body.style.overflow = ''
       document.body.style.position = ''
       document.body.style.width = ''
+      document.body.style.top = ''
+      window.scrollTo(0, savedScrollY.current)
     }
     return () => {
       document.body.style.overflow = ''
       document.body.style.position = ''
       document.body.style.width = ''
+      document.body.style.top = ''
     }
   }, [hasModal])
 
