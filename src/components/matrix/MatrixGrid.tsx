@@ -213,7 +213,7 @@ function GridCell({
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-          <div className="space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
+          <div className="px-2 space-y-0 divide-y divide-slate-100 dark:divide-slate-800/40">
           {visibleTasks.map((task) => (
             <TaskCard
               key={task.id}
