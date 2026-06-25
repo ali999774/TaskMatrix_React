@@ -132,7 +132,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: 'Edit',
                     icon: 'ℹ️',
-                    className: 'bg-[#007AFF]',
+                    className: 'bg-[#8E8E93]',
                     onAction: () => onEdit(note),
                   })
                 }
@@ -140,14 +140,14 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: note.pinned ? 'Unpin' : 'Pin',
                     icon: note.pinned ? '📌' : '📍',
-                    className: 'bg-orange-500',
+                    className: 'bg-[#FF9500]',
                     onAction: () => onPin(note.id, !note.pinned),
                   })
                 }
                 if (onDelete) {
                   actions.push({
                     label: 'Delete',
-                    icon: '🗑️',
+                    icon: '✕',
                     className: 'bg-[#FF3B30]',
                     onAction: () => onDelete(note.id),
                   })
@@ -160,6 +160,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                     onTap={() => onEdit(note)}
                     aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
                     className="bg-white dark:bg-slate-800"
+                    showLabels={false}
                   >
                     <div
                       aria-hidden="true"
