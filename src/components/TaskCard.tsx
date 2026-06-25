@@ -35,6 +35,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; flipUp: boolean } | null>(null)
 
   const openMove = useCallback(() => {
