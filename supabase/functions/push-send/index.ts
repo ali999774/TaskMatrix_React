@@ -282,10 +282,11 @@ Deno.serve(async (req: Request) => {
   const succeeded = results.filter((r) => r.ok).length;
   const failed = results.filter((r) => !r.ok);
 
-  // Clean up stale tokens (410 "Unregistered"). We know the owning user here.
-  if (failed.some((r) => r.status === 410) && targetUserId) {
-    const staleTokens = tokens.filter((_, i) => results[i].status === 410);
-    await admin.from("device_tokens").delete().in("token", staleTokens);
+  // Clean up stale tokens (410 Unregistered, 400 BadDeviceToken).
+  const staleStatuses = [410, 400]
+  if (failed.some((r) => staleStatuses.includes(r.status)) && targetUserId) {
+    const staleTokens = tokens.filter((_, i) => staleStatuses.includes(results[i].status))
+    await admin.from("device_tokens").delete().in("token", staleTokens)
   }
 
   // Log APNs detail server-side only — do NOT leak raw reasons to the caller.
