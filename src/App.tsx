@@ -236,8 +236,7 @@ export default function App() {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
     if (undoTask) {
       if (undoIsDoneDismiss) {
-        // Undo a completion: flip back to todo, returning the task to the matrix.
-        updateStatus(undoTask.id, 'todo')
+        handleStatusChange(undoTask.id, 'todo')
       } else {
         restoreTask(undoTask)
       }
