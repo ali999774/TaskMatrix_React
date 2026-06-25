@@ -15,10 +15,10 @@ conditions / high impact) · **Medium** (defense-in-depth / data-loss / hardenin
 
 | # | Finding | Severity | Area | Status |
 |---|---------|----------|------|--------|
-| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed in code (deploy pending) |
-| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed in code (deploy pending) |
+| 1 | `push-send` auth accepts any `Bearer eyJ…` token → push spoofing to any user | **High** | Edge function | ✅ Fixed & deployed 2026-06-24 |
+| 2 | `push-send` `body.token` direct-send bypasses all ownership checks | **High** | Edge function | ✅ Fixed & deployed 2026-06-24 |
 | 3 | RLS policies for `tasks` / `sticky_notes` / `user_settings` not version-controlled | **Medium** (was High) | RLS / IaC | ✅ Verified enabled in prod; migration captures it as IaC |
-| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling | Open |
+| 4 | Optimistic writes swallow Supabase `{ error }` results → silent data loss | **Medium** | Error handling | ✅ Fixed in code (`lib/persist.ts`) |
 | 5 | No Content-Security-Policy (two `dangerouslySetInnerHTML` sinks) | **Medium** | XSS defense-in-depth | Open |
 | 6 | Auth deep-link token exchange errors silently swallowed | **Medium** | Auth | Open |
 | 7 | `markdown.ts` HTML sink is safe **only** by invariant — fragile | **Medium** | XSS | Open (safe today) |
@@ -93,8 +93,14 @@ it returns `{ data, error }`. These calls are `await`ed but the result is discar
 write that fails RLS, a constraint, or a 4xx leaves the optimistic UI showing success while the
 change is **lost** (the offline queue only covers `!online`, not online failures).
 
-**Fix:** capture `{ error }` on each write; on error, roll back local state or enqueue to the
-offline queue and surface a toast. At minimum log + reconcile via `reload()`.
+**Fix (done):** added `src/lib/persist.ts` → `persistOrQueue()`, which runs the online write,
+checks the returned `{ error }`, and on failure enqueues the equivalent mutation in the offline
+queue for retry-on-reconnect (also bumping the visible pending-count) instead of dropping it. Wired
+into every online write in `useTasks`, `useStickyNotes`, and `useUserSettings`. Also fixed an
+adjacent latent bug surfaced while doing this: `deleteTask`'s offline path enqueued a hard `'delete'`
+while the online path soft-deletes (`deleted_at`) — on reconnect that would hard-delete the row and
+break restore/completed-history. Both paths (and the new retry path) now enqueue the same soft-delete
+`'update'`.
 
 ### 5. No Content-Security-Policy — **Medium**
 `index.html` ships no CSP (meta or header) and there are two `dangerouslySetInnerHTML` sinks

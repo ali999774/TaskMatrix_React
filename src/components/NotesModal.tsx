@@ -112,9 +112,9 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           </div>
         </div>
 
-        {/* Search bar — toggled by search icon */}
+        {/* Search bar — toggled by search icon, sticky so it stays pinned */}
         {search && (
-          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-[69px] z-10">
             <input
               type="text"
               value={search === '_' ? '' : search}
