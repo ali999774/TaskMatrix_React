@@ -106,7 +106,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
 
   const cardInner = (
     <div
-      className="flex items-start gap-1.5"
+      className="flex items-start gap-1.5 pt-1"
       onTouchStart={startLongPress}
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
