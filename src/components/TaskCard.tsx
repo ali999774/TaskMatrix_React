@@ -34,13 +34,20 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
-  const [flipUp, setFlipUp] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; flipUp: boolean } | null>(null)
 
   const openMove = useCallback(() => {
     const rect = cardRef.current?.getBoundingClientRect()
-    setFlipUp(!!rect && window.innerHeight - rect.bottom < 180)
+    if (rect) {
+      const menuH = 180
+      const flipUp = window.innerHeight - rect.bottom < menuH
+      setMenuPos({
+        top: flipUp ? rect.top - 8 : rect.bottom + 4,
+        left: rect.right - 130,
+        flipUp,
+      })
+    }
     setShowMove(true)
   }, [])
 
@@ -192,7 +199,13 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             onClick={(e) => { e.stopPropagation(); setShowMove(false) }}
             aria-hidden="true"
           />
-          <div className={`absolute right-0 z-50 ${flipUp ? 'bottom-full mb-1' : 'top-full mt-1'} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px] max-h-[50vh] overflow-y-auto`}
+          {menuPos && (
+          <div
+            className="fixed z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px] max-h-[50vh] overflow-y-auto"
+            style={{
+              top: menuPos.top,
+              left: Math.max(8, menuPos.left),
+            }}
           onClick={(e) => e.stopPropagation()}>
           <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
           {([1, 2, 3, 4] as Quadrant[]).map((q) => (
@@ -206,6 +219,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             </button>
           ))}
           </div>
+          )}
         </>
       )}
     </>
