@@ -83,16 +83,23 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
           <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">📝 Notes</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {onNewBlank && (
               <button
                 onClick={onNewBlank}
-                aria-label="New blank note"
-                className="text-[0.875rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center font-bold"
+                aria-label="New note"
+                className="text-[0.8125rem] font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors min-h-[44px] inline-flex items-center justify-center"
               >
-                <span aria-hidden="true">+</span>
+                <span aria-hidden="true">+ </span>New Note
               </button>
             )}
+            <button
+              onClick={() => setSearch(search ? '' : '_')}
+              aria-label={search ? 'Clear search' : 'Search notes'}
+              className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${search ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
+            >
+              <span aria-hidden="true">🔍</span>
+            </button>
             <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
             <button
               onClick={onClose}
@@ -104,24 +111,19 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           </div>
         </div>
 
-        {/* Quick-add opens full Edit Note modal */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-          <button
-            aria-label="Create new note"
-            onClick={onNewBlank}
-            className="w-full flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-400 dark:text-slate-500 hover:border-blue-400 dark:hover:border-blue-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors mb-3 min-h-[44px]"
-          >
-            <span className="text-[1.125rem]" aria-hidden="true">+</span>
-            <span aria-hidden="true">Quick note…</span>
-          </button>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Search notes..."
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
-          />
-        </div>
+        {/* Search bar — toggled by search icon */}
+        {search && (
+          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+            <input
+              type="text"
+              value={search === '_' ? '' : search}
+              onChange={(e) => setSearch(e.target.value || '_')}
+              placeholder="Search notes..."
+              autoFocus
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+            />
+          </div>
+        )}
 
         {/* Grid */}
         <div className="p-6">
