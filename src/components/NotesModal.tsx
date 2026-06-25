@@ -33,6 +33,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
 
   const filtered = search
     ? notes.filter(
@@ -47,6 +48,9 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Only allow drag-to-dismiss from the header area, not the scrollable grid
+    const target = e.target as HTMLElement
+    if (scrollerRef.current?.contains(target)) return
     touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
   }
 
@@ -127,7 +131,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         )}
 
         {/* Grid — single scroller below the header; clipping (not z-index) keeps motion layers under the header */}
-        <div className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-20 max-sm:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-20 max-sm:pb-[calc(5rem+env(safe-area-inset-bottom))]">
           {filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
