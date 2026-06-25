@@ -105,7 +105,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         </div>
 
         {/* Quick-add opens full Edit Note modal */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-[69px] z-10">
           <button
             aria-label="Create new note"
             onClick={onNewBlank}

@@ -1,6 +1,9 @@
 // AI-powered voice transcript → structured task parser.
 // Routes through a Supabase Edge Function (server-side API key).
-// Supports three modes: parse (task parsing), breakdown (subtask generation), suggest (next task).
+// Uses supabase.functions.invoke() so the anon key is auto-injected.
+// Supports four modes: parse (task parsing), breakdown (subtask generation), suggest (next task), format (note cleanup).
+
+import { supabase } from './supabase'
 
 interface ParsedTask {
   title: string
@@ -12,35 +15,19 @@ interface ParsedTask {
   notes?: string | null
 }
 
-const EDGE_FN = 'https://xulnxwwwjpvgsaqnsllo.supabase.co/functions/v1/ai-parse'
-
 async function callEdgeFn(body: Record<string, unknown>): Promise<{ data: Record<string, unknown> } | { error: string }> {
   try {
-    const response = await fetch(EDGE_FN, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
+    const { data, error } = await supabase.functions.invoke('ai-parse', { body })
 
-    const text = await response.text()
-
-    if (!response.ok) {
-      try {
-        const errData = JSON.parse(text)
-        console.error('[AI] Edge function error:', response.status, errData)
-        return { error: errData?.error || `API error ${response.status}` }
-      } catch {
-        console.error('[AI] Edge function error:', response.status, text)
-        return { error: `API error ${response.status}` }
-      }
+    if (error) {
+      console.error('[AI] Edge function error:', error)
+      return { error: error.message || 'API error' }
     }
 
-    if (!text) return { error: 'empty response' }
+    if (!data) return { error: 'empty response' }
+    if (data.error) return { error: data.error as string }
 
-    const parsed = JSON.parse(text)
-    if (parsed.error) return { error: parsed.error }
-
-    return { data: parsed }
+    return { data: data as Record<string, unknown> }
   } catch (err) {
     console.error('[AI] Failed:', err)
     return { error: 'network error' }
