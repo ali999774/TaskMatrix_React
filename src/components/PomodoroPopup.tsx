@@ -207,28 +207,25 @@ export default function PomodoroPopup({ show, onClose }: Props) {
       >
         {/* Header / drag handle */}
         <div
-          className="px-4 pt-4 pb-2 flex justify-between items-center cursor-grab active:cursor-grabbing"
+          className="px-4 pt-4 pb-2 flex items-center cursor-grab active:cursor-grabbing"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         >
-          <span className="font-bold text-[1rem] text-slate-800 dark:text-white">
-            ⏱ Focus
-          </span>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200
-              text-[1.25rem] leading-none min-h-[44px] min-w-[44px]
-              inline-flex items-center justify-center"
-            aria-label="Close pomodoro timer"
+            aria-label="Back"
+            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
           >
-            ×
+            <span aria-hidden="true" className="text-[1rem]">←</span>
           </button>
+          <div className="flex-1" />
         </div>
 
         {/* Ring + time */}
         <div className="py-5">
-          <div className="relative w-44 h-44" style={{ left: '50%', transform: 'translateX(-50%)' }}>
+          <div className="flex justify-center">
+            <div className="relative w-44 h-44">
             <svg
               width="176"
               height="176"
@@ -269,6 +266,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 {SESSION_LABELS[session]}
               </span>
             </div>
+          </div>
           </div>
 
         </div>
