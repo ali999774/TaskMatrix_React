@@ -298,8 +298,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             <select
               value={session}
               onChange={(e) => switchSession(e.target.value as SessionType)}
-              className="text-[0.875rem] max-sm:text-[1rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px]"
-              style={{ color: arcColor }}
+              className="text-[0.875rem] max-sm:text-[1rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px] text-slate-800 dark:text-slate-200"
               aria-label="Session mode"
             >
               <option value="work">Work</option>
