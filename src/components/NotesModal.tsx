@@ -131,7 +131,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 if (onEdit) {
                   actions.push({
                     label: 'Edit',
-                    icon: 'ℹ️',
+                    icon: 'i',
                     className: 'bg-[#8E8E93]',
                     onAction: () => onEdit(note),
                   })
@@ -139,7 +139,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 if (onPin) {
                   actions.push({
                     label: note.pinned ? 'Unpin' : 'Pin',
-                    icon: note.pinned ? '📌' : '📍',
+                    icon: note.pinned ? '📌' : '⚑',
                     className: 'bg-[#FF9500]',
                     onAction: () => onPin(note.id, !note.pinned),
                   })
