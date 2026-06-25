@@ -103,14 +103,6 @@ export async function formatNoteContent(
   return { formatted: (result.data.formatted as string) || transcript.trim() }
 }
 
-const CATEGORY_CLASSIFY_PROMPT = `Classify this task into ONE category: personal, dev, launch, or clinic.
-- personal: home, family, errands, health, personal admin
-- dev: coding, software, development, debugging, technical
-- launch: business, startup, marketing, product launch
-- clinic: medical practice, patients, healthcare, clinical ops
-
-Task: `
-
 export async function suggestCategory(
   taskTitle: string
 ): Promise<{ category: string } | { error: string }> {
