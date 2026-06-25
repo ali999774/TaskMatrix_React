@@ -89,7 +89,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-900 rounded-t-2xl shrink-0">
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-900 rounded-t-2xl shrink-0 relative z-10">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
