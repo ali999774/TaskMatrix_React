@@ -25,6 +25,7 @@ export interface QuadrantBucket {
 export function groupTasksByQuadrant(tasks: Task[]): QuadrantBucket[] {
   const buckets: Record<Quadrant, Task[]> = { 1: [], 2: [], 3: [], 4: [] }
   for (const t of tasks) {
+    if (t.status !== 'todo') continue
     const q = importanceUrgencyToQuadrant(t.importance, t.urgency)
     buckets[q].push(t)
   }
