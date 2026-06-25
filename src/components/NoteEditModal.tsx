@@ -274,19 +274,28 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono"
           />
 
-          {/* Color picker */}
-          <div>
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-2">Color</p>
-            <div className="flex gap-2">
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={`w-10 h-10 rounded-full ${COLOR_BG[c]} transition-transform border-2
-                    ${color === c ? 'scale-110 border-slate-800 dark:border-white' : 'border-transparent hover:scale-110'} min-h-[44px] min-w-[44px]`}
-                />
-              ))}
+          {/* Color picker + delete */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-2">Color</p>
+              <div className="flex gap-2">
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`w-10 h-10 rounded-full ${COLOR_BG[c]} transition-transform border-2
+                      ${color === c ? 'scale-110 border-slate-800 dark:border-white' : 'border-transparent hover:scale-110'} min-h-[44px] min-w-[44px]`}
+                  />
+                ))}
+              </div>
             </div>
+            <button
+              onClick={handleDelete}
+              aria-label="Delete note"
+              className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0"
+            >
+              <span aria-hidden="true" className="text-[1.25rem] leading-none">✕</span>
+            </button>
           </div>
 
           {/* Pin toggle */}
@@ -309,17 +318,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
               <p>Last edited: {new Date(note.updated_at).toLocaleString()}</p>
             )}
           </div>
-        </div>
-
-        {/* Footer — Delete only (iOS swipe-style red button) */}
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end">
-          <button
-            onClick={handleDelete}
-            aria-label="Delete note"
-            className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px]"
-          >
-            <span aria-hidden="true" className="text-[1.25rem] leading-none">✕</span>
-          </button>
         </div>
       </div>
     </div>
