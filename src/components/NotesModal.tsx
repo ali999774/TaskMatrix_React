@@ -78,9 +78,9 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto
+        className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col
           max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
-          transition-transform duration-200"
+          transition-transform duration-200 overflow-hidden"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -89,7 +89,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-900 rounded-t-2xl shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -114,7 +114,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
 
         {/* Search bar — toggled by search icon, sticky so it stays pinned */}
         {search && (
-          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-[69px] z-10">
+          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 shrink-0">
             <input
               type="text"
               value={search === '_' ? '' : search}
@@ -127,7 +127,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         )}
 
         {/* Grid */}
-        <div className="p-6 pb-20">
+        <div className="p-6 pb-20 overflow-y-auto flex-1">
           {filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
