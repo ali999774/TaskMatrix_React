@@ -53,7 +53,7 @@
   /* the app's light/dark setting.                                             */
   --color-pomodoro-bg:         #0A0A0F;
   --color-pomodoro-track:      #E2E8F0;   /* ring track — light mode          */
-  --color-pomodoro-work:       #FF3B30;   /* work arc — iOS system red        */
+  --color-pomodoro-work:       #10B981;   /* work arc — emerald green            */
   --color-pomodoro-short:      #34C759;   /* short-break arc — iOS green      */
   --color-pomodoro-long:       #FF9500;   /* long-break arc — iOS amber       */
   --color-pomodoro-dot-done:   #FF3B30;   /* filled completed-round dot       */
@@ -110,7 +110,7 @@
 
     /* Pomodoro dark overrides */
     --color-pomodoro-track:     #48484A;
-    --color-pomodoro-work:      #FF453A;
+    --color-pomodoro-work:      #34D399;  /* work arc — emerald green (dark) */
     --color-pomodoro-short:     #30D158;
     --color-pomodoro-long:      #FF9F0A;
     --color-pomodoro-dot-done:  #FF453A;
@@ -132,7 +132,7 @@
 
       /* Pomodoro dark overrides */
       --color-pomodoro-track:     #48484A;
-      --color-pomodoro-work:      #FF453A;
+      --color-pomodoro-work:      #34D399;  /* work arc — emerald green (dark) */
       --color-pomodoro-short:     #30D158;
       --color-pomodoro-long:      #FF9F0A;
       --color-pomodoro-dot-done:  #FF453A;
