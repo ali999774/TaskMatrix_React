@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
+import { ArrowLeft, RotateCcw } from 'lucide-react'
 import { usePomodoro, SESSION_LABELS } from '../hooks/usePomodoro'
 import type { SessionType } from '../hooks/usePomodoro'
 
@@ -58,6 +59,12 @@ export default function PomodoroPopup({ show, onClose }: Props) {
   const progress = total > 0 ? 1 - timeLeft / total : 0
   const modalOffset = MODAL_CIRCUMFERENCE * (1 - progress)
   const focusOffset = FOCUS_CIRCUMFERENCE * (1 - progress)
+
+  // Idle-dial progress-head dot: leading edge of the arc (r=80, center 88,88),
+  // -90° so 0 progress sits at 12 o'clock to match the rotated ring.
+  const dotAngle = progress * 2 * Math.PI - Math.PI / 2
+  const dotX = 88 + 80 * Math.cos(dotAngle)
+  const dotY = 88 + 80 * Math.sin(dotAngle)
   const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 
   // Session arc color via CSS variable — no hardcoded hex in JSX
@@ -193,7 +200,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
     >
       <div
         ref={popupRef}
-        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
+        className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
           border border-slate-200 dark:border-slate-800 w-[300px] overflow-hidden
           animate-[slideUp_0.25s_ease] motion-reduce:animate-none select-none"
         style={pos.x || pos.y ? {
@@ -205,113 +212,125 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         } : undefined}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header / drag handle */}
+        {/* Back — out of the centered flow so it never pushes the dial off-axis */}
+        <button
+          onClick={onClose}
+          aria-label="Back"
+          className="absolute top-4 left-4 z-10 w-9 h-9 rounded-full flex items-center justify-center
+            text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
+        </button>
+
+        {/* Drag handle strip — keeps the modal repositionable (back button excluded) */}
         <div
-          className="px-4 pt-3 pb-1 flex items-center cursor-grab active:cursor-grabbing"
+          className="h-12 cursor-grab active:cursor-grabbing"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-        >
-          <button
-            onClick={onClose}
-            aria-label="Back"
-            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
-          >
-            <span aria-hidden="true" className="text-[1rem]">←</span>
-          </button>
-          <div className="flex-1" />
-        </div>
+        />
 
-        {/* Ring + time */}
-        <div className="pb-2">
-          <div className="flex justify-center">
-            <div className="relative w-44 h-44">
+        {/* Single centered column — dial, primary action, and config share one axis */}
+        <div className="flex flex-col items-center px-6 pb-6">
+          {/* Dial */}
+          <div className="relative w-44 h-44">
             <svg
               width="176"
               height="176"
               viewBox="0 0 176 176"
               style={{ transform: 'rotate(-90deg)' }}
             >
-              {/* Neutral track */}
+              {/* Neutral track (slate-200) */}
               <circle
                 cx="88" cy="88" r="80"
                 fill="none"
                 stroke="var(--color-pomodoro-track)"
-                strokeWidth="5"
+                strokeWidth="8"
               />
-              {/* Accent progress arc */}
+              {/* Progress arc — same emerald token as the START button */}
               <circle
                 cx="88" cy="88" r="80"
                 fill="none"
-                strokeWidth="5"
+                strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 80}
                 strokeDashoffset={modalOffset}
                 style={{
-                  stroke: '#9CA3AF',
+                  stroke: 'var(--color-pomodoro-work)',
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
                 }}
               />
             </svg>
 
-            {/* Time + mode label */}
+            {/* Progress-head dot at the arc's leading edge */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: 14,
+                height: 14,
+                left: `${dotX}px`,
+                top: `${dotY}px`,
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: 'var(--color-pomodoro-work)',
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.25)',
+              }}
+            />
+
+            {/* Time display — the visual hero */}
             <div className="absolute inset-0 flex items-center justify-center">
               <span
-                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none text-slate-500 dark:text-slate-400"
+                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none text-slate-700 dark:text-slate-200"
               >
                 {timeStr}
               </span>
             </div>
           </div>
+
+          {/* Primary action (centered) + demoted ghost reset (absolute right) */}
+          <div className="relative flex justify-center w-full mt-8">
+            <button
+              onClick={toggleTimer}
+              className="px-8 py-2.5 rounded-2xl text-[0.875rem] font-semibold tracking-wide
+                text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500
+                active:scale-95 motion-reduce:scale-100 active:opacity-90
+                transition-all min-h-[44px] shadow-lg shadow-emerald-500/20"
+              aria-label={
+                timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'
+              }
+            >
+              {timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
+            </button>
+            <button
+              onClick={resetTimer}
+              className="absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center
+                text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Reset timer"
+            >
+              <RotateCcw size={18} strokeWidth={2} aria-hidden="true" />
+            </button>
           </div>
 
-        </div>
-
-        {/* Primary + reset controls */}
-        <div className="flex gap-2 justify-center pb-2">
-          <button
-            onClick={toggleTimer}
-            className="px-8 py-2.5 rounded-xl text-[0.875rem] font-semibold tracking-wide
-              text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500
-              active:scale-95 motion-reduce:scale-100 active:opacity-90
-              transition-all min-h-[44px] shadow-lg shadow-emerald-500/20"
-            aria-label={
-              timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'
-            }
-          >
-            {timeLeft < durations[session] * 60 ? 'RESUME' : 'START'}
-          </button>
-          <button
-            onClick={resetTimer}
-            className="px-4 py-2.5 rounded-xl text-[0.875rem] text-slate-500 dark:text-slate-400
-              bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700
-              hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
-            aria-label="Reset timer"
-          >
-            ↺
-          </button>
-        </div>
-
-        {/* Duration stepper panel */}
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
+          {/* Config row — Work selector + stepper as a matched pair */}
+          <div className="flex items-center justify-center gap-2 w-full mt-6">
             <select
               value={session}
               onChange={(e) => switchSession(e.target.value as SessionType)}
-              className="text-[0.875rem] max-sm:text-[1rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px] text-slate-800 dark:text-slate-200"
+              className="h-9 text-[0.875rem] font-medium px-3 rounded-lg bg-slate-100 dark:bg-slate-800
+                border border-slate-200 dark:border-slate-700 outline-none cursor-pointer
+                text-slate-700 dark:text-slate-200"
               aria-label="Session mode"
             >
               <option value="work">Work</option>
               <option value="short">Short break</option>
               <option value="long">Long break</option>
             </select>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center h-9 rounded-lg bg-slate-100 dark:bg-slate-800
+              border border-slate-200 dark:border-slate-700 px-1">
               <button
                 onClick={() => adjustDuration(session, session === 'short' ? -1 : -5)}
                 disabled={running}
-                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
-                  text-slate-400 dark:text-slate-500 text-[1rem]
-                  hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                className="w-7 h-7 rounded-md text-slate-500 dark:text-slate-400 text-[1rem]
+                  hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center
                   transition-colors active:scale-90 motion-reduce:scale-100
                   disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Decrease duration"
@@ -325,9 +344,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
               <button
                 onClick={() => adjustDuration(session, session === 'short' ? 1 : 5)}
                 disabled={running}
-                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
-                  text-slate-400 dark:text-slate-500 text-[1rem]
-                  hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                className="w-7 h-7 rounded-md text-slate-500 dark:text-slate-400 text-[1rem]
+                  hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center
                   transition-colors active:scale-90 motion-reduce:scale-100
                   disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Increase duration"

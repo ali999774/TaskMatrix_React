@@ -18,6 +18,7 @@ import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
+import { Mic, Timer, Moon, Sun, Pin } from 'lucide-react'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
@@ -859,8 +860,8 @@ export default function App() {
                 onTranscript={handleVoiceNote}
                 onStatus={setVoiceStatus}
                 autoStart={voiceNoteQuickAction}
-                icon="🎙️"
-                className="p-0 bg-transparent border-none text-[1.125rem] text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                icon={<Mic size={20} strokeWidth={2} aria-hidden="true" />}
+                className="p-0 bg-transparent border-none text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               />
               <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">
                 {voiceStatus || 'Voice'}
@@ -872,7 +873,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
-            <span className="text-[1.125rem]" aria-hidden="true">⏱</span>
+            <Timer size={20} strokeWidth={2} aria-hidden="true" />
             <span className="text-[0.75rem] font-medium" aria-hidden="true">Focus</span>
           </button>
           <button
@@ -880,7 +881,9 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <span className="text-[1.125rem]" aria-hidden="true">{dark ? '☀️' : '🌙'}</span>
+            {dark
+              ? <Sun size={20} strokeWidth={2} aria-hidden="true" />
+              : <Moon size={20} strokeWidth={2} aria-hidden="true" />}
             <span className="text-[0.75rem] font-medium" aria-hidden="true">Theme</span>
           </button>
           <button
@@ -888,7 +891,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
-            <span className="text-[1.125rem]" aria-hidden="true">📌</span>
+            <Pin size={20} strokeWidth={2} aria-hidden="true" />
             <span className="text-[0.75rem] font-medium" aria-hidden="true">Notes</span>
           </button>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import { isNativeSpeech } from '../lib/speech'
 import { registerPlugin } from '@capacitor/core'
 
@@ -10,7 +10,7 @@ interface Props {
   onTranscript: (text: string) => void
   onStatus?: (status: string) => void
   className?: string
-  icon?: string
+  icon?: ReactNode
   autoStart?: boolean
 }
 
