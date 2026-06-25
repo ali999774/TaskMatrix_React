@@ -248,7 +248,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 strokeDasharray={2 * Math.PI * 80}
                 strokeDashoffset={modalOffset}
                 style={{
-                  stroke: 'var(--color-slate-500)',
+                  stroke: '#64748B',
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
                 }}
               />
