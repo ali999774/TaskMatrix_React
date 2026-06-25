@@ -19,7 +19,7 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { speechSupported, formatVoiceNote } from './lib/speech'
-import { parseVoiceTranscript, suggestNextTask, formatNoteContent } from './lib/ai-parse'
+import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
 import { useAISettings } from './hooks/useAISettings'
 import { QUADRANT_DEFAULTS } from './types'
@@ -476,9 +476,18 @@ export default function App() {
       }
     }
 
-    // Fallback: use quadrant defaults
+    // Fallback: use quadrant defaults + AI category suggestion
     const defaults = QUADRANT_DEFAULTS[q]
-    addTask(title, defaults.importance, defaults.urgency, context !== 'all' ? context : undefined)
+    let autoCategory = context !== 'all' ? context : undefined
+
+    if (aiSettings.enabled && !autoCategory) {
+      const catResult = await suggestCategory(title, aiSettings.apiKey, getAIBaseUrl())
+      if ('category' in catResult) {
+        autoCategory = catResult.category
+      }
+    }
+
+    addTask(title, defaults.importance, defaults.urgency, autoCategory)
   }
 
   const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {

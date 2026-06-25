@@ -11,6 +11,14 @@ const COLOR_ACCENT: Record<string, string> = {
   green: 'border-l-green-400 dark:border-l-green-400',
 }
 
+// Filled pushpin, fill=currentColor so it inherits the white action-button text
+// color — unlike the 📌 emoji, which renders in its native red and ignores CSS color.
+const PinIcon = (
+  <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" aria-hidden="true">
+    <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
+  </svg>
+)
+
 interface Props {
   notes: StickyNote[]
   onClose: () => void
@@ -139,7 +147,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 if (onPin) {
                   actions.push({
                     label: note.pinned ? 'Unpin' : 'Pin',
-                    icon: note.pinned ? '📌\uFE0E' : '📌\uFE0E',
+                    icon: PinIcon,
                     className: 'bg-[#FF9500]',
                     onAction: () => onPin(note.id, !note.pinned),
                   })

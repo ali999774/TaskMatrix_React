@@ -102,3 +102,53 @@ export async function formatNoteContent(
   if ('error' in result) return result
   return { formatted: (result.data.formatted as string) || transcript.trim() }
 }
+
+const CATEGORY_CLASSIFY_PROMPT = `Classify this task into ONE category: personal, dev, launch, or clinic.
+- personal: home, family, errands, health, personal admin
+- dev: coding, software, development, debugging, technical
+- launch: business, startup, marketing, product launch
+- clinic: medical practice, patients, healthcare, clinical ops
+
+Task: `
+
+export async function suggestCategory(
+  taskTitle: string,
+  apiKey: string,
+  baseUrl: string = 'https://api.deepseek.com/v1'
+): Promise<{ category: string } | { error: string }> {
+  if (!taskTitle.trim()) return { error: 'empty title' }
+  if (!apiKey) return { error: 'no API key' }
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: CATEGORY_CLASSIFY_PROMPT },
+          { role: 'user', content: taskTitle },
+        ],
+        max_tokens: 10,
+        temperature: 0,
+        stream: false,
+      }),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      return { error: data?.error?.message || `API error ${response.status}` }
+    }
+
+    const raw = data.choices?.[0]?.message?.content?.trim().toLowerCase()
+    const valid = ['personal', 'dev', 'launch', 'clinic']
+    const category = valid.find(c => raw === c) || valid.find(c => raw?.includes(c))
+
+    return category ? { category } : { error: `unknown category: ${raw}` }
+  } catch (err) {
+    return { error: 'network error' }
+  }
+}

@@ -6,7 +6,7 @@ const IS_TOUCH =
 
 export interface SwipeAction {
   label: string
-  icon: string
+  icon: React.ReactNode
   className: string
   onAction: () => void
 }
