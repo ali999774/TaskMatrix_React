@@ -207,7 +207,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
       >
         {/* Header / drag handle */}
         <div
-          className="px-4 pt-4 pb-2 flex items-center cursor-grab active:cursor-grabbing"
+          className="px-4 pt-3 pb-1 flex items-center cursor-grab active:cursor-grabbing"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -223,7 +223,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         </div>
 
         {/* Ring + time */}
-        <div className="py-5">
+        <div className="pb-4">
           <div className="flex justify-center">
             <div className="relative w-44 h-44">
             <svg
