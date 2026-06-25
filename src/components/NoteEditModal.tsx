@@ -217,16 +217,18 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
         </div>
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <h2 className="text-[1.125rem] font-bold text-slate-800 dark:text-white">
-            {note.id ? 'Edit Note' : 'New Note'}
-          </h2>
-          <button
-            onClick={handleClose}
-            aria-label="Close note editor"
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClose}
+              aria-label="Back"
+              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+            >
+              <span aria-hidden="true" className="text-[1rem]">←</span>
+            </button>
+            <h2 className="text-[1.125rem] font-bold text-slate-800 dark:text-white">
+              {note.id ? 'Edit Note' : 'New Note'}
+            </h2>
+          </div>
         </div>
 
         {/* Body */}
