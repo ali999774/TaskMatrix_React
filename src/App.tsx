@@ -18,7 +18,7 @@ import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, StickyNote } from 'lucide-react'
+import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon } from 'lucide-react'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
@@ -851,35 +851,37 @@ export default function App() {
 
       {/* Mobile bottom action bar */}
       <nav role="presentation" className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200/60 dark:border-slate-800/40 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around px-3 py-1">
-          {/* Hide the whole slot when speech is unsupported (e.g. WKWebView) —
-              VoiceButton renders null but the label would remain as a dead item */}
+        {/* Transient voice status floats above the bar so the icon row stays symmetric */}
+        {voiceStatus && (
+          <span
+            className="absolute left-1/2 -translate-x-1/2 -top-6 text-[0.625rem] font-medium
+              text-slate-500 dark:text-slate-400 whitespace-nowrap pointer-events-none"
+            aria-hidden="true"
+          >
+            {voiceStatus}
+          </span>
+        )}
+        <div className="flex items-center justify-evenly px-3 pt-2.5 pb-1">
+          {/* Speech unsupported (e.g. WKWebView) → VoiceButton returns null; the slot drops out */}
           {speechSupported() && (
-            <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg min-h-[44px] min-w-[44px]">
-              <VoiceButton
-                onTranscript={handleVoiceNote}
-                onStatus={setVoiceStatus}
-                autoStart={voiceNoteQuickAction}
-                icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
-                className="p-0 bg-transparent border-none text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              />
-              {voiceStatus && (
-                <span className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">
-                  {voiceStatus}
-                </span>
-              )}
-            </div>
+            <VoiceButton
+              onTranscript={handleVoiceNote}
+              onStatus={setVoiceStatus}
+              autoStart={voiceNoteQuickAction}
+              icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
+              className="w-12 h-12 p-0 bg-transparent border-none rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            />
           )}
           <button
             onClick={() => setShowPomodoro(v => !v)}
-            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
             aria-label="Pomodoro timer"
           >
             <Timer size={26} strokeWidth={2} aria-hidden="true" />
           </button>
           <button
             onClick={toggleTheme}
-            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {dark
@@ -888,10 +890,10 @@ export default function App() {
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
-            className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
+            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
             aria-label="View all notes"
           >
-            <StickyNote size={26} strokeWidth={2} aria-hidden="true" />
+            <StickyNoteIcon size={26} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </nav>

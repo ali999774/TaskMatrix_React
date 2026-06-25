@@ -60,7 +60,7 @@ export default function MatrixGrid({
     .filter((t) => t.pinned && t.status !== 'done')
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-6 w-full">
       {/* ── Axis wrapper ──────────────────────────────────────────────────── */}
       <div className="flex gap-2 w-full">
         {/* Vertical: ↑ IMPORTANCE */}
@@ -76,7 +76,7 @@ export default function MatrixGrid({
 
         {/* Grid + horizontal axis */}
         <div className="flex flex-col flex-1 gap-1 min-w-0">
-          <div className="grid grid-cols-2 gap-1 items-start w-full">
+          <div className="grid grid-cols-2 gap-3 items-start w-full">
             {buckets.map((bucket) => (
               <GridCell
                 key={bucket.quadrant}
