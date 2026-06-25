@@ -271,9 +271,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
 **bold** ~~strikethrough~~
 - bullet
 1. numbered`}
-            rows={10}
+            rows={14}
             autoFocus
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono min-h-[250px]"
+            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono min-h-[300px]"
           />
 
           {/* Color picker + delete */}
