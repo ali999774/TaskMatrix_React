@@ -127,7 +127,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         )}
 
         {/* Grid */}
-        <div className="p-6 pb-20 overflow-y-auto flex-1">
+        <div className="p-6 pb-20 overflow-y-auto flex-1 min-h-0">
           {filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
