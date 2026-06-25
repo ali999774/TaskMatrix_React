@@ -191,8 +191,8 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
       ref={overlayRef}
       onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 flex items-center justify-center
-        bg-black/50 backdrop-blur-sm p-4 max-sm:items-end max-sm:p-0 animate-modal-backdrop"
+      className="fixed inset-0 z-50 flex max-sm:items-start items-center justify-center
+        bg-black/50 backdrop-blur-sm max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
     >
       <div
         ref={sheetRef}
@@ -201,7 +201,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
         onTouchEnd={handleTouchEnd}
         className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
           border border-slate-200 dark:border-slate-700 overflow-hidden
-          max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
       >
@@ -210,8 +210,15 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
-          <input
+          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+            <button
+              onClick={onClose}
+              aria-label="Back"
+              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
+            >
+              <span aria-hidden="true" className="text-[1rem]">←</span>
+            </button>
+            <input
             ref={titleRef}
             type="text"
             value={title}
@@ -222,15 +229,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
               outline-none placeholder-slate-400"
             placeholder="Task title"
           />
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-              text-[1.25rem] leading-none p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-            aria-label="Close task details"
-          >
-            ✕
-          </button>
-        </div>
+          </div>
 
         {/* Body */}
         <div className="px-5 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
