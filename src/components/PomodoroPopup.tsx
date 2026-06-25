@@ -119,7 +119,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             {/* Time display */}
             <div className="absolute inset-0 flex items-center justify-center">
               <span
-                className="text-[4.5rem] font-bold tabular-nums tracking-tighter leading-none"
+                className="text-[4.5rem] max-sm:text-[5rem] font-bold tabular-nums tracking-tighter leading-none"
                 style={{ color: 'var(--color-pomodoro-text-hero)' }}
               >
                 {timeStr}
@@ -257,8 +257,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             {/* Time + mode label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
               <span
-                className="text-[2.5rem] font-bold tabular-nums tracking-tight leading-none
-                  text-slate-800 dark:text-white"
+                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none"
+                style={{ color: arcColor }}
               >
                 {timeStr}
               </span>
@@ -302,7 +302,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             <select
               value={session}
               onChange={(e) => switchSession(e.target.value as SessionType)}
-              className="text-[0.875rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px]"
+              className="text-[0.875rem] max-sm:text-[1rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px]"
               style={{ color: arcColor }}
               aria-label="Session mode"
             >
