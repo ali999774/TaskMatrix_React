@@ -276,9 +276,9 @@ export default function PomodoroPopup({ show, onClose }: Props) {
           <button
             onClick={toggleTimer}
             className="px-8 py-2.5 rounded-xl text-[0.875rem] font-semibold tracking-wide
-              text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500
+              text-white bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500
               active:scale-95 motion-reduce:scale-100 active:opacity-90
-              transition-all min-h-[44px] shadow-lg shadow-blue-500/20"
+              transition-all min-h-[44px] shadow-lg shadow-emerald-500/20"
             aria-label={
               timeLeft < durations[session] * 60 ? 'Resume timer' : 'Start timer'
             }
