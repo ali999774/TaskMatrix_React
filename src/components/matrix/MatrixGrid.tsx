@@ -12,12 +12,12 @@ const MAX_VISIBLE = 4
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-/** Panel body background tints per quadrant. */
-const QUADRANT_BG: Record<Quadrant, string> = {
-  1: 'bg-red-50    dark:bg-red-950/30    border-red-200   dark:border-red-800/50 dark:border-l-red-400',
-  2: 'bg-amber-50  dark:bg-amber-950/30  border-amber-200 dark:border-amber-800/50 dark:border-l-amber-400',
-  3: 'bg-blue-50   dark:bg-blue-950/30   border-blue-200  dark:border-blue-800/50 dark:border-l-blue-400',
-  4: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 dark:border-l-emerald-400',
+/** Panel body background tints per quadrant — borders only, no fill. */
+const QUADRANT_BG: Record<number, string> = {
+  1: 'border-red-200   dark:border-red-800/50 dark:border-l-red-400',
+  2: 'border-amber-200 dark:border-amber-800/50 dark:border-l-amber-400',
+  3: 'border-blue-200  dark:border-blue-800/50 dark:border-l-blue-400',
+  4: 'border-emerald-200 dark:border-emerald-800/50 dark:border-l-emerald-400',
 }
 
 /**
@@ -292,8 +292,7 @@ function PinnedRow({
   categories: CategoryDef[]
 }) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-slate-200 dark:border-slate-700/60
-      bg-white/60 dark:bg-slate-800/40 px-4 py-3 flex flex-col gap-2">
+    <div className="rounded-[var(--radius-card)] border border-slate-200 dark:border-slate-700/60 px-4 py-3 flex flex-col gap-2">
       <p className="text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
         📌 Pinned
       </p>
