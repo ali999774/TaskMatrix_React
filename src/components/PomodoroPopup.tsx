@@ -248,7 +248,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 strokeDasharray={2 * Math.PI * 80}
                 strokeDashoffset={modalOffset}
                 style={{
-                  stroke: arcColor,
+                  stroke: 'var(--color-slate-500)',
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
                 }}
               />
@@ -257,7 +257,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             {/* Time + mode label */}
             <div className="absolute inset-0 flex items-center justify-center">
               <span
-                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none text-slate-800 dark:text-white"
+                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none text-slate-600 dark:text-slate-300"
               >
                 {timeStr}
               </span>
