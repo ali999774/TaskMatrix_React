@@ -255,15 +255,11 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             </svg>
 
             {/* Time + mode label */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+            <div className="absolute inset-0 flex items-center justify-center">
               <span
-                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none"
-                style={{ color: arcColor }}
+                className="text-[2.5rem] max-sm:text-[3rem] font-bold tabular-nums tracking-tight leading-none text-slate-800 dark:text-white"
               >
                 {timeStr}
-              </span>
-              <span className="text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500">
-                {SESSION_LABELS[session]}
               </span>
             </div>
           </div>
@@ -297,7 +293,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         </div>
 
         {/* Duration stepper panel */}
-        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <select
               value={session}
