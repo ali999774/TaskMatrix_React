@@ -120,7 +120,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             <div className="absolute inset-0 flex items-center justify-center">
               <span
                 className="text-[4.5rem] font-bold tabular-nums tracking-tighter leading-none"
-                style={{ color: 'var(--color-pomodoro-text-hero)' }}
+                style={{ color: arcColor }}
               >
                 {timeStr}
               </span>
@@ -257,8 +257,8 @@ export default function PomodoroPopup({ show, onClose }: Props) {
             {/* Time + mode label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
               <span
-                className="text-[2.5rem] font-bold tabular-nums tracking-tight leading-none
-                  text-slate-800 dark:text-white"
+                className="text-[2.5rem] font-bold tabular-nums tracking-tight leading-none"
+                style={{ color: arcColor }}
               >
                 {timeStr}
               </span>
