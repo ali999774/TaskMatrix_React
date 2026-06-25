@@ -14,10 +14,10 @@ const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: c
 
 /** Panel body background tints per quadrant. */
 const QUADRANT_BG: Record<Quadrant, string> = {
-  1: 'bg-red-50    dark:bg-red-950/30    border-red-200   dark:border-red-400',
-  2: 'bg-amber-50  dark:bg-amber-950/30  border-amber-200 dark:border-amber-400',
-  3: 'bg-blue-50   dark:bg-blue-950/30   border-blue-200  dark:border-blue-400',
-  4: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-400',
+  1: 'bg-red-50    dark:bg-red-950/30    border-red-200   dark:border-red-800/50 dark:border-l-red-400',
+  2: 'bg-amber-50  dark:bg-amber-950/30  border-amber-200 dark:border-amber-800/50 dark:border-l-amber-400',
+  3: 'bg-blue-50   dark:bg-blue-950/30   border-blue-200  dark:border-blue-800/50 dark:border-l-blue-400',
+  4: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 dark:border-l-emerald-400',
 }
 
 /**
