@@ -18,7 +18,7 @@ import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, Pin } from 'lucide-react'
+import { Mic, Timer, Moon, Sun, StickyNote } from 'lucide-react'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
@@ -860,12 +860,14 @@ export default function App() {
                 onTranscript={handleVoiceNote}
                 onStatus={setVoiceStatus}
                 autoStart={voiceNoteQuickAction}
-                icon={<Mic size={20} strokeWidth={2} aria-hidden="true" />}
+                icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
                 className="p-0 bg-transparent border-none text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               />
-              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">
-                {voiceStatus || 'Voice'}
-              </span>
+              {voiceStatus && (
+                <span className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400" aria-hidden="true">
+                  {voiceStatus}
+                </span>
+              )}
             </div>
           )}
           <button
@@ -873,8 +875,7 @@ export default function App() {
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="Pomodoro timer"
           >
-            <Timer size={20} strokeWidth={2} aria-hidden="true" />
-            <span className="text-[0.75rem] font-medium" aria-hidden="true">Focus</span>
+            <Timer size={26} strokeWidth={2} aria-hidden="true" />
           </button>
           <button
             onClick={toggleTheme}
@@ -882,17 +883,15 @@ export default function App() {
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {dark
-              ? <Sun size={20} strokeWidth={2} aria-hidden="true" />
-              : <Moon size={20} strokeWidth={2} aria-hidden="true" />}
-            <span className="text-[0.75rem] font-medium" aria-hidden="true">Theme</span>
+              ? <Sun size={26} strokeWidth={2} aria-hidden="true" />
+              : <Moon size={26} strokeWidth={2} aria-hidden="true" />}
           </button>
           <button
             onClick={() => setShowNotesModal(true)}
             className="flex flex-col items-center gap-0.5 p-1 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all min-h-[44px] min-w-[44px]"
             aria-label="View all notes"
           >
-            <Pin size={20} strokeWidth={2} aria-hidden="true" />
-            <span className="text-[0.75rem] font-medium" aria-hidden="true">Notes</span>
+            <StickyNote size={26} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
       </nav>
