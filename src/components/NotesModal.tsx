@@ -82,17 +82,17 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         </div>
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
-          <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">📝 Notes</h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              aria-label="Back"
+              className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+            >
+              <span aria-hidden="true" className="text-[1rem]">←</span>
+            </button>
+            <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">Notes</h2>
+          </div>
           <div className="flex items-center gap-2">
-            {onNewBlank && (
-              <button
-                onClick={onNewBlank}
-                aria-label="New note"
-                className="text-[0.8125rem] font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors min-h-[44px] inline-flex items-center justify-center"
-              >
-                <span aria-hidden="true">+ </span>New Note
-              </button>
-            )}
             <button
               onClick={() => setSearch(search ? '' : '_')}
               aria-label={search ? 'Clear search' : 'Search notes'}
@@ -101,13 +101,6 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
               <span aria-hidden="true">🔍</span>
             </button>
             <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
-            <button
-              onClick={onClose}
-              aria-label="Close notes"
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[1.125rem] px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-            >
-              <span aria-hidden="true">✕</span>
-            </button>
           </div>
         </div>
 
@@ -126,7 +119,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         )}
 
         {/* Grid */}
-        <div className="p-6">
+        <div className="p-6 pb-20">
           {filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
@@ -194,6 +187,17 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
             </div>
           )}
         </div>
+
+        {/* Floating new note button */}
+        {onNewBlank && (
+          <button
+            onClick={onNewBlank}
+            aria-label="New note"
+            className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] z-20"
+          >
+            <span aria-hidden="true" className="text-[1.5rem] leading-none">+</span>
+          </button>
+        )}
       </div>
     </div>
   )
