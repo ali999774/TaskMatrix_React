@@ -61,8 +61,8 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center
-        p-4 max-sm:items-end max-sm:p-0 animate-modal-backdrop"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex max-sm:items-start items-center justify-center
+        p-4 max-sm:p-0 animate-modal-backdrop"
       onClick={handleOverlay}
     >
       <div
@@ -71,7 +71,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto
-          shadow-xl max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
+          max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
         onClick={(e) => e.stopPropagation()}
