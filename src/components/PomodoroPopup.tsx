@@ -223,7 +223,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         </div>
 
         {/* Ring + time */}
-        <div className="pb-4">
+        <div className="pb-2">
           <div className="flex justify-center">
             <div className="relative w-44 h-44">
             <svg
@@ -272,7 +272,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         </div>
 
         {/* Primary + reset controls */}
-        <div className="flex gap-2 justify-center pb-4">
+        <div className="flex gap-2 justify-center pb-2">
           <button
             onClick={toggleTimer}
             className="px-8 py-2.5 rounded-xl text-[0.875rem] font-semibold tracking-wide
