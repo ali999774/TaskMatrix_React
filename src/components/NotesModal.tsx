@@ -62,7 +62,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   return (
     <div
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex max-sm:items-start items-center justify-center
-        p-4 max-sm:p-0 animate-modal-backdrop"
+        max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
       onClick={handleOverlay}
     >
       <div
