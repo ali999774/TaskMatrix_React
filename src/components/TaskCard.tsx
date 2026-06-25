@@ -152,7 +152,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onContextMenu={handleContextMenu}
-        className={`pt-2.5 pb-1.5 px-2 transition-all relative
+        className={`pt-[10px] pb-1.5 px-2 transition-all relative
           bg-white dark:bg-slate-800 rounded-xl
           shadow-sm dark:shadow-none
           hover:shadow-md hover:-translate-y-px
