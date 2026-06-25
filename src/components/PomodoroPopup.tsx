@@ -300,57 +300,50 @@ export default function PomodoroPopup({ show, onClose }: Props) {
         <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3">
           <div className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500
             uppercase tracking-wider mb-2">
-            Durations
+            Duration
           </div>
-          <div className="flex flex-col gap-1.5">
-            {(['work', 'short', 'long'] as SessionType[]).map((type) => (
-              <div key={type} className="flex justify-between items-center">
-                <button
-                  onClick={() => switchSession(type)}
-                  className={`text-[0.875rem] px-2 py-1 rounded-lg transition-colors min-h-[36px]
-                    text-left font-medium
-                    ${type === session
-                      ? 'bg-slate-100 dark:bg-slate-800'
-                      : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
-                    }`}
-                  style={type === session ? { color: arcColor } : undefined}
-                  aria-label={`Switch to ${SESSION_LABELS[type]}`}
-                >
-                  {type === 'work' ? 'Work' : type === 'short' ? 'Short break' : 'Long break'}
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => adjustDuration(type, type === 'short' ? -1 : -5)}
-                    disabled={type === session && running}
-                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
-                      text-slate-400 dark:text-slate-500 text-[1rem]
-                      hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
-                      transition-colors active:scale-90 motion-reduce:scale-100
-                      disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label={`Decrease ${type} duration`}
-                  >
-                    −
-                  </button>
-                  <span className="text-[0.8125rem] font-semibold text-slate-700 dark:text-slate-300
-                    w-9 text-center tabular-nums">
-                    {durations[type]}m
-                  </span>
-                  <button
-                    onClick={() => adjustDuration(type, type === 'short' ? 1 : 5)}
-                    disabled={type === session && running}
-                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
-                      text-slate-400 dark:text-slate-500 text-[1rem]
-                      hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
-                      transition-colors active:scale-90 motion-reduce:scale-100
-                      disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label={`Increase ${type} duration`}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <select
+              value={session}
+              onChange={(e) => switchSession(e.target.value as SessionType)}
+              className="text-[0.875rem] font-medium px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-none outline-none cursor-pointer min-h-[36px]"
+              style={{ color: arcColor }}
+              aria-label="Session mode"
+            >
+              <option value="work">Work</option>
+              <option value="short">Short break</option>
+              <option value="long">Long break</option>
+            </select>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => adjustDuration(session, session === 'short' ? -1 : -5)}
+                disabled={running}
+                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
+                  text-slate-400 dark:text-slate-500 text-[1rem]
+                  hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                  transition-colors active:scale-90 motion-reduce:scale-100
+                  disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Decrease duration"
+              >
+                −
+              </button>
+              <span className="text-[0.8125rem] font-semibold text-slate-700 dark:text-slate-300
+                w-9 text-center tabular-nums">
+                {durations[session]}m
+              </span>
+              <button
+                onClick={() => adjustDuration(session, session === 'short' ? 1 : 5)}
+                disabled={running}
+                className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700
+                  text-slate-400 dark:text-slate-500 text-[1rem]
+                  hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center
+                  transition-colors active:scale-90 motion-reduce:scale-100
+                  disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Increase duration"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
       </div>
