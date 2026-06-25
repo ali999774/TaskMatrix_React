@@ -89,7 +89,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-10">
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 rounded-t-2xl z-50">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -114,7 +114,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
 
         {/* Search bar — toggled by search icon, sticky so it stays pinned */}
         {search && (
-          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-[69px] z-10">
+          <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 sticky top-[69px] z-50">
             <input
               type="text"
               value={search === '_' ? '' : search}
