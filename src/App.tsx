@@ -481,7 +481,7 @@ export default function App() {
     let autoCategory = context !== 'all' ? context : undefined
 
     if (aiSettings.enabled && !autoCategory) {
-      const catResult = await suggestCategory(title, aiSettings.apiKey, getAIBaseUrl())
+      const catResult = await suggestCategory(title)
       if ('category' in catResult) {
         autoCategory = catResult.category
       }

@@ -112,43 +112,16 @@ const CATEGORY_CLASSIFY_PROMPT = `Classify this task into ONE category: personal
 Task: `
 
 export async function suggestCategory(
-  taskTitle: string,
-  apiKey: string,
-  baseUrl: string = 'https://api.deepseek.com/v1'
+  taskTitle: string
 ): Promise<{ category: string } | { error: string }> {
   if (!taskTitle.trim()) return { error: 'empty title' }
-  if (!apiKey) return { error: 'no API key' }
 
-  try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: CATEGORY_CLASSIFY_PROMPT },
-          { role: 'user', content: taskTitle },
-        ],
-        max_tokens: 10,
-        temperature: 0,
-        stream: false,
-      }),
-    })
+  const result = await callEdgeFn({ transcript: taskTitle, mode: 'classify' })
+  if ('error' in result) return result
 
-    const data = await response.json()
-    if (!response.ok) {
-      return { error: data?.error?.message || `API error ${response.status}` }
-    }
+  const raw = (result.data.category as string)?.trim().toLowerCase()
+  const valid = ['personal', 'dev', 'launch', 'clinic']
+  const category = valid.find(c => raw === c) || valid.find(c => raw?.includes(c))
 
-    const raw = data.choices?.[0]?.message?.content?.trim().toLowerCase()
-    const valid = ['personal', 'dev', 'launch', 'clinic']
-    const category = valid.find(c => raw === c) || valid.find(c => raw?.includes(c))
-
-    return category ? { category } : { error: `unknown category: ${raw}` }
-  } catch (err) {
-    return { error: 'network error' }
-  }
+  return category ? { category } : { error: `unknown category: ${raw}` }
 }
