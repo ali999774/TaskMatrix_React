@@ -298,10 +298,6 @@ export default function PomodoroPopup({ show, onClose }: Props) {
 
         {/* Duration stepper panel */}
         <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3">
-          <div className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500
-            uppercase tracking-wider mb-2">
-            Duration
-          </div>
           <div className="flex items-center justify-between">
             <select
               value={session}
