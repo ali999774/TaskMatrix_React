@@ -292,7 +292,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             <button
               onClick={handleDelete}
               aria-label="Delete note"
-              className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0"
+              className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0 self-end"
             >
               <span aria-hidden="true" className="text-[1.25rem] leading-none">✕</span>
             </button>
