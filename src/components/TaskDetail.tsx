@@ -214,7 +214,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
             <button
               onClick={onClose}
               aria-label="Back"
-              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
+              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
             >
               <span aria-hidden="true" className="text-[1rem]">←</span>
             </button>
