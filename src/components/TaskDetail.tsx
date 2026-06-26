@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
+import { Calendar, Clock, Bell, Tag, Repeat } from 'lucide-react'
 import type { Task } from '../types'
 import type { CategoryDef } from '../lib/categories'
+import { categoryDisplay } from '../lib/categories'
 import { breakDownTask } from '../lib/ai-parse'
 import { useHaptics } from '../hooks/useHaptics'
 import { REMINDER_OPTIONS, type ReminderPreset } from '../lib/notifications'
+import { formatLongDate, formatTime, localTodayStr } from '../lib/dates'
+import Row from './ui/Row'
+import { Section } from './ui/SettingsGroup'
 
 interface Props {
   task: Task
@@ -77,6 +82,22 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const handleDueDateChange = (val: string) => {
     setDueDate(val)
     save({ due_date: val || null })
+  }
+
+  // Toggle gating the existing due_date field (re-presents data we already
+  // hold). On → default to today; off → clear date and its dependents (time +
+  // reminder) so we never leave an orphaned time/reminder with no date.
+  const handleDueDateToggle = (on: boolean) => {
+    if (on) {
+      const today = localTodayStr()
+      setDueDate(today)
+      save({ due_date: today })
+    } else {
+      setDueDate('')
+      setDueTime('')
+      setReminder(null)
+      save({ due_date: null, due_time: null, reminder: null })
+    }
   }
 
   const handleDueTimeChange = (val: string) => {
@@ -172,6 +193,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   }
 
   const completed = subtasks.filter((s) => s.done).length
+  const reminderLabel = REMINDER_OPTIONS.find((o) => o.value === reminder)?.label ?? 'None'
 
   const handleBreakdown = async () => {
     haptics('light')
@@ -199,7 +221,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
           border border-slate-200 dark:border-slate-700 overflow-hidden
           max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
@@ -209,184 +231,193 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
         <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
-        {/* Header */}
-          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
-            <button
-              onClick={onClose}
-              aria-label="Back"
-              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
-            >
-              <span aria-hidden="true" className="text-[1rem]">←</span>
-            </button>
-            <input
+
+        {/* Header — back-arrow dismiss. Edits auto-save per field (see save()),
+            so there is no explicit commit/discard step; an X/✓ header would
+            imply discard semantics this screen does not have. */}
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
+          >
+            <span aria-hidden="true" className="text-[1rem]">←</span>
+          </button>
+          <input
             ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-            className="flex-1 bg-transparent text-[1.125rem] font-semibold text-slate-800 dark:text-white 
+            className="flex-1 bg-transparent text-[1.125rem] font-semibold text-slate-800 dark:text-white
               outline-none placeholder-slate-400"
             placeholder="Task title"
           />
-          </div>
+        </div>
 
-        {/* Body */}
-        <div className="px-5 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
-          {/* Category */}
-          <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                dark:text-slate-300 outline-none focus:border-slate-400 
-                dark:focus:border-slate-500 transition-colors appearance-none
-                bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] 
-                bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+        {/* Body — inset grouped-card layout */}
+        <div className="px-4 py-5 space-y-6 max-h-[60vh] overflow-y-auto bg-slate-100 dark:bg-slate-950">
+          {/* DATE & TIME */}
+          <Section header="Date & Time">
+            <Row
+              icon={<Calendar />}
+              label="Due Date"
+              affordance="toggle"
+              toggle={!!dueDate}
+              onToggle={handleDueDateToggle}
+              subtitle={dueDate ? formatLongDate(dueDate) : undefined}
+              subtitleTone="accent"
             >
-              <option value="">None</option>
-              {categories.map((cat) => (
-                <option key={cat.label} value={cat.label}>
-                  {cat.icon} {cat.display}
-                </option>
-              ))}
-            </select>
-          </div>
+              {dueDate && (
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => handleDueDateChange(e.target.value)}
+                  aria-label="Change due date"
+                  className="mt-1 w-full rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2
+                    text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none"
+                />
+              )}
+            </Row>
 
-          {/* Due date + time */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Due date
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => handleDueDateChange(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                  dark:text-slate-300 outline-none focus:border-slate-400 
-                  dark:focus:border-slate-500 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Due time
-              </label>
-              <input
-                type="time"
-                value={dueTime}
-                onChange={(e) => handleDueTimeChange(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                  dark:text-slate-300 outline-none focus:border-slate-400 
-                  dark:focus:border-slate-500 transition-colors"
-              />
-            </div>
-          </div>
+            {dueDate && (
+              <div className="relative">
+                <Row
+                  icon={<Clock />}
+                  label="Time"
+                  affordance="value"
+                  value={
+                    dueTime
+                      ? formatTime(dueTime)
+                      : <span className="text-slate-400 dark:text-slate-500">Add Time</span>
+                  }
+                />
+                <input
+                  type="time"
+                  value={dueTime}
+                  onChange={(e) => handleDueTimeChange(e.target.value)}
+                  aria-label="Due time"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                />
+              </div>
+            )}
 
-          {/* Reminder */}
-          {dueDate && (
-            <div>
-              <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                Reminder
-              </label>
+            {dueDate && (
+              <div className="relative">
+                <Row
+                  icon={<Bell />}
+                  label="Reminder"
+                  affordance="disclosure"
+                  value={reminderLabel}
+                />
+                <select
+                  value={reminder ?? 'null'}
+                  onChange={(e) => handleReminderChange(e.target.value)}
+                  aria-label="Reminder"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                >
+                  {REMINDER_OPTIONS.map((opt) => (
+                    <option key={opt.value ?? 'null'} value={opt.value ?? 'null'}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </Section>
+
+          {/* CATEGORY */}
+          <Section header="Category">
+            <div className="relative">
+              <Row
+                icon={<Tag />}
+                label="Category"
+                affordance="disclosure"
+                value={categoryDisplay(categories, category)}
+              />
               <select
-                value={reminder ?? 'null'}
-                onChange={(e) => handleReminderChange(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                  dark:text-slate-300 outline-none focus:border-slate-400 
-                  dark:focus:border-slate-500 transition-colors appearance-none
-                  bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E")` }}
+                value={category}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                aria-label="Category"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
               >
-                {REMINDER_OPTIONS.map((opt) => (
-                  <option key={opt.value ?? 'null'} value={opt.value ?? 'null'}>
-                    {opt.label}
+                <option value="">None</option>
+                {categories.map((cat) => (
+                  <option key={cat.label} value={cat.label}>
+                    {cat.icon} {cat.display}
                   </option>
                 ))}
               </select>
             </div>
-          )}
+          </Section>
 
-          {/* Recurrence */}
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={recurring}
-                onChange={(e) => handleRecurringToggle(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400">🔄 Repeat</span>
-            </label>
+          {/* REPEAT — behavior unchanged; restyled into the grouped card only. */}
+          <Section header="Repeat">
+            <Row
+              icon={<Repeat />}
+              label="Repeat"
+              affordance="toggle"
+              toggle={recurring}
+              onToggle={handleRecurringToggle}
+            >
+              {recurring && (
+                <div className="mt-2 space-y-2">
+                  <select
+                    value={recurFrequency}
+                    onChange={(e) => handleRecurFrequencyChange(e.target.value)}
+                    className="w-full bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-[0.875rem]
+                      text-slate-700 dark:text-slate-300 outline-none appearance-none
+                      bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E")` }}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
 
-            {recurring && (
-              <div className="ml-6 mt-2 space-y-2">
-                <select
-                  value={recurFrequency}
-                  onChange={(e) => handleRecurFrequencyChange(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                    dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                    dark:text-slate-300 outline-none focus:border-slate-400 
-                    dark:focus:border-slate-500 transition-colors appearance-none
-                    bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z' clip-rule='evenodd'/%3E%3C/svg%3E")` }}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                  {recurFrequency === 'weekly' && (
+                    <div className="flex gap-1">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => toggleRecurDay(i)}
+                          className={`w-9 h-9 rounded-full text-[0.75rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
+                            ${recurDays.includes(i)
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                            }`}
+                          aria-label={['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Row>
+          </Section>
 
-                {recurFrequency === 'weekly' && (
-                  <div className="flex gap-1">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => toggleRecurDay(i)}
-                        className={`w-9 h-9 rounded-full text-[0.75rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
-                          ${recurDays.includes(i)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                          }`}
-                        aria-label={['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Subtasks */}
-          <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
-              Subtasks {subtasks.length > 0 && `(${completed}/${subtasks.length})`}
-            </label>
+          {/* SUBTASKS — behavior unchanged; restyled into the grouped card only. */}
+          <Section header={`Subtasks${subtasks.length > 0 ? ` · ${completed}/${subtasks.length}` : ''}`}>
             {subtasks.length > 0 && (
-              <div className="space-y-1 mb-2">
+              <div className="px-4 py-2 space-y-1">
                 {subtasks.map((st, i) => (
                   <div key={i} className="flex items-center gap-2 group">
                     <input
                       type="checkbox"
                       checked={st.done}
                       onChange={() => toggleSubtask(i)}
-                      className="rounded border-slate-300 dark:border-slate-600 
+                      className="rounded border-slate-300 dark:border-slate-600
                         text-blue-500 focus:ring-blue-500"
                     />
                     <span
-                      className={`flex-1 text-[0.875rem] ${
+                      className={`flex-1 text-[0.9375rem] ${
                         st.done
                           ? 'line-through text-slate-400 dark:text-slate-500'
-                          : 'text-slate-700 dark:text-slate-300'
+                          : 'text-slate-700 dark:text-slate-200'
                       }`}
                     >
                       {st.title}
@@ -404,18 +435,16 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                 ))}
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex gap-2 px-4 py-2.5">
               <input
                 type="text"
                 value={newSubtask}
                 onChange={(e) => setNewSubtask(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addSubtask()}
                 placeholder="+ Add subtask..."
-                className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                  dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
-                  outline-none focus:border-slate-400 dark:focus:border-slate-500 
-                  transition-colors"
+                className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 text-[0.875rem]
+                  text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600
+                  outline-none"
               />
               <button
                 onClick={handleBreakdown}
@@ -428,26 +457,20 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                 {breakingDown ? '...' : '✨ Break down'}
               </button>
             </div>
-          </div>
+          </Section>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Notes
-            </label>
+          {/* NOTES */}
+          <Section header="Notes">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={handleNotesBlur}
               rows={3}
               placeholder="Add notes..."
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 
-                dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
-                dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-600 
-                outline-none focus:border-slate-400 dark:focus:border-slate-500 
-                transition-colors resize-none"
+              className="w-full bg-transparent px-4 py-3 text-[0.9375rem] text-slate-700 dark:text-slate-200
+                placeholder-slate-400 dark:placeholder-slate-600 outline-none resize-none"
             />
-          </div>
+          </Section>
         </div>
       </div>
     </div>
