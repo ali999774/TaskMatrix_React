@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Trash2 } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
 
@@ -68,6 +69,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const [content, setContent] = useState(note.content || '')
   const [color, setColor] = useState(note.color || 'red')
   const [pinned, setPinned] = useState(!!note.pinned)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const haptics = useHaptics()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -114,6 +116,11 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   }, [note])
 
   const handleDelete = () => {
+    haptics('light')
+    setConfirmDelete(true)
+  }
+
+  const handleConfirmDelete = () => {
     haptics('medium')
     onDelete(note.id)
     handleClose()
@@ -291,13 +298,31 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
                 ))}
               </div>
             </div>
-            <button
-              onClick={handleDelete}
-              aria-label="Delete note"
-              className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0 self-end"
-            >
-              <span aria-hidden="true" className="text-[1.25rem] leading-none">✕</span>
-            </button>
+            {confirmDelete ? (
+              <div className="flex items-center gap-2 shrink-0 self-end">
+                <span className="text-[0.8125rem] font-medium text-slate-700 dark:text-slate-300">Delete note?</span>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-3 py-1.5 text-[0.75rem] font-medium rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors min-h-[36px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-3 py-1.5 text-[0.75rem] font-medium rounded-lg bg-[#FF3B30] text-white hover:bg-red-600 active:scale-95 transition-all min-h-[36px]"
+                >
+                  Delete
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleDelete}
+                aria-label="Delete note"
+                className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0 self-end"
+              >
+                <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
+              </button>
+            )}
           </div>
 
           {/* Pin toggle */}
