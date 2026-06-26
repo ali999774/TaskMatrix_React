@@ -31,6 +31,7 @@ const INVEST_EMPHASIS =
 export interface MatrixLayoutProps {
   buckets: QuadrantBucket[]
   onMove: (taskId: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
@@ -50,6 +51,7 @@ export interface MatrixLayoutProps {
 export default function MatrixGrid({
   buckets,
   onMove,
+  onFlag,
   onStatusChange,
   onDelete,
   onTaskClick,
@@ -82,6 +84,7 @@ export default function MatrixGrid({
                 key={bucket.quadrant}
                 bucket={bucket}
                 onMove={onMove}
+                onFlag={onFlag}
                 onStatusChange={onStatusChange}
                 onDelete={onDelete}
                 onTaskClick={onTaskClick}
@@ -107,6 +110,7 @@ export default function MatrixGrid({
           onDelete={onDelete}
           onTaskClick={onTaskClick}
           onMove={onMove}
+          onFlag={onFlag}
           categories={categories}
         />
       )}
@@ -121,6 +125,7 @@ export default function MatrixGrid({
 function GridCell({
   bucket,
   onMove,
+  onFlag,
   onStatusChange,
   onDelete,
   onTaskClick,
@@ -128,6 +133,7 @@ function GridCell({
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
@@ -222,6 +228,7 @@ function GridCell({
               onDelete={onDelete}
               onClick={onTaskClick}
               onMove={onMove}
+              onFlag={onFlag}
               categories={categories}
             />
           ))}
@@ -282,6 +289,7 @@ function PinnedRow({
   onDelete,
   onTaskClick,
   onMove,
+  onFlag,
   categories,
 }: {
   tasks: Task[]
@@ -289,6 +297,7 @@ function PinnedRow({
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   categories: CategoryDef[]
 }) {
   return (
@@ -305,6 +314,7 @@ function PinnedRow({
             onDelete={onDelete}
             onClick={onTaskClick}
             onMove={onMove}
+            onFlag={onFlag}
             categories={categories}
           />
         ))}

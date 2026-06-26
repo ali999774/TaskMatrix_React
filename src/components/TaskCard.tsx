@@ -3,6 +3,7 @@ import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { getCategoryDef, CATEGORY_BORDER } from '../lib/categories'
+import { Pin } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
 import CheckCircle from './matrix/CheckCircle'
@@ -14,6 +15,7 @@ interface Props {
   onDelete: (id: string) => void
   onClick: (task: Task) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   categories?: CategoryDef[]
 }
 
@@ -30,7 +32,7 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, categories = [] }: Props) {
+export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, onFlag, categories = [] }: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
@@ -171,10 +173,10 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
               onAction: () => onClick(task),
             },
             {
-              label: 'Flag',
-              icon: '⚑',
+              label: task.pinned ? 'Unpin' : 'Pin',
+              icon: <Pin size={20} />,
               className: 'bg-[#FF9500]',
-              onAction: () => haptics('light'),
+              onAction: () => { haptics('light'); onFlag(task.id) },
             },
             {
               label: 'Delete',
