@@ -173,7 +173,11 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
               onAction: () => onClick(task),
             },
             {
+<<<<<<< HEAD
               label: task.pinned ? 'Unpin' : 'Pin',
+=======
+              label: 'Pin',
+>>>>>>> origin/claude/taskmatrix-category-filter-logic-l9omaa
               icon: <Pin size={20} />,
               className: 'bg-[#FF9500]',
               onAction: () => { haptics('light'); onFlag(task.id) },

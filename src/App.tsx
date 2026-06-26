@@ -710,12 +710,18 @@ export default function App() {
           </span>
         </div>
       )}
-      {/* Context switcher */}
+      {/* Context switcher — single-select category filter.
+          Canonical state: the `context` string (`'all'` or one category label);
+          single-select is enforced by setContext replacing the value (App.tsx ~198/355/481).
+          TODO (deferred: needs device — SPEC-category-ux.md "Visual implementation"):
+          give each selected pill its category colour identity via CATEGORY_BADGE/CATEGORY_RING.
+          Visual styling is eyeball-gated; not implemented here. */}
       <div className="px-3 sm:px-6 py-2 border-b border-slate-200/60 dark:border-slate-800/40 bg-white/60 dark:bg-slate-950/60">
         <div className="flex gap-1.5 overflow-x-auto">
           <button
             key="all"
             aria-label="Show all categories"
+            aria-pressed={context === 'all'}
             onClick={() => setContext('all')}
             className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
               ${context === 'all'
@@ -729,6 +735,7 @@ export default function App() {
             <button
               key={cat.label}
               aria-label={`Filter by ${cat.display}`}
+              aria-pressed={context === cat.label}
               onClick={() => setContext(cat.label)}
               className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
                 ${context === cat.label
