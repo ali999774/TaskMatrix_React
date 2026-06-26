@@ -13,7 +13,6 @@
  *   aria-label — pass for standalone icon buttons; omit for decorative icons
  */
 
-import type React from 'react'
 import type { SVGProps } from 'react'
 
 interface IconProps extends SVGProps<SVGSVGElement> {
@@ -164,33 +163,3 @@ export function IconPlus({ size = 24, ...rest }: IconProps) {
   )
 }
 
-/* ── Convenience re-export map ────────────────────────────────────────────── */
-/**
- * Indexed by quadrant number (1–4) for use in QuadrantPanel without a switch.
- * Example: `const QuadrantIcon = QUADRANT_ICON_MAP[q]`
- */
-export const QUADRANT_ICON_MAP: Record<1 | 2 | 3 | 4, React.ComponentType<IconProps>> = {
-  1: IconFlame,
-  2: IconCalendar,
-  3: IconPeople,
-  4: IconCircleX,
-}
-
-/**
- * All icons as a named map — useful for dynamic rendering in settings or
- * anywhere an icon name comes from data.
- */
-export const ICON_MAP = {
-  flame: IconFlame,
-  calendar: IconCalendar,
-  people: IconPeople,
-  'circle-x': IconCircleX,
-  grid: IconGrid,
-  target: IconTarget,
-  note: IconNote,
-  gear: IconGear,
-  mic: IconMic,
-  plus: IconPlus,
-} as const
-
-export type IconName = keyof typeof ICON_MAP

@@ -25,7 +25,7 @@ async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{
       // FunctionsHttpError  = edge fn returned non-2xx (e.g. 503 relay, 502 API)
       // FunctionsRelayError = Supabase relay issue
       const isFetchError = error.name === 'FunctionsFetchError'
-      const originalErr = (error as any).context
+      const originalErr = (error as { context?: { name?: string } }).context
 
       // Retry once on transient fetch failures (network blip, DNS, TLS)
       if (isFetchError && attempt < 2) {
