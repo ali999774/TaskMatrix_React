@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
+import { FONT_SCALES } from '../hooks/useFontScale'
 
 interface Props {
   categories: CategoryDef[]
@@ -9,13 +10,15 @@ interface Props {
   onClose: () => void
   aiSettings: AISettings
   onAISettingsChange: (update: Partial<AISettings>) => void
+  fontScale: number
+  onFontScaleChange: (scale: number) => void
 }
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange }: Props) {
+export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange }: Props) {
   const [items, setItems] = useState<CategoryDef[]>(() =>
     categories.map(c => ({ ...c }))
   )
@@ -178,6 +181,45 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
         {/* Body */}
         <div className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto">
+          {/* Text size */}
+          <div>
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+              Text size
+            </label>
+            <div
+              role="radiogroup"
+              aria-label="Text size"
+              className="flex gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800"
+            >
+              {FONT_SCALES.map((opt) => {
+                const selected = Math.abs(fontScale - opt.size) < 0.001
+                return (
+                  <button
+                    key={opt.key}
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={opt.aria}
+                    onClick={() => onFontScaleChange(opt.size)}
+                    className={`flex-1 min-h-[44px] rounded-lg font-semibold leading-none transition-all active:scale-95 motion-reduce:scale-100
+                      ${selected
+                        ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                    style={{ fontSize: `${0.75 + (opt.size - 0.9) * 1.4}rem` }}
+                  >
+                    A
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mt-2">
+              Scales all text across the app. Applies instantly.
+            </p>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-700" />
+
           {/* AI Settings */}
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
