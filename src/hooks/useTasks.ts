@@ -125,7 +125,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       setTasks(data as Task[])
       const snap = new Map<string, string>()
       for (const t of data as Task[]) {
-        snap.set(t.id, JSON.stringify({ title: t.title, status: t.status, category: t.category, importance: t.importance, urgency: t.urgency, position: t.position }))
+        snap.set(t.id, JSON.stringify({ title: t.title, status: t.status, category: t.category, importance: t.importance, urgency: t.urgency, position: t.position, pinned: t.pinned }))
       }
       syncedSnapshotRef.current = snap
     }

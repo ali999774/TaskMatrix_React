@@ -36,10 +36,15 @@
         if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
           document.documentElement.classList.add('dark');
         }
+        // Prevent flash of wrong text size — apply saved font scale before paint.
+        var fs = parseFloat(localStorage.getItem('tm-font-scale'));
+        if (fs && fs > 0 && fs !== 1) {
+          document.documentElement.style.fontSize = (16 * fs) + 'px';
+        }
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-DOw1D3-b.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-e13bKn_O.css">
+    <script type="module" crossorigin src="./assets/index-CSU6Gat7.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D3cj2u8p.css">
   </head>
   <body>
     <div id="root"></div>
