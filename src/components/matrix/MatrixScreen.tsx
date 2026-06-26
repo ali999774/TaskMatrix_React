@@ -8,6 +8,7 @@ import MatrixList from './MatrixList'
 interface MatrixScreenProps {
   tasks: Task[]
   onMove: (taskId: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
@@ -29,6 +30,7 @@ interface MatrixScreenProps {
 export default function MatrixScreen({
   tasks,
   onMove,
+  onFlag,
   onStatusChange,
   onDelete,
   onTaskClick,
@@ -40,6 +42,7 @@ export default function MatrixScreen({
   const layoutProps = {
     buckets,
     onMove,
+    onFlag,
     onStatusChange,
     onDelete,
     onTaskClick,

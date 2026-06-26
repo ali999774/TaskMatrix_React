@@ -501,6 +501,14 @@ export default function App() {
     updateTask(taskId, { importance: defaults.importance, urgency: defaults.urgency })
   }
 
+  // Flag = toggle the existing `pinned` field. Reuses updateTask (debounced
+  // optimistic + offline-queue path), the same persistence as move/title edits.
+  const handleFlag = (id: string) => {
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+    updateTask(id, { pinned: !task.pinned })
+  }
+
   const handleVoiceTask = async (transcript: string) => {
     if (!transcript.trim()) return
     setVoiceTaskStatus('saving')
@@ -747,6 +755,7 @@ export default function App() {
             <MatrixScreen
               tasks={filteredTasks}
               onMove={handleMove}
+              onFlag={handleFlag}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteTask}
               onTaskClick={setSelectedTask}

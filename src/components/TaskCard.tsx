@@ -14,6 +14,7 @@ interface Props {
   onDelete: (id: string) => void
   onClick: (task: Task) => void
   onMove: (id: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   categories?: CategoryDef[]
 }
 
@@ -30,7 +31,7 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, categories = [] }: Props) {
+export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, onFlag, categories = [] }: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
@@ -171,10 +172,10 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
               onAction: () => onClick(task),
             },
             {
-              label: 'Flag',
+              label: task.pinned ? 'Unflag' : 'Flag',
               icon: '⚑',
               className: 'bg-[#FF9500]',
-              onAction: () => haptics('light'),
+              onAction: () => { haptics('light'); onFlag(task.id) },
             },
             {
               label: 'Delete',

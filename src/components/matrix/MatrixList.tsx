@@ -57,6 +57,7 @@ const IS_TOUCH =
 export interface MatrixLayoutProps {
   buckets: QuadrantBucket[]
   onMove: (taskId: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
@@ -73,6 +74,7 @@ export interface MatrixLayoutProps {
 export default function MatrixList({
   buckets,
   onMove,
+  onFlag,
   onStatusChange,
   onDelete,
   onTaskClick,
@@ -94,6 +96,7 @@ export default function MatrixList({
           key={bucket.quadrant}
           bucket={bucket}
           onMove={onMove}
+          onFlag={onFlag}
           onStatusChange={onStatusChange}
           onDelete={onDelete}
           onTaskClick={onTaskClick}
@@ -111,6 +114,7 @@ export default function MatrixList({
 function ListQuadrant({
   bucket,
   onMove,
+  onFlag,
   onStatusChange,
   onDelete,
   onTaskClick,
@@ -118,6 +122,7 @@ function ListQuadrant({
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
+  onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
@@ -210,6 +215,7 @@ function ListQuadrant({
                 onDelete={onDelete}
                 onClick={onTaskClick}
                 onMove={onMove}
+                onFlag={onFlag}
                 categories={categories}
               />
             ))}
