@@ -8,6 +8,7 @@ import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { usePushNotifications } from './hooks/usePushNotifications'
 import { useUserSettings } from './hooks/useUserSettings'
+import { useFontScale } from './hooks/useFontScale'
 import MatrixScreen from './components/matrix/MatrixScreen'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
@@ -19,6 +20,7 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon } from 'lucide-react'
+import { stripMarkdown } from './lib/markdown'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
@@ -190,9 +192,10 @@ export default function App() {
   usePushNotifications(userId)
 
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
+  const { fontScale, setFontScale } = useFontScale()
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
-  const { notes, pinnedNotes, addNote, updateNote, deleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
+  const { notes, pinnedNotes, addNote, updateNote, deleteNote, restoreNote, fetchDeletedNotes, permanentlyDeleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const { categories, updateCategories } = useUserSettings(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
@@ -215,10 +218,28 @@ export default function App() {
     return () => clearTimeout(t)
   }, [showMenu])
 
-  // Undo-on-delete: hold the deleted task for 5s so the snackbar can restore it
-  const [undoTask, setUndoTask] = useState<Task | null>(null)
-  const [undoIsDoneDismiss, setUndoIsDoneDismiss] = useState(false)
+  // Generic undo snackbar — holds a message + restore action for 5s. Covers task
+  // delete, task complete-dismiss, and note delete, so any single destructive
+  // action is one tap away from being reversed.
+  const [pendingUndo, setPendingUndo] = useState<{ message: string; onUndo: () => void } | null>(null)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showUndo = (message: string, onUndo: () => void) => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    setPendingUndo({ message, onUndo })
+    undoTimerRef.current = setTimeout(() => setPendingUndo(null), 5000)
+  }
+
+  const clearUndo = () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    setPendingUndo(null)
+  }
+
+  const handleUndo = () => {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    pendingUndo?.onUndo()
+    setPendingUndo(null)
+  }
 
   // Increment to signal CompletedSection to re-fetch
   const [reloadTrigger, setReloadTrigger] = useState(0)
@@ -226,24 +247,16 @@ export default function App() {
   const handleDeleteTask = (id: string) => {
     const task = tasks.find((t) => t.id === id)
     deleteTask(id)
-    if (task) {
-      if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-      setUndoTask(task)
-      undoTimerRef.current = setTimeout(() => setUndoTask(null), 5000)
-    }
+    if (task) showUndo(`Deleted “${task.title}”`, () => restoreTask(task))
   }
 
-  const handleUndoDelete = () => {
-    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-    if (undoTask) {
-      if (undoIsDoneDismiss) {
-        updateStatus(undoTask.id, 'todo')
-      } else {
-        restoreTask(undoTask)
-      }
+  const handleDeleteNote = (id: string) => {
+    const note = notes.find((n) => n.id === id)
+    deleteNote(id)
+    if (note) {
+      const label = note.title?.trim() || stripMarkdown(note.content || '').trim()
+      showUndo(label ? `Deleted note “${label.slice(0, 32)}”` : 'Deleted note', () => restoreNote(note))
     }
-    setUndoIsDoneDismiss(false)
-    setUndoTask(null)
   }
 
   // When a task is marked done, show an undo snackbar for 5s.
@@ -253,24 +266,12 @@ export default function App() {
     updateStatus(id, status)
     if (status === 'done') {
       const task = tasks.find((t) => t.id === id)
-      if (task) {
-        if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-        setUndoIsDoneDismiss(true)
-        setUndoTask(task)
-        undoTimerRef.current = setTimeout(() => {
-          setUndoTask(null)
-          setUndoIsDoneDismiss(false)
-        }, 5000)
-      }
+      if (task) showUndo(`Completed “${task.title}”`, () => updateStatus(task.id, 'todo'))
       // Signal CompletedSection to re-fetch so the newly done task appears.
       setReloadTrigger((n) => n + 1)
     } else {
-      // Task un-completed — cancel any pending snackbar for this task.
-      if (undoTask?.id === id) {
-        if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
-        setUndoTask(null)
-        setUndoIsDoneDismiss(false)
-      }
+      // Task un-completed — clear any pending snackbar.
+      clearUndo()
     }
   }
 
@@ -758,7 +759,7 @@ export default function App() {
           <div className="w-full lg:w-80 shrink-0">
             <StickyWall
               notes={pinnedNotes}
-              onDelete={deleteNote}
+              onDelete={handleDeleteNote}
               onAdd={addNote}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
@@ -799,7 +800,10 @@ export default function App() {
             setEditingNote(note)
           }}
           onPin={(id, pinned) => updateNote(id, { pinned })}
-          onDelete={deleteNote}
+          onDelete={handleDeleteNote}
+          onFetchDeleted={fetchDeletedNotes}
+          onRestore={restoreNote}
+          onPurgeForever={permanentlyDeleteNote}
         />
       )}
 
@@ -807,7 +811,7 @@ export default function App() {
         <NoteEditModal
           note={editingNote}
           onSave={updateNote}
-          onDelete={deleteNote}
+          onDelete={handleDeleteNote}
           onClose={() => {
             setEditingNote(null)
             if (cameFromNotesModal.current) {
@@ -827,11 +831,13 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           aiSettings={aiSettings}
           onAISettingsChange={updateAISettings}
+          fontScale={fontScale}
+          onFontScaleChange={setFontScale}
         />
       )}
 
       {/* Undo snackbar — sits above the bottom nav */}
-      {undoTask && (
+      {pendingUndo && (
         <div
           role="status"
           aria-live="polite"
@@ -839,9 +845,9 @@ export default function App() {
             flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
             rounded-xl shadow-lg pl-4 pr-1 py-1 max-w-[calc(100vw-2rem)]"
         >
-          <span className="text-[0.875rem] truncate">{undoIsDoneDismiss ? 'Completed' : 'Deleted'} “{undoTask.title}”</span>
+          <span className="text-[0.875rem] truncate">{pendingUndo.message}</span>
           <button
-            onClick={handleUndoDelete}
+            onClick={handleUndo}
             className="text-[0.875rem] font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
           >
             Undo

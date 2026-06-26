@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 import SwipeableRow from './SwipeableRow'
@@ -26,10 +26,45 @@ interface Props {
   onPin?: (id: string, pinned: boolean) => void
   onDelete?: (id: string) => void
   onNewBlank?: () => void
+  /** Lazily fetch soft-deleted notes for the Trash view. */
+  onFetchDeleted?: () => Promise<StickyNote[]>
+  /** Restore a soft-deleted note from Trash. */
+  onRestore?: (note: StickyNote) => void
+  /** Permanently delete a note from Trash (hard delete, no undo). */
+  onPurgeForever?: (id: string) => void
 }
 
-export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank }: Props) {
+export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank, onFetchDeleted, onRestore, onPurgeForever }: Props) {
   const [search, setSearch] = useState('')
+  const [view, setView] = useState<'notes' | 'trash'>('notes')
+  const [deleted, setDeleted] = useState<StickyNote[]>([])
+  const [trashLoading, setTrashLoading] = useState(false)
+  const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null)
+
+  const loadTrash = useCallback(async () => {
+    if (!onFetchDeleted) return
+    setTrashLoading(true)
+    const rows = await onFetchDeleted()
+    setDeleted(rows)
+    setTrashLoading(false)
+  }, [onFetchDeleted])
+
+  // Fetch (or refetch) the Trash list whenever the user opens that view.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async fetch
+    if (view === 'trash') loadTrash()
+  }, [view, loadTrash])
+
+  const handleRestore = (note: StickyNote) => {
+    onRestore?.(note)
+    setDeleted((prev) => prev.filter((n) => n.id !== note.id))
+  }
+
+  const handlePurge = (id: string) => {
+    onPurgeForever?.(id)
+    setDeleted((prev) => prev.filter((n) => n.id !== id))
+    setConfirmPurgeId(null)
+  }
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -102,22 +137,37 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
             >
               <span aria-hidden="true" className="text-[1rem]">←</span>
             </button>
-            <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">Notes</h2>
+            <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">
+              {view === 'trash' ? 'Recently Deleted' : 'Notes'}
+            </h2>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSearch(search ? '' : '_')}
-              aria-label={search ? 'Clear search' : 'Search notes'}
-              className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${search ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
-            >
-              <span aria-hidden="true">🔍</span>
-            </button>
-            <span className="text-[0.875rem] text-slate-400">{notes.length} total</span>
+            {view === 'notes' && (
+              <button
+                onClick={() => setSearch(search ? '' : '_')}
+                aria-label={search ? 'Clear search' : 'Search notes'}
+                className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${search ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
+              >
+                <span aria-hidden="true">🔍</span>
+              </button>
+            )}
+            {onFetchDeleted && (
+              <button
+                onClick={() => { setSearch(''); setView((v) => (v === 'trash' ? 'notes' : 'trash')) }}
+                aria-label={view === 'trash' ? 'Back to notes' : 'Recently deleted'}
+                className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${view === 'trash' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
+              >
+                <span aria-hidden="true">🗑</span>
+              </button>
+            )}
+            <span className="text-[0.875rem] text-slate-400">
+              {view === 'trash' ? `${deleted.length} deleted` : `${notes.length} total`}
+            </span>
           </div>
         </div>
 
         {/* Search bar — toggled by search icon; non-scrolling flex sibling below the header */}
-        {search && (
+        {view === 'notes' && search && (
           <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 shrink-0">
             <input
               type="text"
@@ -132,7 +182,74 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
 
         {/* Grid — single scroller below the header; clipping (not z-index) keeps motion layers under the header */}
         <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-20 max-sm:pb-[calc(5rem+env(safe-area-inset-bottom))]">
-          {filtered.length === 0 ? (
+          {view === 'trash' ? (
+            trashLoading ? (
+              <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">Loading…</p>
+            ) : deleted.length === 0 ? (
+              <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
+                Trash is empty
+              </p>
+            ) : (
+              <>
+                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-4">
+                  Deleted notes are kept for 30 days, then removed automatically.
+                </p>
+                <div className="space-y-2">
+                  {deleted.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`flex items-start gap-2 p-3 rounded-lg border bg-white dark:bg-slate-800
+                        border-slate-200 dark:border-slate-700 border-l-[3px] ${COLOR_ACCENT[note.color ?? 'red'] || COLOR_ACCENT.red}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        {note.title && (
+                          <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100 truncate">{note.title}</p>
+                        )}
+                        <p className="text-[0.8125rem] sm:text-[0.875rem] line-clamp-2 text-slate-600 dark:text-slate-400">
+                          {stripMarkdown(note.content || 'Empty note')}
+                        </p>
+                        {note.deleted_at && (
+                          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-1">
+                            Deleted {new Date(note.deleted_at).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        {onRestore && (
+                          <button
+                            onClick={() => handleRestore(note)}
+                            className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px] inline-flex items-center justify-center gap-1"
+                            aria-label={`Restore note ${note.title || ''}`}
+                          >
+                            <span aria-hidden="true">↩</span> Restore
+                          </button>
+                        )}
+                        {onPurgeForever && (
+                          confirmPurgeId === note.id ? (
+                            <button
+                              onClick={() => handlePurge(note.id)}
+                              className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px] inline-flex items-center justify-center"
+                              aria-label="Confirm permanent delete"
+                            >
+                              Delete?
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmPurgeId(note.id)}
+                              className="text-[0.75rem] px-3 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px] inline-flex items-center justify-center"
+                              aria-label={`Delete note forever ${note.title || ''}`}
+                            >
+                              <span aria-hidden="true">✕</span>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )
+          ) : filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
             </p>
@@ -202,7 +319,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         </div>
 
         {/* Floating new note button */}
-        {onNewBlank && (
+        {view === 'notes' && onNewBlank && (
           <button
             onClick={onNewBlank}
             aria-label="New note"
