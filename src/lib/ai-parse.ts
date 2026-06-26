@@ -15,12 +15,32 @@ interface ParsedTask {
   notes?: string | null
 }
 
-async function callEdgeFn(body: Record<string, unknown>): Promise<{ data: Record<string, unknown> } | { error: string }> {
+async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{ data: Record<string, unknown> } | { error: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('ai-parse', { body })
 
     if (error) {
       console.error('[AI] Edge function error:', error)
+      // FunctionsFetchError = network/fetch failure (client never reached edge fn)
+      // FunctionsHttpError  = edge fn returned non-2xx (e.g. 503 relay, 502 API)
+      // FunctionsRelayError = Supabase relay issue
+      const isFetchError = error.name === 'FunctionsFetchError'
+      const originalErr = (error as any).context
+
+      // Retry once on transient fetch failures (network blip, DNS, TLS)
+      if (isFetchError && attempt < 2) {
+        console.warn('[AI] Retrying after fetch error...')
+        await new Promise(r => setTimeout(r, 800))
+        return callEdgeFn(body, attempt + 1)
+      }
+
+      if (isFetchError) {
+        const detail = originalErr?.name ? ` (${originalErr.name})` : ''
+        return { error: `Can't reach AI — check connection${detail}` }
+      }
+      if (error.name === 'FunctionsHttpError') {
+        return { error: `AI service error — try again later` }
+      }
       return { error: error.message || 'API error' }
     }
 
@@ -29,7 +49,7 @@ async function callEdgeFn(body: Record<string, unknown>): Promise<{ data: Record
 
     return { data: data as Record<string, unknown> }
   } catch (err) {
-    console.error('[AI] Failed:', err)
+    console.error('[AI] Unexpected:', err)
     return { error: 'network error' }
   }
 }
