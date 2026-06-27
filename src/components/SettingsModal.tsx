@@ -181,7 +181,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto">
+        <div className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto max-sm:pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {/* Text size */}
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
