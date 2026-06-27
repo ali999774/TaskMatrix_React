@@ -306,14 +306,14 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                       }`}
                   >
                     {/* Drag handle */}
-                    <span className="text-slate-300 dark:text-slate-600 text-[0.875rem] shrink-0">⋮⋮</span>
+                    <span className="text-slate-300 dark:text-slate-500 text-[0.875rem] shrink-0">⋮⋮</span>
 
                     {/* Up/down arrows for touch reorder */}
                     <div className="flex flex-col gap-0 shrink-0">
                       <button
                         onClick={(e) => { e.stopPropagation(); if (idx > 0) { const copy = [...items]; [copy[idx], copy[idx-1]] = [copy[idx-1], copy[idx]]; setItems(copy) } }}
                         disabled={idx === 0}
-                        className="text-[0.5rem] text-slate-300 dark:text-slate-600 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
+                        className="text-[0.5rem] text-slate-300 dark:text-slate-400 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
                         aria-label="Move up"
                       >
                         ▲
@@ -321,7 +321,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                       <button
                         onClick={(e) => { e.stopPropagation(); if (idx < items.length - 1) { const copy = [...items]; [copy[idx], copy[idx+1]] = [copy[idx+1], copy[idx]]; setItems(copy) } }}
                         disabled={idx === items.length - 1}
-                        className="text-[0.5rem] text-slate-300 dark:text-slate-600 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
+                        className="text-[0.5rem] text-slate-300 dark:text-slate-400 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
                         aria-label="Move down"
                       >
                         ▼
@@ -359,7 +359,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     ) : (
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(idx) }}
-                        className="text-[0.75rem] text-slate-300 dark:text-slate-600 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                        className="text-[0.75rem] text-slate-300 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                         aria-label={`Delete category ${cat.display || 'new'}`}
                       >
                         ✕
