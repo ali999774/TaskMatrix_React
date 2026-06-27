@@ -172,18 +172,16 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         </div>
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+          >
+            <span aria-hidden="true" className="text-[1rem]">←</span>
+          </button>
           <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">
             ⚙️ Settings
           </h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center
-              text-slate-400 hover:text-slate-600 dark:hover:text-slate-300
-              text-[1.125rem] leading-none min-h-[44px] min-w-[44px]"
-            aria-label="Back"
-          >
-            ←
-          </button>
         </div>
 
         {/* Body */}
