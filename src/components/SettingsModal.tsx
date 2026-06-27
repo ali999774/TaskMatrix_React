@@ -30,6 +30,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
+  const [siriCopied, setSiriCopied] = useState(false)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose()
@@ -440,17 +441,19 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             </p>
             <button
               onClick={() => {
-                const input = document.querySelector('#siri-url') as HTMLInputElement
-                if (input) { input.focus(); input.select() }
+                navigator.clipboard.writeText('taskmatrix://quick-add').then(() => {
+                  setSiriCopied(true)
+                  setTimeout(() => setSiriCopied(false), 2000)
+                })
               }}
               className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
                 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
                 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all
                 active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
-              aria-label="Select URL to copy"
+              aria-label="Copy Siri shortcut URL"
             >
-              <span aria-hidden="true" className="text-[1.25rem]">📋</span>
-              Select to Copy
+              <span aria-hidden="true" className="text-[1.25rem]">{siriCopied ? '✅' : '📋'}</span>
+              {siriCopied ? 'Copied!' : 'Copy URL'}
             </button>
             <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
               Open Shortcuts app: <strong>+</strong> → Web → <strong>Open URL</strong> →
