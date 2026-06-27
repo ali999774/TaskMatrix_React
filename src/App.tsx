@@ -74,6 +74,8 @@ export default function App() {
   const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceTaskQuickAction, setVoiceTaskQuickAction] = useState(false)
   const [voiceNoteQuickAction, setVoiceNoteQuickAction] = useState(false)
+  const [focusQuickAdd, setFocusQuickAdd] = useState(false)
+  const quickAddRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -159,6 +161,12 @@ export default function App() {
         if (action === 'voice-note') {
           setVoiceNoteQuickAction(true)
         }
+        return
+      }
+
+      // Siri Shortcut deep link: taskmatrix://quick-add
+      if (callbackUrl === 'taskmatrix://quick-add') {
+        setFocusQuickAdd(true)
         return
       }
 
@@ -300,6 +308,15 @@ export default function App() {
     setQuickAction(null)
     handleNewBlankNote()
   }, [userId, quickAction])
+
+  // Focus quick-add input when triggered by Siri Shortcut
+  useEffect(() => {
+    if (focusQuickAdd) {
+      setFocusQuickAdd(false)
+      // Small delay for Capacitor to finish presenting the app
+      setTimeout(() => quickAddRef.current?.focus(), 300)
+    }
+  }, [focusQuickAdd])
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
   // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
@@ -607,6 +624,7 @@ export default function App() {
                   <label htmlFor="quick-add-input" className="sr-only">Quick add task</label>
                   <input
                     id="quick-add-input"
+                    ref={quickAddRef}
                     type="search"
                     value={quickAdd}
                     onChange={(e) => setQuickAdd(e.target.value)}

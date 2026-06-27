@@ -385,6 +385,36 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           </div>
         </div>
 
+        {/* Siri Shortcut */}
+        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-[0.75rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            Siri Shortcut
+          </p>
+          <p className="text-[0.8125rem] text-slate-500 dark:text-slate-400 mb-3">
+            Say "Hey Siri, add task" to open the quick-add bar instantly.
+            Set up once, works forever.
+          </p>
+          <button
+            onClick={() => {
+              const url = 'https://www.icloud.com/shortcuts/'
+              // Open in Safari so the user can create the shortcut manually
+              window.open(url, '_blank')
+            }}
+            className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
+              bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
+              hover:bg-slate-200 dark:hover:bg-slate-700 transition-all
+              active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
+            aria-label="Set up Siri Shortcut"
+          >
+            <span aria-hidden="true" className="text-[1.25rem]">🎙️</span>
+            Add "Quick Add" to Siri
+          </button>
+          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2">
+            You'll need to create a Shortcut in the iOS Shortcuts app with
+            "Open URL" → <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">taskmatrix://quick-add</code>
+          </p>
+        </div>
+
         {/* Footer */}
         <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 flex gap-2 justify-end">
           <button
