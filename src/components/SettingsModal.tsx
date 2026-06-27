@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { AppLauncher } from '@capacitor/app-launcher'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
@@ -30,7 +31,6 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
-  const [siriCopied, setSiriCopied] = useState(false)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose()
@@ -436,41 +436,25 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               Siri Shortcut
             </p>
             <p className="text-[0.8125rem] text-slate-500 dark:text-slate-400 mb-3">
-              Say "Hey Siri, add task" to open the quick-add bar instantly.
-              Set up once, works forever.
+              Add the shortcut, then say "Hey Siri, Add Task" to open quick-add instantly.
             </p>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText('taskmatrix://quick-add').then(() => {
-                  setSiriCopied(true)
-                  setTimeout(() => setSiriCopied(false), 2000)
-                })
+              onClick={async () => {
+                try {
+                  await AppLauncher.openUrl({ url: 'https://www.icloud.com/shortcuts/a1d8b3c387074bed841c94e3af23e8de' })
+                } catch {
+                  // no-op — don't crash the modal
+                }
               }}
               className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
                 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
                 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all
                 active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
-              aria-label="Copy Siri shortcut URL"
+              aria-label="Add to Siri Shortcut"
             >
-              <span aria-hidden="true" className="text-[1.25rem]">{siriCopied ? '✅' : '📋'}</span>
-              {siriCopied ? 'Copied!' : 'Copy URL'}
+              <span aria-hidden="true" className="text-[1.25rem]">🎙️</span>
+              Add to Siri Shortcut
             </button>
-            <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-              Open Shortcuts app: <strong>+</strong> → Web → <strong>Open URL</strong> →
-              paste this URL → ⓘ → <strong>Add to Siri</strong>
-            </p>
-            <div className="mt-2">
-              <input
-                id="siri-url"
-                type="text"
-                readOnly
-                value="taskmatrix://quick-add"
-                onFocus={(e) => e.target.select()}
-                className="w-full text-[0.8125rem] bg-slate-100 dark:bg-slate-800 border border-slate-200
-                  dark:border-slate-700 rounded-lg px-3 py-2 text-slate-600 dark:text-slate-300
-                  outline-none select-all"
-              />
-            </div>
           </div>
         </div>
 
