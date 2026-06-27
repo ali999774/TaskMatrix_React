@@ -791,7 +791,9 @@ export default function App() {
         </div>
 
         {/* Progress heatmap */}
-        <ProgressHeatmap tasks={filteredTasks} />
+        <div className="mt-8 max-sm:mt-4">
+          <ProgressHeatmap tasks={filteredTasks} />
+        </div>
 
         {/* Completed section */}
         <CompletedSection
