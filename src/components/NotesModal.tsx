@@ -51,6 +51,12 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
     setTrashLoading(false)
   }, [onFetchDeleted])
 
+  // Pre-fetch deleted count on mount so the "Recently Deleted" row appears
+  useEffect(() => {
+    if (onFetchDeleted) loadTrash()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Fetch (or refetch) the Trash list whenever the user opens that view.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async fetch
