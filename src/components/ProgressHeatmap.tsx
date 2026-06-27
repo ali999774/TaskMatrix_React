@@ -39,6 +39,7 @@ interface Props {
 }
 
 const CELL_SIZE = 12
+const CELL_SIZE_DESKTOP = 15
 
 export default function ProgressHeatmap({ tasks }: Props) {
   const { weeks, colorMap, totalDone, maxCount } = useMemo(() => {
@@ -83,7 +84,7 @@ export default function ProgressHeatmap({ tasks }: Props) {
   const todayKey = dateKey(today)
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
+    <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 sm:max-w-2xl sm:mx-auto">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
           Activity
@@ -118,12 +119,11 @@ export default function ProgressHeatmap({ tasks }: Props) {
                   <div
                     key={key}
                     title={count > 0 ? `${count} task${count > 1 ? 's' : ''} on ${formatShortDate(day)}` : formatShortDate(day)}
-                    className={`rounded-sm transition-colors ${
+                    className={`rounded-sm transition-colors w-[12px] h-[12px] sm:w-[15px] sm:h-[15px] ${
                       isFuture
                         ? 'bg-transparent'
                         : getColor(count)
                     } ${isToday ? 'ring-1 ring-slate-400 dark:ring-slate-500 ring-offset-1 ring-offset-white dark:ring-offset-slate-900' : ''}`}
-                    style={{ width: CELL_SIZE, height: CELL_SIZE }}
                     aria-label={isFuture ? undefined : `${count} task${count !== 1 ? 's' : ''} on ${formatShortDate(day)}`}
                   />
                 )
