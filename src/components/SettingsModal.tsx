@@ -28,6 +28,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const draggedIdx = useRef<number | null>(null)
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose()
@@ -307,6 +308,26 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     {/* Drag handle */}
                     <span className="text-slate-300 dark:text-slate-600 text-[0.875rem] shrink-0">⋮⋮</span>
 
+                    {/* Up/down arrows for touch reorder */}
+                    <div className="flex flex-col gap-0 shrink-0">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (idx > 0) { const copy = [...items]; [copy[idx], copy[idx-1]] = [copy[idx-1], copy[idx]]; setItems(copy) } }}
+                        disabled={idx === 0}
+                        className="text-[0.5rem] text-slate-300 dark:text-slate-600 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
+                        aria-label="Move up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (idx < items.length - 1) { const copy = [...items]; [copy[idx], copy[idx+1]] = [copy[idx+1], copy[idx]]; setItems(copy) } }}
+                        disabled={idx === items.length - 1}
+                        className="text-[0.5rem] text-slate-300 dark:text-slate-600 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
+                        aria-label="Move down"
+                      >
+                        ▼
+                      </button>
+                    </div>
+
                     {/* Icon + display */}
                     <span className="text-[1rem] shrink-0">{cat.icon || '📌'}</span>
                     <span className="flex-1 text-[0.875rem] text-slate-700 dark:text-slate-300 truncate">
@@ -317,13 +338,33 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     <span className={`w-3 h-3 rounded-full shrink-0 ${CATEGORY_BADGE[cat.color]?.split(' ')[0] || 'bg-blue-100'}`} />
 
                     {/* Delete */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); remove(idx) }}
-                      className="text-[0.75rem] text-slate-300 dark:text-slate-600 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                      aria-label={`Delete category ${cat.display || 'new'}`}
-                    >
-                      ✕
-                    </button>
+                    {confirmDeleteIdx === idx ? (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[0.6875rem] text-red-500">Delete?</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); remove(idx); setConfirmDeleteIdx(null) }}
+                          className="text-[0.75rem] text-red-500 font-semibold px-2 min-h-[44px]"
+                          aria-label="Confirm delete"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(null) }}
+                          className="text-[0.75rem] text-slate-400 px-2 min-h-[44px]"
+                          aria-label="Cancel delete"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(idx) }}
+                        className="text-[0.75rem] text-slate-300 dark:text-slate-600 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                        aria-label={`Delete category ${cat.display || 'new'}`}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
 
                   {/* Edit panel */}
@@ -396,22 +437,22 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           </p>
           <button
             onClick={() => {
-              const url = 'https://www.icloud.com/shortcuts/'
-              // Open in Safari so the user can create the shortcut manually
-              window.open(url, '_blank')
+              // Try opening Shortcuts app directly on iOS
+              window.location.href = 'shortcuts://'
             }}
             className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
               bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
               hover:bg-slate-200 dark:hover:bg-slate-700 transition-all
               active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
-            aria-label="Set up Siri Shortcut"
+            aria-label="Open Shortcuts app"
           >
             <span aria-hidden="true" className="text-[1.25rem]">🎙️</span>
-            Add "Quick Add" to Siri
+            Open Shortcuts App
           </button>
-          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2">
-            You'll need to create a Shortcut in the iOS Shortcuts app with
-            "Open URL" → <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">taskmatrix://quick-add</code>
+          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
+            Create a shortcut: <strong>+</strong> → Add Action → Web → <strong>Open URL</strong> →
+            type <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-slate-600 dark:text-slate-300">taskmatrix://quick-add</code> →
+            tap ⓘ → <strong>Add to Siri</strong>
           </p>
         </div>
 
