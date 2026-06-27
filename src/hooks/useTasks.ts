@@ -163,14 +163,18 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             }
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as Task
-            // Keep all tasks in the array — the matrix filters by status during render.
+            // Evict soft-deleted rows immediately regardless of their other fields.
             if (row.deleted_at) {
               setTasks((prev) => prev.filter((t) => t.id !== row.id))
             } else {
               setTasks((prev) =>
                 prev.some((t) => t.id === row.id)
                   ? prev.map((t) => (t.id === row.id ? row : t))
-                  : row.status === 'todo' ? [row, ...prev] : prev
+                  // Guard: only re-insert a todo row that is absent from local state
+                  // when it is NOT soft-deleted. Without !row.deleted_at a concurrent
+                  // UPDATE (e.g. from another session) carrying deleted_at=null would
+                  // resurrect a task that was already optimistic-removed by deleteTask.
+                  : row.status === 'todo' && !row.deleted_at ? [row, ...prev] : prev
               )
             }
           } else if (payload.eventType === 'DELETE') {
