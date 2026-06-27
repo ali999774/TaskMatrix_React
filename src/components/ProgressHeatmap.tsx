@@ -81,7 +81,7 @@ export default function ProgressHeatmap({ tasks }: Props) {
   const todayKey = dateKey(today)
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 sm:max-w-2xl">
+    <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 sm:max-w-md">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
           Activity
