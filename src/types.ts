@@ -17,6 +17,7 @@ export interface Task {
   recur_frequency?: string | null
   recur_interval?: number | null
   recur_days?: number[] | null
+  series_id?: string | null
   tags?: string[]
   subtasks?: { title: string; done: boolean }[]
   pinned?: boolean

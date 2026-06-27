@@ -118,6 +118,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
       recur_frequency: checked ? recurFrequency : null,
       recur_interval: checked ? 1 : null,
       recur_days: checked ? (recurFrequency === 'weekly' ? recurDays : null) : null,
+      series_id: checked ? (task.series_id || crypto.randomUUID()) : null,
     })
   }
 

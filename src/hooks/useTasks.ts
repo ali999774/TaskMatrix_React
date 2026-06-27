@@ -252,7 +252,12 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       due_time: opts?.due_time || null,
       reminder: opts?.reminder || null,
       notes: opts?.notes || null,
+      series_id: null,
     }
+    // Assign series_id if it's recurring (handled by TaskDetail when initially saving recurring options)
+    // Note: since the initial addTask has recurring=false and it's updated in TaskDetail, 
+    // we may need to make sure updateTask assigns series_id if it transitions from non-recurring to recurring.
+    // Wait, let's just make sure updateTask does it. Actually, addTask currently defaults to recurring: false.
     setTasks((prev) => [newTask as Task, ...prev])
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('tasks', 'create', newTask.id!, newTask)
@@ -273,14 +278,13 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       if (status === 'done') {
         const doneTask = prev.find((t) => t.id === id)
         if (doneTask?.recurring && doneTask.recur_frequency) {
-          // Prevent spawn explosion: check if a live clone of this recurring task already exists
+          // Prevent spawn explosion: check if a live clone of this series already exists
+          const targetSeriesId = doneTask.series_id || doneTask.id
           const hasActiveClone = prev.some((t) => 
             t.id !== id &&
             t.status === 'todo' &&
             !t.deleted_at &&
-            t.title === doneTask.title &&
-            t.recurring === true &&
-            t.recur_frequency === doneTask.recur_frequency
+            (t.series_id === targetSeriesId || (t.series_id == null && t.title === doneTask.title && t.recurring === true && t.recur_frequency === doneTask.recur_frequency))
           )
           
           if (!hasActiveClone) {
@@ -293,6 +297,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             const nextTask: Task = {
               ...doneTask,
               id: crypto.randomUUID(),
+              series_id: targetSeriesId,
               status: 'todo',
               due_date: nextDue.date,
               due_time: nextDue.time || doneTask.due_time || null,
