@@ -809,7 +809,7 @@ export default function App() {
         </div>
 
         {/* Progress heatmap */}
-        <div className="px-1 sm:px-6 mt-8 max-sm:mt-4">
+        <div className="px-1 sm:px-6 mt-16 max-sm:mt-4">
           <ProgressHeatmap tasks={filteredTasks} />
         </div>
 
