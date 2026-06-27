@@ -42,7 +42,7 @@ export default function SwipeableRow({
 }: Props) {
   const x = useMotionValue(0)
   const openRef = useRef(false)
-  const closeRef = useRef<() => void>()
+  const closeRef = useRef<(() => void) | null>(null)
 
   // iOS mode: each circle is 44px with 6px gap + 8px right padding
   // Classic mode: each button is 56px full-height block
