@@ -655,7 +655,7 @@ export default function App() {
             </div>
 
             {/* Right actions */}
-            <div className="flex items-center gap-0.5 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0 ml-auto">
               {/* Sync indicator */}
               {(!offlineQueue.online || offlineQueue.isFlushing || offlineQueue.pendingCount > 0) && (
                 <span className={`text-[0.75rem] px-2 py-1 rounded-full font-medium min-h-[44px] inline-flex items-center ${
