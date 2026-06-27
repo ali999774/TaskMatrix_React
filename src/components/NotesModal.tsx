@@ -153,15 +153,6 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 <span aria-hidden="true">🔍</span>
               </button>
             )}
-            {onFetchDeleted && (
-              <button
-                onClick={() => { setSearch(''); setView((v) => (v === 'trash' ? 'notes' : 'trash')) }}
-                aria-label={view === 'trash' ? 'Back to notes' : 'Recently deleted'}
-                className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${view === 'trash' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
-              >
-                <span aria-hidden="true">🗑</span>
-              </button>
-            )}
             <span className="text-[0.875rem] text-slate-400">
               {view === 'trash' ? `${deleted.length} deleted` : `${notes.length} total`}
             </span>
@@ -317,6 +308,21 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 )
               })}
             </div>
+          )}
+          {view === 'notes' && onFetchDeleted && deleted.length > 0 && (
+            <button
+              onClick={() => { setSearch(''); setView('trash'); loadTrash() }}
+              className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl
+                bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700/50
+                transition-colors min-h-[44px]"
+              aria-label="Recently deleted"
+            >
+              <span className="flex items-center gap-2 text-[0.875rem] text-slate-600 dark:text-slate-400">
+                <span aria-hidden="true">🗑</span>
+                Recently Deleted
+              </span>
+              <span className="text-[0.8125rem] text-slate-400">{deleted.length}</span>
+            </button>
           )}
         </div>
 
