@@ -772,8 +772,6 @@ export default function App() {
               categories={categories}
             />
 
-            {/* Progress heatmap */}
-            <ProgressHeatmap tasks={filteredTasks} />
           </div>
 
           {/* Sticky notes sidebar */}
@@ -792,6 +790,10 @@ export default function App() {
           </div>
         </div>
 
+        {/* Progress heatmap */}
+        <ProgressHeatmap tasks={filteredTasks} />
+
+        {/* Completed section */}
         <CompletedSection
           userId={userId}
           context={context}
