@@ -437,22 +437,26 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           </p>
           <button
             onClick={() => {
-              // Try opening Shortcuts app directly on iOS
-              window.location.href = 'shortcuts://'
+              const url = 'taskmatrix://quick-add'
+              navigator.clipboard.writeText(url).then(() => {
+                alert(`Copied "${url}" to clipboard.\n\nNow open the Shortcuts app, create a new shortcut with "Open URL" action, and paste this.`)
+              }).catch(() => {
+                alert(`Add this URL to a Shortcut:\n\n${url}\n\nOpen Shortcuts app → new shortcut → "Open URL" → paste.`)
+              })
             }}
             className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
               bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300
               hover:bg-slate-200 dark:hover:bg-slate-700 transition-all
               active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
-            aria-label="Open Shortcuts app"
+            aria-label="Copy shortcut URL"
           >
-            <span aria-hidden="true" className="text-[1.25rem]">🎙️</span>
-            Open Shortcuts App
+            <span aria-hidden="true" className="text-[1.25rem]">📋</span>
+            Copy Shortcut URL
           </button>
           <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Create a shortcut: <strong>+</strong> → Add Action → Web → <strong>Open URL</strong> →
-            type <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-slate-600 dark:text-slate-300">taskmatrix://quick-add</code> →
-            tap ⓘ → <strong>Add to Siri</strong>
+            Paste into Shortcuts app: <strong>+</strong> → Web → <strong>Open URL</strong> →
+            paste <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded text-slate-600 dark:text-slate-300">taskmatrix://quick-add</code> →
+            ⓘ → <strong>Add to Siri</strong>
           </p>
         </div>
 
