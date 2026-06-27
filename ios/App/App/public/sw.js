@@ -1,5 +1,5 @@
 // TODO(pwa): migrate to vite-plugin-pwa (Workbox) for durable cache versioning + precache manifest
-const CACHE_NAME = 'taskmatrix-react-v5'
+const CACHE_NAME = 'taskmatrix-react-v6'
 
 // App shell assets to pre-cache on install
 const SHELL_ASSETS = [
