@@ -110,6 +110,9 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     setIsFlushing(true)
 
     for (const item of fresh) {
+      // [TM][QUEUE-REPLAY] log every mutation being replayed from the offline queue
+      // eslint-disable-next-line no-console
+      console.log('[TM][QUEUE-REPLAY]', item.table, item.operation, item.recordId, 'payload ->', JSON.stringify(item.payload ?? null))
       try {
         const ck = item.conflictKey ?? 'id'
         switch (item.operation) {
@@ -149,6 +152,21 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     }
   }, [online, pendingCount, flush])
 
+  // Scan the mutations queue for tasks that have a pending soft-delete (update
+  // with deleted_at set) but haven't been flushed to Supabase yet.  loadTasks
+  // calls this before setTasks so Supabase-truth never resurrects a task that
+  // the user deleted while offline.
+  const getPendingDeleteIds = useCallback(async (): Promise<Set<string>> => {
+    const db = dbRef.current
+    if (!db) return new Set()
+    const items = await db.mutations.where('table').equals('tasks').toArray()
+    return new Set(
+      items
+        .filter((i) => i.operation === 'update' && i.payload?.deleted_at != null)
+        .map((i) => i.recordId)
+    )
+  }, [])
+
   // Expose online for the banner — single source of truth
-  return { enqueue, flush, pendingCount, isFlushing, online }
+  return { enqueue, flush, pendingCount, isFlushing, online, getPendingDeleteIds }
 }

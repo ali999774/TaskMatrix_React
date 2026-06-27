@@ -37,10 +37,14 @@ function getNextDueDate(
 
 interface OfflineQueue {
   enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
+  getPendingDeleteIds: () => Promise<Set<string>>
   online: boolean
 }
 
 export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
+  // [TM] Build stamp — confirm which bundle is running on device/browser.
+  // eslint-disable-next-line no-console
+  console.log('[TM] build 4de1151+instr', new Date().toISOString())
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
@@ -122,9 +126,24 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) {
-      setTasks(data as Task[])
+      // Exclude any task that has a pending offline soft-delete in the Dexie
+      // mutations queue.  Without this check, Supabase still returns the task
+      // (deleted_at is null there until the queue flushes), and the wholesale
+      // setTasks call would resurrect it on every reload.
+      const locallyDeleted = offlineQueue
+        ? await offlineQueue.getPendingDeleteIds()
+        : new Set<string>()
+      const active = locallyDeleted.size > 0
+        ? (data as Task[]).filter((t) => !locallyDeleted.has(t.id))
+        : (data as Task[])
+      // [TM][LOAD-SUPABASE] log every row entering active state from the Supabase fetch
+      for (const t of active) {
+        // eslint-disable-next-line no-console
+        console.log('[TM][LOAD-SUPABASE]', t.id, 'deleted_at ->', t.deleted_at ?? null)
+      }
+      setTasks(active)
       const snap = new Map<string, string>()
-      for (const t of data as Task[]) {
+      for (const t of active) {
         snap.set(t.id, JSON.stringify({ title: t.title, status: t.status, category: t.category, importance: t.importance, urgency: t.urgency, position: t.position, pinned: t.pinned }))
       }
       syncedSnapshotRef.current = snap
@@ -154,6 +173,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const row = payload.new as Task
+            // [TM][RT-INSERT] log every realtime INSERT event, regardless of guard outcome
+            // eslint-disable-next-line no-console
+            console.log('[TM][RT-INSERT]', row.id, 'deleted_at ->', row.deleted_at ?? null, 'status ->', row.status)
             // Only surface todo tasks in the active matrix.
             if (row.status === 'todo' && !row.deleted_at) {
               setTasks((prev) => {
@@ -163,19 +185,28 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             }
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as Task
+            // [TM][RT-UPDATE] log every realtime UPDATE event before any guard
+            // eslint-disable-next-line no-console
+            console.log('[TM][RT-UPDATE]', row.id, 'deleted_at ->', row.deleted_at ?? null, 'status ->', row.status)
             // Evict soft-deleted rows immediately regardless of their other fields.
             if (row.deleted_at) {
               setTasks((prev) => prev.filter((t) => t.id !== row.id))
             } else {
-              setTasks((prev) =>
-                prev.some((t) => t.id === row.id)
+              setTasks((prev) => {
+                const alreadyPresent = prev.some((t) => t.id === row.id)
+                if (!alreadyPresent && row.status === 'todo' && !row.deleted_at) {
+                  // [TM][RT-UPDATE-REINSERT] task absent from local state is being re-inserted
+                  // eslint-disable-next-line no-console
+                  console.log('[TM][RT-UPDATE-REINSERT]', row.id, 'deleted_at ->', row.deleted_at ?? null)
+                }
+                return alreadyPresent
                   ? prev.map((t) => (t.id === row.id ? row : t))
                   // Guard: only re-insert a todo row that is absent from local state
                   // when it is NOT soft-deleted. Without !row.deleted_at a concurrent
                   // UPDATE (e.g. from another session) carrying deleted_at=null would
                   // resurrect a task that was already optimistic-removed by deleteTask.
                   : row.status === 'todo' && !row.deleted_at ? [row, ...prev] : prev
-              )
+              })
             }
           } else if (payload.eventType === 'DELETE') {
             setTasks((prev) => prev.filter((t) => t.id !== payload.old.id))
@@ -300,9 +331,19 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     // error-retry paths enqueue the same UPDATE — NOT a hard 'delete', which on
     // flush would drop the row and break restore/completed-history.
     const deletedAt = new Date().toISOString()
+    // [TM][DELETE] log the value being written to deleted_at
+    // eslint-disable-next-line no-console
+    console.log('[TM][DELETE]', id, 'deleted_at set ->', deletedAt)
     if (offlineQueue && !offlineQueue.online) {
+      // [TM][DELETE-DEXIE] offline path — tombstone goes to Dexie queue (not direct Supabase)
+      // eslint-disable-next-line no-console
+      console.log('[TM][DELETE-DEXIE]', id, 'updated?', true, '(queued offline)')
       await offlineQueue.enqueue('tasks', 'update', id, { deleted_at: deletedAt })
     } else {
+      // [TM][DELETE-DEXIE] online path — no Dexie task-row store; tombstone goes directly to Supabase.
+      // Dexie is only used as a retry queue if persistOrQueue fails (see persist.ts enqueue call).
+      // eslint-disable-next-line no-console
+      console.log('[TM][DELETE-DEXIE]', id, 'updated?', false, '(online — direct Supabase write, no Dexie task row store)')
       await persistOrQueue(offlineQueue, 'tasks', 'update', id,
         () => supabase.from('tasks').update({ deleted_at: deletedAt }).eq('id', id),
         { deleted_at: deletedAt })
