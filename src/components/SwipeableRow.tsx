@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'framer-motion'
 
 const IS_TOUCH =
@@ -10,6 +10,10 @@ export interface SwipeAction {
   className: string
   onAction: () => void
 }
+
+// ─── Module-level singleton: only one row can be open at a time ──────────
+// When a row opens, it registers itself here. Opening a new row closes the previous one.
+let activeClose: (() => void) | null = null
 
 interface Props {
   children: React.ReactNode
@@ -26,6 +30,7 @@ const SPRING = { type: 'spring' as const, stiffness: 400, damping: 30, mass: 0.8
 /**
  * Touch/mouse swipe-to-reveal action buttons backed by framer-motion.
  * Uses `useMotionValue` — zero React re-renders during drag, pure 60fps.
+ * Auto-closes any previously open row via module-level singleton.
  */
 export default function SwipeableRow({
   children,
@@ -37,6 +42,7 @@ export default function SwipeableRow({
 }: Props) {
   const x = useMotionValue(0)
   const openRef = useRef(false)
+  const closeRef = useRef<() => void>()
 
   // iOS mode: each circle is 44px with 6px gap + 8px right padding
   // Classic mode: each button is 56px full-height block
@@ -46,24 +52,47 @@ export default function SwipeableRow({
   const maxSwipe = actions.length * colWidth + (actions.length - 1) * gapWidth + padWidth
 
   // Fade action buttons in only after meaningful swipe (>=20px).
-  // Prevents flash-on-tap: dragElastic causes micro x-offset on every tap.
   const actionOpacity = useTransform(x, [-maxSwipe, -20, 0], [1, 0, 0])
+
+  // Cleanup: if this row is the active one and unmounts, clear the singleton
+  useEffect(() => {
+    closeRef.current = () => {
+      animate(x, 0, SPRING)
+      openRef.current = false
+    }
+    return () => {
+      if (activeClose === closeRef.current) {
+        activeClose = null
+      }
+    }
+  }, [x])
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = -maxSwipe * 0.4
     const shouldOpen = x.get() < threshold || info.velocity.x < -500
 
     if (shouldOpen) {
+      // Close any previously open row
+      if (activeClose && activeClose !== closeRef.current) {
+        activeClose()
+      }
       animate(x, -maxSwipe, SPRING)
       openRef.current = true
+      activeClose = closeRef.current!
     } else {
       animate(x, 0, SPRING)
       openRef.current = false
+      if (activeClose === closeRef.current) {
+        activeClose = null
+      }
     }
   }
 
   const handleClick = () => {
     if (openRef.current) {
+      if (activeClose === closeRef.current) {
+        activeClose = null
+      }
       animate(x, 0, SPRING)
       openRef.current = false
     } else {
@@ -72,6 +101,9 @@ export default function SwipeableRow({
   }
 
   const handleAction = (fn: () => void) => {
+    if (activeClose === closeRef.current) {
+      activeClose = null
+    }
     animate(x, 0, { ...SPRING, stiffness: 500 })
     openRef.current = false
     fn()
