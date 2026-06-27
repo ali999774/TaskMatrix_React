@@ -38,9 +38,6 @@ interface Props {
   tasks: Task[]
 }
 
-const CELL_SIZE = 12
-const CELL_SIZE_DESKTOP = 15
-
 export default function ProgressHeatmap({ tasks }: Props) {
   const { weeks, colorMap, totalDone, maxCount } = useMemo(() => {
     const weeks = getWeeks(12)
