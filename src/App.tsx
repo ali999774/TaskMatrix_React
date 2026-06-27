@@ -273,9 +273,16 @@ export default function App() {
   // The task leaves the active matrix immediately (matrix filters status='todo').
   // No auto-delete timer — done tasks persist in CompletedSection until manually cleared.
   const handleStatusChange = (id: string, status: string) => {
-    updateStatus(id, status)
+    let preventSpawn = false
+    const task = tasks.find((t) => t.id === id)
+    
+    if (status === 'done' && task?.recurring) {
+      preventSpawn = window.confirm('This is a recurring task. Do you want to STOP it from recurring in the future?\n\n(Click OK to end the series, Cancel to spawn the next occurrence)')
+    }
+    
+    updateStatus(id, status, preventSpawn)
+    
     if (status === 'done') {
-      const task = tasks.find((t) => t.id === id)
       if (task) showUndo(`Completed “${task.title}”`, () => updateStatus(task.id, 'todo'))
       // Signal CompletedSection to re-fetch so the newly done task appears.
       setReloadTrigger((n) => n + 1)

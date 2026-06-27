@@ -270,14 +270,14 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
 
   // Status changes are user-initiated and infrequent — immediate sync is fine.
   // No debounce needed; these aren't continuous events like drag.
-  const updateStatus = useCallback(async (id: string, status: string) => {
+  const updateStatus = useCallback(async (id: string, status: string, preventSpawn?: boolean) => {
     setTasks((prev) => {
       const updated = prev.map((t) => (t.id === id ? { ...t, status } : t))
 
       // Recurring task completed → create the next instance
       if (status === 'done') {
         const doneTask = prev.find((t) => t.id === id)
-        if (doneTask?.recurring && doneTask.recur_frequency) {
+        if (doneTask?.recurring && doneTask.recur_frequency && !preventSpawn) {
           // Prevent spawn explosion: check if a live clone of this series already exists
           const targetSeriesId = doneTask.series_id || doneTask.id
           const hasActiveClone = prev.some((t) => 
