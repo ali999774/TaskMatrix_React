@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Trash2 } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { renderMarkdown } from '../lib/markdown'
 import { formatVoiceNote } from '../lib/speech'
@@ -11,6 +12,7 @@ interface Props {
   onAdd?: (content: string) => void
   onEdit?: (note: StickyNote) => void
   onShowAll?: () => void
+  onShowDeleted?: () => void
   sidebar?: boolean
   onReorder?: (id: string, newIndex: number) => void
   onNewBlank?: () => void
@@ -23,7 +25,7 @@ const LEFT_ACCENT: Record<string, string> = {
   green: 'border-l-green-400 dark:border-l-green-400',
 }
 
-export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, sidebar, onReorder, onNewBlank }: Props) {
+export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, onShowDeleted, sidebar, onReorder, onNewBlank }: Props) {
   const [input, setInput] = useState('')
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
@@ -198,6 +200,17 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
 
             {onShowAll && (
               <button onClick={onShowAll} aria-label="View all notes" className="text-[0.75rem] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition w-full text-center min-h-[44px]"><span aria-hidden="true">View all notes →</span></button>
+            )}
+
+            {onShowDeleted && (
+              <button
+                onClick={onShowDeleted}
+                aria-label="Recently Deleted notes"
+                className="flex items-center justify-center gap-1.5 w-full text-[0.75rem] text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition min-h-[44px] mt-0.5"
+              >
+                <Trash2 size={13} strokeWidth={2} aria-hidden="true" />
+                <span>Recently Deleted</span>
+              </button>
             )}
           </>
         )}

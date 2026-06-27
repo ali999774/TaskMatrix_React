@@ -122,7 +122,7 @@ test('Trash view restores the note, and Delete Permanently is the only hard dele
 
   // Open Notes modal → Recently Deleted view.
   await page.getByRole('button', { name: 'View all notes' }).first().click()
-  await page.getByRole('button', { name: 'Recently deleted' }).click()
+  await page.getByRole('button', { name: 'Recently deleted', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Recently Deleted' })).toBeVisible()
   await expect(page.getByText(content, { exact: true })).toBeVisible()
 
@@ -134,7 +134,7 @@ test('Trash view restores the note, and Delete Permanently is the only hard dele
   // Soft-delete again (DB) and refresh the Trash view to test permanent delete.
   await client.from('sticky_notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)
   await page.getByRole('button', { name: 'Back to notes' }).click()
-  await page.getByRole('button', { name: 'Recently deleted' }).click()
+  await page.getByRole('button', { name: 'Recently deleted', exact: true }).click()
   await expect(page.getByText(content, { exact: true })).toBeVisible({ timeout: 10_000 })
 
   // Delete Permanently — two taps (reveal confirm, then confirm). The ONLY hard DELETE.

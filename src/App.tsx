@@ -201,6 +201,7 @@ export default function App() {
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
+  const [notesInitialView, setNotesInitialView] = useState<'notes' | 'trash'>('notes')
   const [editingNote, setEditingNote] = useState<StickyNote | null>(null)
   const cameFromNotesModal = useRef(false)
   const [showPomodoro, setShowPomodoro] = useState(false)
@@ -779,6 +780,7 @@ export default function App() {
               onAdd={addNote}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
+              onShowDeleted={() => { setNotesInitialView('trash'); setShowNotesModal(true) }}
               onNewBlank={handleNewBlankNote}
               onReorder={reorderNote}
               sidebar
@@ -808,7 +810,7 @@ export default function App() {
       {showNotesModal && (
         <NotesModal
           notes={notes}
-          onClose={() => setShowNotesModal(false)}
+          onClose={() => { setShowNotesModal(false); setNotesInitialView('notes') }}
           onNewBlank={handleNewBlankNote}
           onEdit={(note) => {
             cameFromNotesModal.current = true
@@ -820,6 +822,7 @@ export default function App() {
           onFetchDeleted={fetchDeletedNotes}
           onRestore={restoreNote}
           onPurgeForever={permanentlyDeleteNote}
+          initialView={notesInitialView}
         />
       )}
 

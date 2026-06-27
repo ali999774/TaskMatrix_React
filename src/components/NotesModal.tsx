@@ -32,11 +32,13 @@ interface Props {
   onRestore?: (note: StickyNote) => void
   /** Permanently delete a note from Trash (hard delete, no undo). */
   onPurgeForever?: (id: string) => void
+  /** Open the modal directly on a specific view (default: 'notes'). */
+  initialView?: 'notes' | 'trash'
 }
 
-export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank, onFetchDeleted, onRestore, onPurgeForever }: Props) {
+export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank, onFetchDeleted, onRestore, onPurgeForever, initialView = 'notes' }: Props) {
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'notes' | 'trash'>('notes')
+  const [view, setView] = useState<'notes' | 'trash'>(initialView)
   const [deleted, setDeleted] = useState<StickyNote[]>([])
   const [trashLoading, setTrashLoading] = useState(false)
   const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null)
