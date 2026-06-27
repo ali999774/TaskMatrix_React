@@ -12,6 +12,7 @@ import { useFontScale } from './hooks/useFontScale'
 import MatrixScreen from './components/matrix/MatrixScreen'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
+import ProgressHeatmap from './components/ProgressHeatmap'
 import NoteEditModal from './components/NoteEditModal'
 import PomodoroPopup from './components/PomodoroPopup'
 import TodayStrip from './components/TodayStrip'
@@ -770,6 +771,9 @@ export default function App() {
               onTaskClick={setSelectedTask}
               categories={categories}
             />
+
+            {/* Progress heatmap */}
+            <ProgressHeatmap tasks={filteredTasks} />
           </div>
 
           {/* Sticky notes sidebar */}
