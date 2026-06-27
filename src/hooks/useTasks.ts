@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
@@ -50,6 +50,17 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const locallyDeletedIdsRef = useRef<Set<string>>(new Set())
   const getPendingDeleteIds = offlineQueue?.getPendingDeleteIds
+  const [tombstoneVersion, setTombstoneVersion] = useState(0)
+
+  // Derive display tasks by filtering out tombstoned IDs.  tombstoneVersion
+  // is bumped on every delete/restore so this memo re-computes reactively
+  // even though locallyDeletedIdsRef is a ref (mutation-only, no re-render).
+  const displayTasks = useMemo(() => {
+    void tombstoneVersion
+    if (locallyDeletedIdsRef.current.size === 0) return tasks
+    const filtered = tasks.filter((t) => !locallyDeletedIdsRef.current.has(t.id))
+    return filtered.length === tasks.length ? tasks : filtered
+  }, [tasks, tombstoneVersion])
 
   // Track previous task IDs to cancel reminders for removed tasks
   const prevTaskIdsRef = useRef<Set<string>>(new Set())
@@ -350,6 +361,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   const deleteTask = useCallback(async (id: string) => {
     dirtyRef.current.delete(id)
     locallyDeletedIdsRef.current.add(id)
+    setTombstoneVersion((v) => v + 1)
     setTasks((prev) => prev.filter((t) => t.id !== id))
     // Soft delete (deleted_at) so the row can be restored. Both the offline and
     // error-retry paths enqueue the same UPDATE — NOT a hard 'delete', which on
@@ -378,6 +390,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   // timestamp), so restore is just nulling it and re-inserting locally.
   const restoreTask = useCallback(async (task: Task) => {
     locallyDeletedIdsRef.current.delete(task.id)
+    setTombstoneVersion((v) => v + 1)
     setTasks((prev) => (prev.some((t) => t.id === task.id) ? prev : [task, ...prev]))
     if (offlineQueue && !offlineQueue.online) {
       await offlineQueue.enqueue('tasks', 'update', task.id, { deleted_at: null })
@@ -417,5 +430,5 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     }
   }, [userId, offlineQueue])
 
-  return { tasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload: loadTasks }
+  return { tasks: displayTasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload: loadTasks }
 }

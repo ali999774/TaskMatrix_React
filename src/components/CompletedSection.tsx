@@ -123,9 +123,10 @@ export default function CompletedSection({
                 </button>
                 <button
                   onClick={() => handleUncomplete(task.id)}
-                  className="shrink-0 text-[0.75rem] px-2 py-1 rounded-lg text-slate-300 dark:text-slate-600
-                    hover:text-blue-500 dark:hover:text-blue-400 transition-colors opacity-0 group-hover:opacity-100
-                    focus:opacity-100 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  className="shrink-0 text-[0.75rem] px-2 py-1 rounded-lg text-slate-400 dark:text-slate-500
+                    hover:text-blue-500 dark:hover:text-blue-400 transition-colors
+                    sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100
+                    min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                   title="Move back to active tasks"
                   aria-label={`Undo completion: ${task.title}`}
                 >
