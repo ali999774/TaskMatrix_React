@@ -25,6 +25,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
   const draggedIdx = useRef<number | null>(null)
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
@@ -39,6 +40,9 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Only allow drag-to-dismiss from the header area, not the scrollable body
+    const target = e.target as HTMLElement
+    if (scrollerRef.current?.contains(target)) return
     touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
   }
 
@@ -181,7 +185,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto max-sm:pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div ref={scrollerRef} className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto max-sm:pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {/* Text size */}
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
