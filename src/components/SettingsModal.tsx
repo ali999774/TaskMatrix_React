@@ -177,11 +177,12 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 
-              text-[1.25rem] leading-none p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-            aria-label="Close settings"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center
+              text-slate-400 hover:text-slate-600 dark:hover:text-slate-300
+              text-[1.125rem] leading-none min-h-[44px] min-w-[44px]"
+            aria-label="Back"
           >
-            ✕
+            ←
           </button>
         </div>
 
