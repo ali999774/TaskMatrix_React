@@ -160,11 +160,27 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     const db = dbRef.current
     if (!db) return new Set()
     const items = await db.mutations.where('table').equals('tasks').toArray()
-    return new Set(
-      items
-        .filter((i) => i.operation === 'update' && i.payload?.deleted_at != null)
-        .map((i) => i.recordId)
-    )
+    const deletedIds = new Set<string>()
+
+    for (const item of items.sort((a, b) => a.timestamp - b.timestamp)) {
+      if (item.operation === 'delete') {
+        deletedIds.add(item.recordId)
+        continue
+      }
+      if (
+        item.operation === 'update' &&
+        item.payload &&
+        Object.prototype.hasOwnProperty.call(item.payload, 'deleted_at')
+      ) {
+        if (item.payload.deleted_at == null) {
+          deletedIds.delete(item.recordId)
+        } else {
+          deletedIds.add(item.recordId)
+        }
+      }
+    }
+
+    return deletedIds
   }, [])
 
   // Expose online for the banner — single source of truth
