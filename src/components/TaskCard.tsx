@@ -108,12 +108,13 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
 
   const cardInner = (
     <div
-      className="flex items-start gap-1.5"
+      className="flex items-center gap-1.5"
       onTouchStart={startLongPress}
       onTouchEnd={cancelLongPress}
       onTouchMove={cancelLongPress}
     >
       <CheckCircle status={task.status} onToggle={cycleStatus} />
+      {/* Text block: flex-1 so it absorbs free space and pushes pin to the right */}
       <div className="flex-1 min-w-0">
         <p
           className={`text-[0.78125rem] sm:text-[0.875rem] font-semibold leading-snug ${
@@ -143,8 +144,35 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           </p>
         )}
       </div>
+      {/* Pin button — always visible (no hover gate) so it works on iOS/Capacitor.
+          shrink-0 prevents a long title from squishing it.
+          fill-current makes the icon solid when pinned, outline when not. */}
+      <button
+        type="button"
+        aria-pressed={!!task.pinned}
+        aria-label={task.pinned ? 'Unpin task' : 'Pin task'}
+        onClick={(e) => {
+          e.stopPropagation()
+          haptics('light')
+          onFlag(task.id)
+        }}
+        onTouchEnd={(e) => e.stopPropagation()}
+        className={`shrink-0 flex items-center justify-center w-[30px] h-[44px] rounded
+          transition-colors
+          ${task.pinned
+            ? 'text-amber-500 dark:text-amber-400'
+            : 'text-slate-300 dark:text-slate-600 hover:text-slate-400 dark:hover:text-slate-500'
+          }`}
+      >
+        <Pin
+          size={14}
+          className={task.pinned ? 'fill-current' : ''}
+          aria-hidden="true"
+        />
+      </button>
     </div>
   )
+
 
   return (
     <>

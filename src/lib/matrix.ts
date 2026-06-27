@@ -21,6 +21,13 @@ export interface QuadrantBucket {
 /**
  * Group an array of tasks into the four Eisenhower quadrants.
  * Called ONCE in the parent — both MatrixList and MatrixGrid consume the output.
+ *
+ * Sort order within each quadrant:
+ *   1. Pinned tasks first (pinned = true floats above pinned = false/undefined).
+ *   2. `position` ascending (nulls last) — preserves the DB/drag order within each zone.
+ *   3. `created_at` descending as a tie-breaker.
+ *
+ * The array is COPIED before sorting — state/props are never mutated in place.
  */
 export function groupTasksByQuadrant(tasks: Task[]): QuadrantBucket[] {
   const buckets: Record<Quadrant, Task[]> = { 1: [], 2: [], 3: [], 4: [] }
@@ -29,10 +36,26 @@ export function groupTasksByQuadrant(tasks: Task[]): QuadrantBucket[] {
     const q = importanceUrgencyToQuadrant(t.importance, t.urgency)
     buckets[q].push(t)
   }
-  return ([1, 2, 3, 4] as Quadrant[]).map(q => ({
-    quadrant: q,
-    label: QUADRANT_LABELS[q],
-    subtitle: QUADRANT_SUBTITLES[q],
-    tasks: buckets[q],
-  }))
+  return ([1, 2, 3, 4] as Quadrant[]).map(q => {
+    const sorted = [...buckets[q]].sort((a, b) => {
+      // 1. Pinned-first
+      const aPinned = a.pinned ? 1 : 0
+      const bPinned = b.pinned ? 1 : 0
+      if (aPinned !== bPinned) return bPinned - aPinned
+      // 2. Position ascending (null/undefined sorts last)
+      const aPos = a.position ?? Infinity
+      const bPos = b.position ?? Infinity
+      if (aPos !== bPos) return aPos - bPos
+      // 3. created_at descending
+      const aTime = a.created_at ?? ''
+      const bTime = b.created_at ?? ''
+      return bTime.localeCompare(aTime)
+    })
+    return {
+      quadrant: q,
+      label: QUADRANT_LABELS[q],
+      subtitle: QUADRANT_SUBTITLES[q],
+      tasks: sorted,
+    }
+  })
 }

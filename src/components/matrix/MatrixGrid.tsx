@@ -57,9 +57,6 @@ export default function MatrixGrid({
   onTaskClick,
   categories,
 }: MatrixLayoutProps) {
-  const pinnedTasks = buckets
-    .flatMap((b) => b.tasks)
-    .filter((t) => t.pinned && t.status !== 'done')
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -102,18 +99,6 @@ export default function MatrixGrid({
         </div>
       </div>
 
-      {/* ── Optional pinned compact row ───────────────────────────────────── */}
-      {pinnedTasks.length > 0 && (
-        <PinnedRow
-          tasks={pinnedTasks}
-          onStatusChange={onStatusChange}
-          onDelete={onDelete}
-          onTaskClick={onTaskClick}
-          onMove={onMove}
-          onFlag={onFlag}
-          categories={categories}
-        />
-      )}
     </div>
   )
 }
@@ -279,46 +264,3 @@ function GridCell({
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PinnedRow — compact strip of pinned tasks below the grid
-// ─────────────────────────────────────────────────────────────────────────────
-
-function PinnedRow({
-  tasks,
-  onStatusChange,
-  onDelete,
-  onTaskClick,
-  onMove,
-  onFlag,
-  categories,
-}: {
-  tasks: Task[]
-  onStatusChange: (id: string, status: string) => void
-  onDelete: (id: string) => void
-  onTaskClick: (task: Task) => void
-  onMove: (id: string, toQuadrant: Quadrant) => void
-  onFlag: (id: string) => void
-  categories: CategoryDef[]
-}) {
-  return (
-    <div className="rounded-[var(--radius-card)] border border-slate-200 dark:border-slate-700/60 px-4 py-3 flex flex-col gap-2">
-      <p className="text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-        📌 Pinned
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onStatusChange={onStatusChange}
-            onDelete={onDelete}
-            onClick={onTaskClick}
-            onMove={onMove}
-            onFlag={onFlag}
-            categories={categories}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
