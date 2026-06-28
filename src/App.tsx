@@ -665,14 +665,27 @@ export default function App() {
                   />
                   {!quickAdd && (
                     suggestion ? (
-                      <button
-                        type="button"
-                        onClick={() => setQuickAdd(suggestion)}
-                        className="absolute inset-y-0 left-3 right-3 flex items-center text-[1rem] font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 transition-colors truncate cursor-pointer"
-                        aria-label={`Create suggested task: ${suggestion}`}
-                      >
-                        Try: {suggestion}
-                      </button>
+                      <div className="absolute -top-[3rem] left-0 right-0 z-10">
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2 shadow-md animate-in slide-in-from-bottom-2 fade-in duration-200">
+                          <span className="text-sm shrink-0">✨</span>
+                          <span className="flex-1 text-[0.875rem] font-medium text-blue-800 dark:text-blue-200 truncate">{suggestion}</span>
+                          <button
+                            type="button"
+                            onClick={() => { setQuickAdd(suggestion); setSuggestion('') }}
+                            className="text-[0.75rem] font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 shrink-0 min-h-[36px]"
+                          >
+                            Do it
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSuggestion('')}
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shrink-0 min-h-[36px] px-0.5"
+                            aria-label="Dismiss suggestion"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
                     ) : (
                       <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-3" aria-hidden="true">
                         {voiceTaskStatus || 'Quick add task…'}
