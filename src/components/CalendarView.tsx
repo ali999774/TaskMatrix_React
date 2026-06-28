@@ -21,6 +21,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const touchStartX = useRef<number | null>(null)
 
   useEffect(() => {
     if (selectedDate) {
@@ -82,6 +83,35 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
   const selectedTasks = selectedDate ? getTasksOnDate(selectedDate) : []
 
+  // Navigate based on current view
+  const navigatePrev = () => {
+    if (view === 'day') {
+      const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : today
+      d.setDate(d.getDate() - 1)
+      setSelectedDate(d.toISOString().split('T')[0])
+    } else if (view === 'week') prevWeek()
+    else prevMonth()
+  }
+  const navigateNext = () => {
+    if (view === 'day') {
+      const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : today
+      d.setDate(d.getDate() + 1)
+      setSelectedDate(d.toISOString().split('T')[0])
+    } else if (view === 'week') nextWeek()
+    else nextMonth()
+  }
+
+  // Swipe handlers
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diff = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(diff) > 60) {
+      diff > 0 ? navigatePrev() : navigateNext()
+    }
+    touchStartX.current = null
+  }
+
   const scheduleDates = (() => {
     const dateMap = new Map<string, Task[]>()
     const start = new Date(year, month - 1, 1)
@@ -95,7 +125,10 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   })()
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-950"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Header bar — two rows on mobile, single row on desktop */}
       <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
         <div className="flex items-center justify-between px-4 sm:px-5 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 pl-16 sm:pl-14">
