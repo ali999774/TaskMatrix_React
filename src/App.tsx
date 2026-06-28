@@ -911,16 +911,16 @@ export default function App() {
           role="alertdialog"
           aria-label="Stop recurring task"
           className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50
-            flex items-center gap-2 bg-slate-800 dark:bg-slate-700 text-white
-            rounded-xl shadow-lg px-4 py-2 max-w-[calc(100vw-2rem)]"
+            flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
+            rounded-xl shadow-lg pl-3 pr-1 py-1 max-w-[calc(100vw-2rem)]"
         >
-          <span className="text-[0.875rem] truncate">Stop “{recurringConfirm.title}” from recurring?</span>
+          <span className="text-[0.8125rem] shrink-0">Stop recurring?</span>
           <button
             onClick={() => {
               recurringResolveRef.current?.(true)
               setRecurringConfirm(null)
             }}
-            className="text-[0.8125rem] font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded-lg min-h-[44px] shrink-0"
+            className="text-[0.8125rem] font-semibold text-red-400 hover:text-red-300 px-3 rounded-lg min-h-[44px] shrink-0"
           >
             Stop
           </button>
@@ -929,7 +929,7 @@ export default function App() {
               recurringResolveRef.current?.(false)
               setRecurringConfirm(null)
             }}
-            className="text-[0.8125rem] font-semibold text-blue-300 hover:text-blue-200 px-2 py-1 rounded-lg min-h-[44px] shrink-0"
+            className="text-[0.8125rem] font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
           >
             Keep
           </button>
