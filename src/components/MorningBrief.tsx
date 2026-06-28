@@ -12,11 +12,12 @@ interface Props {
   onToggle: () => void
   onDismiss: () => void
   onPlanDay: () => void
+  onRetry: () => void
 }
 
 const iconClass = 'w-4 h-4 flex-shrink-0'
 
-export default function MorningBrief({ brief, loading, error, collapsed, onToggle, onDismiss, onPlanDay }: Props) {
+export default function MorningBrief({ brief, loading, error, collapsed, onToggle, onDismiss, onPlanDay, onRetry }: Props) {
   if (error) {
     return (
       <div className="mx-3 mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[0.8125rem] text-amber-700 dark:text-amber-300">
@@ -24,7 +25,13 @@ export default function MorningBrief({ brief, loading, error, collapsed, onToggl
           <X className="w-4 h-4" />
         </button>
         <p className="font-semibold mb-1">Couldn't load morning brief</p>
-        <p className="text-amber-600 dark:text-amber-400">{error}</p>
+        <p className="text-amber-600 dark:text-amber-400 mb-2">{error}</p>
+        <button
+          onClick={onRetry}
+          className="text-[0.75rem] font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 hover:bg-amber-200 dark:hover:bg-amber-900/60 px-3 py-1.5 rounded-lg transition-colors min-h-[44px]"
+        >
+          🔄 Retry
+        </button>
       </div>
     )
   }

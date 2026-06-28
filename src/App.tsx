@@ -279,6 +279,7 @@ export default function App() {
   const [morningBriefError, setMorningBriefError] = useState<string | null>(null)
   const [morningBriefCollapsed, setMorningBriefCollapsed] = useState(false)
   const [morningBriefDismissed, setMorningBriefDismissed] = useState(false)
+  const [morningBriefRetry, setMorningBriefRetry] = useState(0)
   const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
   const [dayPlanLoading, setDayPlanLoading] = useState(false)
   const [dayPlanError, setDayPlanError] = useState<string | null>(null)
@@ -304,7 +305,7 @@ export default function App() {
 
     // Wait for tasks to settle (avoid firing on empty initial load)
     const t = setTimeout(() => {
-      const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
+      const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
       setMorningBriefLoading(true)
       // Include calendar context if connected
       const calContext = (gcal.todayEventsText && gcal.todayEventsText !== 'No calendar events today.')
@@ -322,7 +323,7 @@ export default function App() {
     }, 1500)
 
     return () => clearTimeout(t)
-  }, [userId, tasksLoading, aiSettings.enabled, morningBriefDismissed])
+  }, [userId, tasksLoading, aiSettings.enabled, morningBriefDismissed, morningBriefRetry])
 
   // Reset voice-task quick-action flag once recording starts, so it
   // re-arms for the next Siri / force-touch invocation.
@@ -1043,6 +1044,11 @@ export default function App() {
                 onToggle={() => setMorningBriefCollapsed(v => !v)}
                 onDismiss={() => setMorningBriefDismissed(true)}
                 onPlanDay={handlePlanDay}
+                onRetry={() => {
+                  setMorningBriefError(null)
+                  localStorage.removeItem('tm-last-morning-brief')
+                  setMorningBriefRetry(n => n + 1)
+                }}
               />
             </div>
           )}
