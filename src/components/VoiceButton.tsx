@@ -177,6 +177,11 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
     let accumulated = ''
     let currentRec: SpeechRecognitionLike | null = null
+    let silenceTimer: ReturnType<typeof setTimeout> | null = null
+
+    const clearSilenceTimer = () => {
+      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
+    }
 
     const makeRecorder = (retried = false): SpeechRecognitionLike => {
       const rec = new SpeechRecognitionAPI()
@@ -192,10 +197,24 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         if (accumulated) {
           onStatus?.('hearing: ' + accumulated)
         }
+        // Reset silence timer on every recognized phrase
+        clearSilenceTimer()
+        silenceTimer = setTimeout(() => {
+          onStatus?.('auto-stop in 1s...')
+          silenceTimer = setTimeout(() => {
+            silenceTimer = null
+            if (currentRec === rec) {
+              const r = currentRec
+              currentRec = null
+              try { r.stop() } catch { /* ignore */ }
+            }
+          }, 1000)
+        }, 4000) // 5s total silence → auto-stop
       }
 
       rec.onerror = (event: { error: string }) => {
         console.warn('[Voice] Recognition error:', event.error)
+        clearSilenceTimer()
         // Edge throws 'network' on first start — retry once
         if (event.error === 'network' && !retried && currentRec === rec) {
           return // let onend fire; it will retry
@@ -216,6 +235,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       }
 
       rec.onend = () => {
+        clearSilenceTimer()
         // If this was a network-error-then-retry, restart with a fresh recorder
         if ((rec as any).__retried && currentRec === rec) {
           currentRec = null
@@ -246,11 +266,13 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         currentRec.start()
       },
       stop: () => {
+        clearSilenceTimer()
         const r = currentRec
         currentRec = null
         if (r) r.stop()
       },
       abort: () => {
+        clearSilenceTimer()
         const r = currentRec
         currentRec = null
         if (r) r.abort()
