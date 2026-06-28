@@ -779,7 +779,7 @@ export default function App() {
       {/* Body: matrix + sticky notes side by side */}
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
       <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
-        <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full">
+        <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full mb-6">
 
           {/* Matrix column */}
           <div className="flex-1 min-w-0 w-full">
@@ -817,7 +817,7 @@ export default function App() {
 
         {/* Progress heatmap */}
         <div className="px-1 sm:px-6">
-          <div className="sm:w-1/2" style={{ marginTop: '24px' }}>
+          <div className="sm:w-1/2">
             <ProgressHeatmap tasks={filteredTasks} />
           </div>
         </div>
