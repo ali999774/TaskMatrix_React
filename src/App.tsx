@@ -955,20 +955,22 @@ export default function App() {
 
       {/* Recurring stop confirm snackbar */}
       {showCalendar && (
-        <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
-            <h1 className="text-[1.125rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
-            <button
-              onClick={() => setShowCalendar(false)}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400"
-              aria-label="Close calendar"
-            >
-              ✕
-            </button>
+        <>
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
+          <div className="fixed inset-x-4 top-[10%] bottom-[10%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-md mx-auto overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <h1 className="text-[1.0625rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400"
+                aria-label="Close calendar"
+              >
+                ✕
+              </button>
+            </div>
+            <CalendarView tasks={tasks} hasTasksOnDate={hasTasksOnDate} getTasksOnDate={getTasksOnDate} />
           </div>
-          <CalendarView tasks={tasks} hasTasksOnDate={hasTasksOnDate} getTasksOnDate={getTasksOnDate} />
-        </div>
-      )}
+        </>)}
 
       {recurringConfirm && (
         <div

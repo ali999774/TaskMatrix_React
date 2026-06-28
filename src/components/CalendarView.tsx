@@ -97,7 +97,7 @@ export default function CalendarView({ hasTasksOnDate, getTasksOnDate }: Props) 
 
       {/* Selected date task list */}
       {selectedDate && (
-        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 max-h-[40%] overflow-y-auto">
+        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 max-h-[35%] overflow-y-auto shrink-0">
           <h3 className="text-[0.8125rem] font-semibold text-slate-500 dark:text-slate-400 mb-2">
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </h3>
