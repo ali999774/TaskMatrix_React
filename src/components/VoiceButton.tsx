@@ -164,8 +164,8 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   }, [onStatus])
 
   // --- Web path using Web Speech API ---
-  // Creates a fresh recognition instance per recording session because Chrome's
-  // Web Speech API gets flaky when reusing the same object (immediate onend/onerror).
+  // Fresh instance per recording (Chrome/Edge get flaky with reuse).
+  // continuous=true for Edge (Azure speech service needs it); retries once on first 'network' error.
   const setupWeb = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
@@ -178,11 +178,12 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     let accumulated = ''
     let currentRec: SpeechRecognitionLike | null = null
 
-    const makeRecorder = (): SpeechRecognitionLike => {
+    const makeRecorder = (retried = false): SpeechRecognitionLike => {
       const rec = new SpeechRecognitionAPI()
-      rec.continuous = false
+      rec.continuous = true
       rec.interimResults = true
       rec.lang = 'en-US'
+      ;(rec as any).__retried = retried
 
       rec.onresult = (event: SpeechRecognitionEvent) => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -195,6 +196,10 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
       rec.onerror = (event: { error: string }) => {
         console.warn('[Voice] Recognition error:', event.error)
+        // Edge throws 'network' on first start — retry once
+        if (event.error === 'network' && !retried && currentRec === rec) {
+          return // let onend fire; it will retry
+        }
         setListening(false)
         accumulated = ''
         currentRec = null
@@ -211,13 +216,20 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       }
 
       rec.onend = () => {
+        // If this was a network-error-then-retry, restart with a fresh recorder
+        if ((rec as any).__retried && currentRec === rec) {
+          currentRec = null
+          setTimeout(() => {
+            currentRec = makeRecorder(true)
+            currentRec.start()
+          }, 400)
+          return
+        }
         setListening(false)
         if (accumulated.trim()) {
           onTranscriptRef.current(accumulated.trim())
           onStatus?.('saved')
         } else if (currentRec) {
-          // Only show 'no speech' if the recording wasn't already stopped by
-          // the user (currentRec is cleared on user-initiated stop)
           onStatus?.('no speech')
         }
         accumulated = ''
@@ -230,12 +242,12 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     recognitionRef.current = {
       start: () => {
         accumulated = ''
-        currentRec = makeRecorder()
+        currentRec = makeRecorder(false)
         currentRec.start()
       },
       stop: () => {
         const r = currentRec
-        currentRec = null  // clear before stop() so onend knows it was user-initiated
+        currentRec = null
         if (r) r.stop()
       },
       abort: () => {
