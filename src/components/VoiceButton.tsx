@@ -349,13 +349,12 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   // Auto-start recording (used by iOS home screen quick action)
   const autoStarted = useRef(false)
   useEffect(() => {
-    if (autoStart && !autoStarted.current && recognitionRef.current && !listening) {
+    if (!autoStart || autoStarted.current) return
+    if (recognitionRef.current && !listening) {
       autoStarted.current = true
       toggle()
     }
-    // toggle intentionally omitted — including it would re-fire on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStart, listening])
+  }, [autoStart, listening, recognitionRef.current])
 
   if (unsupported) return null
 
