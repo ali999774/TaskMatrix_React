@@ -50,17 +50,20 @@ Deno.serve(async (req: Request) => {
   };
 
   try {
-    const apiKey = Deno.env.get('TASKMATRIX_DEEPSEEK_API_KEY');
+    const body = await req.json();
+    const { transcript, model, baseUrl, mode } = body;
+    const targetUrl = `${baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`;
+
+    // ── KEY SELECTION ───────────────────────────────────────────
+    const isOpenAI = targetUrl.includes('api.openai.com');
+    const secretName = isOpenAI ? 'TASKMATRIX_OPENAI_API_KEY' : 'TASKMATRIX_DEEPSEEK_API_KEY';
+    const apiKey = Deno.env.get(secretName);
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'AI not configured — missing API key' }), {
+      return new Response(JSON.stringify({ error: `AI not configured — missing ${secretName}` }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
-
-    const body = await req.json();
-    const { transcript, model, baseUrl, mode } = body;
-    const targetUrl = `${baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`;
     const today = new Date().toISOString().split('T')[0];
 
     let systemPrompt: string;
@@ -275,7 +278,7 @@ Rules:
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('DeepSeek API error:', response.status, errText);
+      console.error(`${isOpenAI ? 'OpenAI' : 'DeepSeek'} API error:`, response.status, errText);
       return new Response(JSON.stringify({ error: `API error: ${response.status}` }), {
         status: 502,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
