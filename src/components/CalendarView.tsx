@@ -98,7 +98,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
     <div className="flex flex-col h-full bg-white dark:bg-slate-950">
       {/* Header bar — two rows on mobile, single row on desktop */}
       <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-5 pt-3 pb-2 sm:pb-3 pl-14">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 pl-16 sm:pl-14">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={goToToday}
