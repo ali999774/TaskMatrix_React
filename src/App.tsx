@@ -53,9 +53,10 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
 }
 
 function useTheme(): [boolean, () => void] {
+  const hasManuallySet = useRef(false)
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem('tm-theme')
-    if (stored) return stored === 'dark'
+    if (stored) { hasManuallySet.current = true; return stored === 'dark' }
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
@@ -64,7 +65,18 @@ function useTheme(): [boolean, () => void] {
     localStorage.setItem('tm-theme', dark ? 'dark' : 'light')
   }, [dark])
 
-  return [dark, () => setDark((d) => !d)]
+  // Listen for system preference changes — only if user hasn't manually set
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = (e: MediaQueryListEvent) => {
+      if (!hasManuallySet.current) setDark(e.matches)
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const toggle = () => { hasManuallySet.current = true; setDark(d => !d) }
+  return [dark, toggle]
 }
 
 export default function App() {
