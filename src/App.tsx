@@ -816,8 +816,8 @@ export default function App() {
         </div>
 
         {/* Progress heatmap */}
-        <div className="px-1 sm:px-6 mt-6">
-          <div className="sm:w-1/2">
+        <div className="px-1 sm:px-6">
+          <div className="sm:w-1/2" style={{ marginTop: '24px' }}>
             <ProgressHeatmap tasks={filteredTasks} />
           </div>
         </div>
