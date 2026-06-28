@@ -192,7 +192,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           group cursor-grab active:cursor-grabbing
           border-l-[3px]
           ${isDone ? 'opacity-50' : ''}`}
-        style={{ borderLeftColor: categoryColor(task.category, categories) }}
+        style={{ borderLeftColor: categoryColor(task.category) }}
       >
         <SwipeableRow
           actions={[

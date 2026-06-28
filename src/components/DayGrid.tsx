@@ -1,7 +1,6 @@
 import { useRef, useEffect, useMemo } from 'react'
 import type { Task } from '../types'
 import { importanceUrgencyToQuadrant } from '../types'
-import type { CategoryDef } from '../lib/categories'
 import { categoryColor } from '../lib/categoryColors'
 
 // ─── Grid constants — single source of truth ────────────────────────────────
@@ -188,12 +187,11 @@ function NowLine({ nowTop }: { nowTop: number }) {
 
 // ─── DayGrid ──────────────────────────────────────────────────────────────────
 interface Props {
-  tasks:      Task[]
-  isToday:    boolean
-  categories?: CategoryDef[]
+  tasks:   Task[]
+  isToday: boolean
 }
 
-export default function DayGrid({ tasks, isToday, categories }: Props) {
+export default function DayGrid({ tasks, isToday }: Props) {
   const gridRef = useRef<HTMLDivElement>(null)
 
   // ── Classify tasks once per render ──────────────────────────────────────
@@ -271,7 +269,7 @@ export default function DayGrid({ tasks, isToday, categories }: Props) {
               text-slate-400 dark:text-slate-500 mr-0.5 shrink-0">
               Anytime
             </span>
-            {railChips.map(t => <RailChip key={t.id} task={t} categoryHex={categoryColor(t.category, categories)} />)}
+            {railChips.map(t => <RailChip key={t.id} task={t} categoryHex={categoryColor(t.category)} />)}
             {railExtra > 0 && (
               <span className="text-[0.75rem] font-medium text-slate-400 dark:text-slate-500
                 px-2 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full shrink-0">
@@ -335,7 +333,7 @@ export default function DayGrid({ tasks, isToday, categories }: Props) {
               key={tt.task.id}
               timedTask={tt}
               overlapOffset={overlapMap.get(tt.task.id) ?? 0}
-              categoryHex={categoryColor(tt.task.category, categories)}
+              categoryHex={categoryColor(tt.task.category)}
             />
           ))}
 

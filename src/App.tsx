@@ -993,16 +993,15 @@ export default function App() {
           <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
           <div className="fixed inset-x-2 z-50 bg-white dark:bg-slate-950 rounded shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden"
             style={{
-              // Top: fixed 14px gap + iOS status-bar/notch inset so panel never
+              // Top: fixed 12px gap + iOS status-bar/notch inset so panel never
               // slides under the safe area on device; 0px fallback is harmless on desktop.
-              top: 'calc(14px + env(safe-area-inset-top, 0px))',
-              // Bottom: clear the fixed navbar height + iOS home-indicator + 8px breathing room.
-              // Uses the --navbar-height token (5rem) defined in index.css so this and the
-              // navbar can never drift apart. env() fallback of 0px keeps desktop unaffected.
-              bottom: 'calc(var(--navbar-height) + env(safe-area-inset-bottom, 0px) + 8px)',
+              top: 'calc(12px + env(safe-area-inset-top, 0px))',
+              // Bottom: clear the fixed navbar (--navbar-height = 5rem) + iOS home-indicator.
+              // 5rem is already ~18px above the ~62px rendered bar, so no extra gap needed.
+              bottom: 'calc(var(--navbar-height) + env(safe-area-inset-bottom, 0px))',
             }}
           >
-            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} categories={categories} />
+            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
             <button
               onClick={() => setShowCalendar(false)}
               aria-label="Back"
