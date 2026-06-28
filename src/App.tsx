@@ -894,8 +894,10 @@ export default function App() {
               categories={categories}
             />
 
-            {/* Progress heatmap */}
-            <div className="mt-9 lg:w-3/4 xl:w-1/2 flex-1">
+            {/* Progress heatmap — full-width sibling of MatrixScreen so its edges
+                align with the 2×2 grid's left and right edges.
+                Width comes from the parent flex-1 column, not a hardcoded fraction. */}
+            <div className="mt-9 w-full">
               <div className="lg:sticky lg:top-24 pb-4">
                 <ProgressHeatmap tasks={filteredTasks} />
               </div>
