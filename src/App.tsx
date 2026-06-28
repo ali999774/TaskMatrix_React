@@ -908,7 +908,7 @@ export default function App() {
             <StickyWall
               notes={pinnedNotes}
               onDelete={handleDeleteNote}
-              onAdd={addNote}
+              onAdd={(content) => addNote(content, true)}
               onEdit={setEditingNote}
               onShowAll={() => setShowNotesModal(true)}
               onShowDeleted={() => { setNotesInitialView('trash'); setShowNotesModal(true) }}

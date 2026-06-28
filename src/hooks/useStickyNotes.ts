@@ -125,11 +125,18 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
               if (prev.some((n) => n.id === row.id)) return prev
               return [row, ...prev]
             })
+            // Seed snapshot for new notes arriving via realtime
+            syncedSnapshotRef.current.set(row.id, JSON.stringify({
+              content: row.content, color: row.color,
+              position_x: row.position_x, position_y: row.position_y,
+              pinned: row.pinned, position: row.position,
+            }))
           } else if (payload.eventType === 'UPDATE') {
             const row = payload.new as StickyNote
             if (row.deleted_at) {
               // Soft-deleted (here or on another device) → drop from the active wall.
               setNotes((prev) => prev.filter((n) => n.id !== row.id))
+              syncedSnapshotRef.current.delete(row.id)
             } else {
               // Normal edit, or a restore from another device → upsert into the wall.
               setNotes((prev) =>
@@ -137,9 +144,17 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
                   ? prev.map((n) => (n.id === row.id ? row : n))
                   : [row, ...prev]
               )
+              // Keep the dirty-detection snapshot in sync with the server row
+              // so subsequent diffs are computed against the latest truth.
+              syncedSnapshotRef.current.set(row.id, JSON.stringify({
+                content: row.content, color: row.color,
+                position_x: row.position_x, position_y: row.position_y,
+                pinned: row.pinned, position: row.position,
+              }))
             }
           } else if (payload.eventType === 'DELETE') {
             setNotes((prev) => prev.filter((n) => n.id !== payload.old.id))
+            syncedSnapshotRef.current.delete(payload.old.id as string)
           }
         }
       )
