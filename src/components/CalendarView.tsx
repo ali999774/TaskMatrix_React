@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { Task } from '../types'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -17,6 +17,15 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Auto-focus input and clear previous text when a date is selected
+  useEffect(() => {
+    if (selectedDate) {
+      setNewTaskTitle('')
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }, [selectedDate])
 
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -123,6 +132,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
             className="mb-2"
           >
             <input
+              ref={inputRef}
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
