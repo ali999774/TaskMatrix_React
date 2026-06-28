@@ -164,6 +164,8 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   }, [onStatus])
 
   // --- Web path using Web Speech API ---
+  // Creates a fresh recognition instance per recording session because Chrome's
+  // Web Speech API gets flaky when reusing the same object (immediate onend/onerror).
   const setupWeb = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
@@ -173,50 +175,75 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       return
     }
 
-    const rec = new SpeechRecognitionAPI()
-    rec.continuous = false
-    rec.interimResults = true
-    rec.lang = 'en-US'
-
     let accumulated = ''
+    let currentRec: SpeechRecognitionLike | null = null
 
-    rec.onresult = (event: SpeechRecognitionEvent) => {
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        accumulated += event.results[i][0]?.transcript || ''
+    const makeRecorder = (): SpeechRecognitionLike => {
+      const rec = new SpeechRecognitionAPI()
+      rec.continuous = false
+      rec.interimResults = true
+      rec.lang = 'en-US'
+
+      rec.onresult = (event: SpeechRecognitionEvent) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          accumulated += event.results[i][0]?.transcript || ''
+        }
+        if (accumulated) {
+          onStatus?.('hearing: ' + accumulated)
+        }
       }
-      if (accumulated) {
-        onStatus?.('hearing: ' + accumulated)
+
+      rec.onerror = (event: { error: string }) => {
+        console.warn('[Voice] Recognition error:', event.error)
+        setListening(false)
+        accumulated = ''
+        currentRec = null
+        if (event.error === 'not-allowed') {
+          setUnsupported(true)
+          onStatus?.('mic denied')
+        } else if (event.error === 'no-speech') {
+          onStatus?.('no speech')
+        } else if (event.error === 'language-not-supported') {
+          onStatus?.('unsupported browser')
+        } else {
+          onStatus?.('error: ' + event.error)
+        }
       }
+
+      rec.onend = () => {
+        setListening(false)
+        if (accumulated.trim()) {
+          onTranscriptRef.current(accumulated.trim())
+          onStatus?.('saved')
+        } else if (currentRec) {
+          // Only show 'no speech' if the recording wasn't already stopped by
+          // the user (currentRec is cleared on user-initiated stop)
+          onStatus?.('no speech')
+        }
+        accumulated = ''
+        currentRec = null
+      }
+
+      return rec
     }
 
-    rec.onerror = (event: { error: string }) => {
-      console.warn('[Voice] Recognition error:', event.error)
-      setListening(false)
-      accumulated = ''
-      if (event.error === 'not-allowed') {
-        setUnsupported(true)
-        onStatus?.('mic denied')
-      } else if (event.error === 'no-speech') {
-        onStatus?.('no speech')
-      } else if (event.error === 'language-not-supported') {
-        onStatus?.('unsupported browser')
-      } else {
-        onStatus?.('error: ' + event.error)
-      }
+    recognitionRef.current = {
+      start: () => {
+        accumulated = ''
+        currentRec = makeRecorder()
+        currentRec.start()
+      },
+      stop: () => {
+        const r = currentRec
+        currentRec = null  // clear before stop() so onend knows it was user-initiated
+        if (r) r.stop()
+      },
+      abort: () => {
+        const r = currentRec
+        currentRec = null
+        if (r) r.abort()
+      },
     }
-
-    rec.onend = () => {
-      setListening(false)
-      if (accumulated.trim()) {
-        onTranscriptRef.current(accumulated.trim())
-        onStatus?.('saved')
-      } else {
-        onStatus?.('no speech')
-      }
-      accumulated = ''
-    }
-
-    recognitionRef.current = rec
   }, [onStatus])
 
   useEffect(() => {
