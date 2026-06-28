@@ -979,18 +979,15 @@ export default function App() {
       {showCalendar && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
-          <div className="fixed inset-x-2 top-[2%] bottom-[2%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
-              <h1 className="text-[1.0625rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
-              <button
-                onClick={() => setShowCalendar(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400"
-                aria-label="Close calendar"
-              >
-                ✕
-              </button>
-            </div>
+          <div className="fixed inset-x-2 top-[2%] bottom-[2%] z-50 bg-white dark:bg-slate-950 rounded shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden">
             <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
+            <button
+              onClick={() => setShowCalendar(false)}
+              className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-90 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400"
+              aria-label="Close calendar"
+            >
+              ✕
+            </button>
           </div>
         </>)}
 

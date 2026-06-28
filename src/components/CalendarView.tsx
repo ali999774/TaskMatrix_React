@@ -9,14 +9,15 @@ interface Props {
 }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const DAYS_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 
 export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const [view, setView] = useState<'day' | 'week' | 'month'>('month')
-  const [weekOffset, setWeekOffset] = useState(0) // 0 = current week
+  const [view, setView] = useState<'day' | 'week' | 'month' | 'schedule'>('month')
+  const [weekOffset, setWeekOffset] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -44,13 +45,12 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const prevWeek = () => setWeekOffset(w => w - 1)
   const nextWeek = () => setWeekOffset(w => w + 1)
 
-  // Get the 7 days for the current week view
   const getWeekDays = (): Date[] => {
     const d = new Date(today)
     d.setDate(d.getDate() + weekOffset * 7)
     const dayOfWeek = d.getDay()
     const start = new Date(d)
-    start.setDate(d.getDate() - dayOfWeek) // Sunday
+    start.setDate(d.getDate() - dayOfWeek)
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(start)
       date.setDate(start.getDate() + i)
@@ -84,48 +84,60 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
   const selectedTasks = selectedDate ? getTasksOnDate(selectedDate) : []
 
+  // Schedule: build a list of all dates with tasks, sorted chronologically
+  const scheduleDates = (() => {
+    const dateMap = new Map<string, Task[]>()
+    // Collect all dates from month view's visible range +- a few months
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month + 2, 0)
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const ds = d.toISOString().split('T')[0]
+      const tasks = getTasksOnDate(ds)
+      if (tasks.length > 0) dateMap.set(ds, tasks)
+    }
+    return Array.from(dateMap.entries()).sort(([a], [b]) => a.localeCompare(b))
+  })()
+
   return (
     <div className="flex flex-col h-full">
-      {/* Header: Today button + title + arrows */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <button
-          onClick={goToToday}
-          className="text-[0.8125rem] font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2 py-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 active:scale-90 transition-all min-h-[36px]"
-        >
-          Today
-        </button>
-        <h2 className="text-[1.0625rem] font-semibold text-slate-800 dark:text-slate-100 tabular-nums truncate px-2">
-          {view === 'week' ? weekLabel : `${MONTHS[month]} ${year}`}
-        </h2>
-        <div className="flex gap-0.5">
+      {/* Google-style header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 shrink-0">
+        <div className="flex items-center gap-3">
           <button
-            onClick={view === 'week' ? prevWeek : prevMonth}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400"
-            aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
+            onClick={goToToday}
+            className="text-[0.8125rem] font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1 rounded active:scale-90 transition-all min-h-[32px]"
           >
-            <ChevronLeft size={18} />
+            Today
           </button>
-          <button
-            onClick={view === 'week' ? nextWeek : nextMonth}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400"
-            aria-label={view === 'week' ? 'Next week' : 'Next month'}
-          >
-            <ChevronRight size={18} />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={view === 'week' ? prevWeek : prevMonth}
+              className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400"
+              aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={view === 'week' ? nextWeek : nextMonth}
+              className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400"
+              aria-label={view === 'week' ? 'Next week' : 'Next month'}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <h2 className="text-[1.1875rem] font-normal text-slate-800 dark:text-slate-100 ml-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+            {view === 'week' ? weekLabel : `${MONTHS[month]} ${year}`}
+          </h2>
         </div>
-      </div>
-
-      {/* Segmented view toggle — Apple Calendar style */}
-      <div className="px-4 pb-2">
-        <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
-          {(['day', 'week', 'month'] as const).map(v => (
+        <div className="flex items-center gap-1">
+          {(['day', 'week', 'month', 'schedule'] as const).map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`flex-1 text-[0.75rem] font-medium py-1.5 rounded-md transition-all capitalize
+              className={`text-[0.75rem] capitalize px-2.5 py-1 rounded transition-colors
                 ${view === v
-                  ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-medium'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
             >
               {v}
@@ -134,28 +146,24 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
         </div>
       </div>
 
+      {/* Month view — Google Calendar style */}
       {view === 'month' && (
-        <>
-          {/* Day headers */}
-          <div className="grid grid-cols-7 px-2 pb-1">
-            {DAYS.map(d => (
-              <div key={d} className="text-center text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide py-1">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 shrink-0">
+            {DAYS_SHORT.map(d => (
+              <div key={d} className="text-center text-[0.6875rem] font-medium text-slate-500 dark:text-slate-400 py-2 border-r border-slate-200 dark:border-slate-700 last:border-r-0">
                 {d}
               </div>
             ))}
           </div>
-
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-0.5 px-2 flex-1 overflow-y-auto content-start pb-2">
+          <div className="grid grid-cols-7 flex-1 overflow-y-auto" style={{ gridTemplateRows: 'repeat(auto-fill, minmax(0, 1fr))' }}>
             {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square" />
+              <div key={`empty-${i}`} className="border-b border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20" />
             ))}
-
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const d = i + 1
               const ds = dateStr(d)
               const dayTasks = getTasksOnDate(ds)
-              const hasTask = dayTasks.length > 0
               const isToday = ds === todayStr
               const isSelected = ds === selectedDate
 
@@ -163,34 +171,86 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                 <button
                   key={d}
                   onClick={() => setSelectedDate(isSelected ? null : ds)}
-                  className={`flex flex-col items-start rounded-xl text-[0.875rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[80px] p-2 gap-1
-                    ${isToday
-                      ? 'bg-blue-600 text-white'
-                      : isSelected
-                      ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                    }`}
+                  className={`flex flex-col items-start border-b border-r border-slate-200 dark:border-slate-700 p-1 text-left transition-colors min-h-[72px] overflow-hidden
+                    ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}
+                    ${isSelected ? 'bg-blue-100 dark:bg-blue-900/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}
                 >
-                  <span className={`text-[0.75rem] font-semibold w-6 text-center ${!isToday && 'text-slate-400 dark:text-slate-500'}`}>{d}</span>
-                  {hasTask && (
-                    <div className="flex flex-col gap-px w-full overflow-hidden">
-                      {dayTasks.slice(0, 3).map(t => (
-                        <span key={t.id} className={`text-[0.6875rem] leading-tight truncate w-full ${isToday ? 'text-white/80' : 'text-blue-600 dark:text-blue-400'}`}>
-                          {t.title}
-                        </span>
-                      ))}
-                      {dayTasks.length > 3 && (
-                        <span className={`text-[0.625rem] ${isToday ? 'text-white/50' : 'text-slate-400'}`}>+{dayTasks.length - 3} more</span>
-                      )}
-                    </div>
+                  <span className={`text-[0.75rem] font-medium mb-0.5 w-full text-right pr-1
+                    ${isToday ? 'bg-blue-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center ml-auto' : 'text-slate-700 dark:text-slate-300'}`}>
+                    {d}
+                  </span>
+                  <div className="flex flex-col gap-px w-full overflow-hidden">
+                    {dayTasks.slice(0, 3).map(t => (
+                      <span key={t.id} className="text-[0.625rem] leading-tight truncate rounded-sm px-1 py-px bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
+                        {t.title}
+                      </span>
+                    ))}
+                    {dayTasks.length > 3 && (
+                      <span className="text-[0.5625rem] text-slate-400 dark:text-slate-500 px-1">+{dayTasks.length - 3} more</span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Week view — Google Calendar style */}
+      {view === 'week' && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700 shrink-0">
+            {weekDays.map((d, i) => {
+              const ds = d.toISOString().split('T')[0]
+              const isToday = ds === todayStr
+              const isSelected = ds === selectedDate
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedDate(isSelected ? null : ds)}
+                  className={`text-center py-2 border-r border-slate-200 dark:border-slate-700 last:border-r-0 transition-colors
+                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
+                    ${isSelected ? 'bg-blue-100 dark:bg-blue-900/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}
+                >
+                  <div className="text-[0.625rem] uppercase tracking-wide text-slate-500 dark:text-slate-400">{DAYS_SHORT[i]}</div>
+                  <div className={`text-[1.25rem] font-normal mt-0.5
+                    ${isToday ? 'bg-blue-600 text-white w-9 h-9 rounded-full inline-flex items-center justify-center' : 'text-slate-800 dark:text-slate-200'}`}>
+                    {d.getDate()}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <div className="grid grid-cols-7 flex-1 overflow-y-auto">
+            {weekDays.map((d, i) => {
+              const ds = d.toISOString().split('T')[0]
+              const dayTasks = getTasksOnDate(ds)
+              const isToday = ds === todayStr
+              const isSelected = ds === selectedDate
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedDate(isSelected ? null : ds)}
+                  className={`flex flex-col items-start border-r border-slate-200 dark:border-slate-700 last:border-r-0 p-1 text-left transition-colors gap-px
+                    ${isToday ? 'bg-blue-50/30 dark:bg-blue-900/5' : ''}
+                    ${isSelected ? 'bg-blue-100 dark:bg-blue-900/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}
+                >
+                  {dayTasks.slice(0, 6).map(t => (
+                    <span key={t.id} className={`text-[0.625rem] leading-tight truncate w-full rounded-sm px-1 py-px bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200`}>
+                      {t.title}
+                    </span>
+                  ))}
+                  {dayTasks.length > 6 && (
+                    <span className="text-[0.5625rem] text-slate-400 dark:text-slate-500 px-1">+{dayTasks.length - 6}</span>
                   )}
                 </button>
               )
             })}
           </div>
-        </>
+        </div>
       )}
 
+      {/* Day view — Google Calendar style */}
       {view === 'day' && (
         (() => {
           const activeDay = selectedDate ? new Date(selectedDate + 'T00:00:00') : today
@@ -210,38 +270,30 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
           return (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Day header */}
-              <div className="flex items-center justify-between px-4 py-2 shrink-0">
-                <button onClick={prevDay} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 shrink-0">
+                <button onClick={prevDay} className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400">
                   <ChevronLeft size={18} />
                 </button>
                 <div className="text-center">
-                  <div className={`text-[1.25rem] font-bold ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-100'}`}>
-                    {activeDay.toLocaleDateString('en-US', { weekday: 'long' })}
-                  </div>
-                  <div className="text-[0.875rem] text-slate-500 dark:text-slate-400">
-                    {activeDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  <div className={`text-[1.125rem] font-normal ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-800 dark:text-slate-100'}`}>
+                    {DAYS_LONG[activeDay.getDay()]}, {MONTHS[activeDay.getMonth()]} {activeDay.getDate()}
                   </div>
                 </div>
-                <button onClick={nextDay} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400">
+                <button onClick={nextDay} className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-slate-600 dark:text-slate-400">
                   <ChevronRight size={18} />
                 </button>
               </div>
-
-              {/* Task list */}
-              <div className="flex-1 overflow-y-auto px-4 pb-4">
+              <div className="flex-1 overflow-y-auto px-4 py-2">
                 {dayTasks.length === 0 ? (
-                  <p className="text-[0.875rem] text-slate-400 dark:text-slate-500 italic text-center mt-8">No tasks</p>
+                  <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 text-center mt-12">No events</p>
                 ) : (
                   <ul className="space-y-1">
                     {dayTasks.map(t => (
-                      <li key={t.id} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
-                        <span className={`text-[0.875rem] flex-1 ${t.status === 'done' ? 'line-through text-slate-400 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'}`}>
-                          {t.title}
-                        </span>
+                      <li key={t.id} className="flex items-center gap-3 py-2.5 px-3 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-500'}`} />
+                        <span className={`text-[0.875rem] text-slate-700 dark:text-slate-300 ${t.status === 'done' ? 'line-through' : ''}`}>{t.title}</span>
                         {t.due_time && (
-                          <span className="text-[0.75rem] text-slate-400 dark:text-slate-500">{t.due_time.slice(0, 5)}</span>
+                          <span className="text-[0.75rem] text-slate-400 dark:text-slate-500 ml-auto">{t.due_time.slice(0, 5)}</span>
                         )}
                       </li>
                     ))}
@@ -253,71 +305,50 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
         })()
       )}
 
-      {view === 'week' && (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Day headers */}
-          <div className="grid grid-cols-7 px-2 pb-1 shrink-0">
-            {weekDays.map((d, i) => {
-              const ds = d.toISOString().split('T')[0]
+      {/* Schedule view — Google Calendar style (list of upcoming tasks) */}
+      {view === 'schedule' && (
+        <div className="flex-1 overflow-y-auto">
+          {scheduleDates.length === 0 ? (
+            <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 text-center mt-12">No upcoming tasks</p>
+          ) : (
+            scheduleDates.map(([ds, tasks]) => {
+              const date = new Date(ds + 'T00:00:00')
               const isToday = ds === todayStr
-              const isSelected = ds === selectedDate
               return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedDate(isSelected ? null : ds)}
-                  className={`text-center py-1 rounded-lg transition-all
-                    ${isToday ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-500 dark:text-slate-400'}
-                    ${isSelected ? 'bg-slate-200 dark:bg-slate-700' : ''}`}
-                >
-                  <div className="text-[0.625rem] uppercase tracking-wide">{DAYS[i]}</div>
-                  <div className={`text-[1rem] font-semibold ${isToday ? 'bg-blue-600 text-white w-8 h-8 rounded-full inline-flex items-center justify-center mx-auto' : ''}`}>
-                    {d.getDate()}
+                <div key={ds}>
+                  <div className={`sticky top-0 z-10 px-4 py-2 border-b border-slate-200 dark:border-slate-700
+                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-slate-50 dark:bg-slate-900/50'}`}>
+                    <div className={`text-[0.75rem] font-medium ${isToday ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                      {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'long' })} ·
+                      {' '}{date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    </div>
                   </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Week columns */}
-          <div className="grid grid-cols-7 flex-1 overflow-y-auto px-1 gap-1 pb-2">
-            {weekDays.map((d, i) => {
-              const ds = d.toISOString().split('T')[0]
-              const dayTasks = getTasksOnDate(ds)
-              const isToday = ds === todayStr
-              const isSelected = ds === selectedDate
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedDate(isSelected ? null : ds)}
-                  className={`flex flex-col items-start rounded-lg p-1 text-left transition-all min-h-[60px]
-                    ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}
-                    ${isSelected ? 'bg-slate-100 dark:bg-slate-800' : ''}`}
-                >
-                  {dayTasks.slice(0, 4).map(t => (
-                    <span key={t.id} className={`text-[0.625rem] leading-tight truncate w-full
-                      ${t.status === 'done' ? 'line-through opacity-50' : 'text-blue-700 dark:text-blue-300'}`}>
-                      {t.title}
-                    </span>
+                  {tasks.map(t => (
+                    <div key={t.id} className="flex items-center gap-3 py-2.5 px-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-500'}`} />
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-[0.875rem] text-slate-700 dark:text-slate-300 ${t.status === 'done' ? 'line-through' : ''}`}>
+                          {t.title}
+                        </span>
+                      </div>
+                      {t.due_time && (
+                        <span className="text-[0.75rem] text-slate-400 dark:text-slate-500">{t.due_time.slice(0, 5)}</span>
+                      )}
+                    </div>
                   ))}
-                  {dayTasks.length > 4 && (
-                    <span className="text-[0.5625rem] text-slate-400">+{dayTasks.length - 4}</span>
-                  )}
-                  {dayTasks.length === 0 && (
-                    <span className="text-[0.625rem] text-slate-300 dark:text-slate-700">—</span>
-                  )}
-                </button>
+                </div>
               )
-            })}
-          </div>
+            })
+          )}
         </div>
       )}
 
-      {/* Selected date task list */}
+      {/* Bottom add-task section — shown when a date is selected */}
       {selectedDate && (
-        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 max-h-[45%] overflow-y-auto shrink-0">
-          <h3 className="text-[0.8125rem] font-semibold text-slate-500 dark:text-slate-400 mb-2">
+        <div className="border-t border-slate-200 dark:border-slate-700 px-4 py-3 max-h-[40%] overflow-y-auto shrink-0">
+          <div className="text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </h3>
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -326,27 +357,27 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                 setNewTaskTitle('')
               }
             }}
-            className="mb-2"
+            className="mb-3"
           >
             <input
               ref={inputRef}
               type="text"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="+ Add task for this date…"
-              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.8125rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 dark:focus:border-blue-600 placeholder-slate-400 dark:placeholder-slate-600"
+              placeholder="Add a task…"
+              className="w-full bg-transparent border-b border-slate-200 dark:border-slate-700 pb-1.5 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 dark:focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-600"
             />
           </form>
           {selectedTasks.length === 0 ? (
-            <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 italic">No tasks due</p>
+            <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 italic">No tasks</p>
           ) : (
             <ul className="space-y-1">
               {selectedTasks.map(t => (
-                <li key={t.id} className="text-[0.875rem] text-slate-700 dark:text-slate-300 flex items-center gap-2 py-1">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
+                <li key={t.id} className="text-[0.8125rem] text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
                   <span className={t.status === 'done' ? 'line-through opacity-60' : ''}>{t.title}</span>
                   {t.due_time && (
-                    <span className="text-[0.75rem] text-slate-400 dark:text-slate-500 ml-auto">{t.due_time.slice(0, 5)}</span>
+                    <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 ml-auto">{t.due_time.slice(0, 5)}</span>
                   )}
                 </li>
               ))}
