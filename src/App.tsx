@@ -995,10 +995,10 @@ export default function App() {
             <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
             <button
               onClick={() => setShowCalendar(false)}
-              className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 min-h-[32px] min-w-[32px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500 shadow-sm border border-slate-200 dark:border-slate-700"
-              aria-label="Close calendar"
+              aria-label="Back"
+              className="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg>
+              <span aria-hidden="true" className="text-[1rem]">←</span>
             </button>
           </div>
         </>)}
