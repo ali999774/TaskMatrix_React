@@ -779,10 +779,10 @@ export default function App() {
       {/* Body: matrix + sticky notes side by side */}
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
       <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
-        <div className="flex flex-col lg:flex-row gap-5 lg:items-start w-full mb-6">
+        <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch w-full mb-6">
 
           {/* Matrix column */}
-          <div className="flex-1 min-w-0 w-full">
+          <div className="flex-1 min-w-0 w-full flex flex-col">
 
             {/* Today strip */}
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
@@ -796,6 +796,13 @@ export default function App() {
               onTaskClick={setSelectedTask}
               categories={categories}
             />
+
+            {/* Progress heatmap */}
+            <div className="mt-9 lg:w-3/4 xl:w-1/2 flex-1">
+              <div className="lg:sticky lg:top-24 pb-4">
+                <ProgressHeatmap tasks={filteredTasks} />
+              </div>
+            </div>
 
           </div>
 
@@ -812,13 +819,6 @@ export default function App() {
               onReorder={reorderNote}
               sidebar
             />
-          </div>
-        </div>
-
-        {/* Progress heatmap */}
-        <div className="px-1 sm:px-6">
-          <div className="sm:w-1/2">
-            <ProgressHeatmap tasks={filteredTasks} />
           </div>
         </div>
 
