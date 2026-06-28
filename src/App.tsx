@@ -891,7 +891,7 @@ export default function App() {
                 Width comes from the parent flex-1 column, not a hardcoded fraction. */}
             <div className="mt-9 w-full">
               <div className="lg:sticky lg:top-24 pb-4">
-                <ProgressHeatmap tasks={filteredTasks} />
+                <ProgressHeatmap userId={userId} tasks={filteredTasks} />
               </div>
             </div>
 
