@@ -816,7 +816,7 @@ export default function App() {
         </div>
 
         {/* Progress heatmap */}
-        <div className="px-1 sm:px-6 mt-6 sm:mt-12">
+        <div className="px-1 sm:px-6 mt-6 sm:mt-9">
           <div className="sm:w-1/2">
             <ProgressHeatmap tasks={filteredTasks} />
           </div>
