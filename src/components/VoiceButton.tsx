@@ -189,27 +189,29 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       rec.interimResults = true
       rec.lang = 'en-US'
       ;(rec as any).__retried = retried
-
       rec.onresult = (event: SpeechRecognitionEvent) => {
+        const prevLen = accumulated.length
         for (let i = event.resultIndex; i < event.results.length; i++) {
           accumulated += event.results[i][0]?.transcript || ''
         }
         if (accumulated) {
           onStatus?.('hearing: ' + accumulated)
         }
-        // Reset silence timer on every recognized phrase
-        clearSilenceTimer()
-        silenceTimer = setTimeout(() => {
-          onStatus?.('auto-stop in 1s...')
+        // Reset silence timer only when new speech is detected
+        if (accumulated.length > prevLen) {
+          clearSilenceTimer()
           silenceTimer = setTimeout(() => {
-            silenceTimer = null
-            if (currentRec === rec) {
-              const r = currentRec
-              currentRec = null
-              try { r.stop() } catch { /* ignore */ }
-            }
-          }, 1000)
-        }, 4000) // 5s total silence → auto-stop
+            onStatus?.('auto-stop in 1s...')
+            silenceTimer = setTimeout(() => {
+              silenceTimer = null
+              if (currentRec === rec) {
+                const r = currentRec
+                currentRec = null
+                try { r.stop() } catch { /* ignore */ }
+              }
+            }, 1000)
+          }, 4000) // 5s total silence → auto-stop
+        }
       }
 
       rec.onerror = (event: { error: string }) => {
