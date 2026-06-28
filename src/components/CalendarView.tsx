@@ -193,6 +193,10 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                 </button>
               )
             })}
+            {/* Fill remaining cells to complete the grid */}
+            {Array.from({ length: Math.max(0, monthRows * 7 - firstDay - daysInMonth) }).map((_, i) => (
+              <div key={`trail-${i}`} className="border-b border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20" />
+            ))}
           </div>
         </div>
       )}
