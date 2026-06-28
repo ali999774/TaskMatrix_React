@@ -498,7 +498,8 @@ export default function App() {
         addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
           { due_date: p.due_date || undefined, due_time: p.due_time || undefined,
             notes: p.notes || undefined,
-            reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined })
+            reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
+            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
         return
       }
     }
