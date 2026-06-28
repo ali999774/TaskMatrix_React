@@ -356,10 +356,27 @@ export default function App() {
   // Calendar helpers
   const getTasksOnDate = (dateStr: string) => tasks.filter((t) => t.due_date === dateStr)
 
-  const handleCalendarAddTask = (title: string, dateStr: string) => {
-    const defaults = QUADRANT_DEFAULTS[context === 'all' ? 1 : 1]
+  const handleCalendarAddTask = async (title: string, dateStr: string) => {
+    // If AI is enabled, parse the title for category, importance, urgency, etc.
+    if (aiSettings.enabled) {
+      const result = await parseVoiceTranscript(
+        `[due ${dateStr}] ${title}`,
+        aiSettings.model,
+        getAIBaseUrl(),
+        categories.map(c => c.label)
+      )
+      if (!('error' in result)) {
+        const p = result.parsed
+        addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
+          { due_date: dateStr, due_time: p.due_time || undefined, notes: p.notes || undefined,
+            pinned: p.pinned || undefined,
+            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
+        return
+      }
+    }
+    // Fallback without AI
+    const defaults = QUADRANT_DEFAULTS[1]
     addTask(title, defaults.importance, defaults.urgency, undefined, { due_date: dateStr })
-    // Don't close calendar — user might want to add more tasks for this date
   }
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
