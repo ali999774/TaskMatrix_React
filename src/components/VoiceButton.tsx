@@ -174,11 +174,12 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
 
     const rec = new SpeechRecognitionAPI()
-    rec.continuous = false
+    rec.continuous = true   // keep listening until user taps stop — false would auto-stop after 1-2s silence
     rec.interimResults = true
     rec.lang = 'en-US'
 
     let accumulated = ''
+    let userStopping = false  // gate: only process transcript when user taps stop
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -192,6 +193,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     rec.onerror = (event: { error: string }) => {
       console.warn('[Voice] Recognition error:', event.error)
       setListening(false)
+      userStopping = false
       accumulated = ''
       if (event.error === 'not-allowed') {
         setUnsupported(true)
@@ -207,16 +209,21 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
 
     rec.onend = () => {
       setListening(false)
-      if (accumulated.trim()) {
+      if (userStopping && accumulated.trim()) {
         onTranscriptRef.current(accumulated.trim())
         onStatus?.('saved')
-      } else {
+      } else if (userStopping) {
         onStatus?.('no speech')
       }
       accumulated = ''
+      userStopping = false
     }
 
-    recognitionRef.current = rec
+    recognitionRef.current = {
+      start: () => { accumulated = ''; rec.start() },
+      stop: () => { userStopping = true; rec.stop() },
+      abort: () => { rec.abort() },
+    }
   }, [onStatus])
 
   useEffect(() => {
