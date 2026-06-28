@@ -12,21 +12,19 @@ const MAX_VISIBLE = 4
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-/** Panel body background tints per quadrant — borders only, no fill. */
-const QUADRANT_BG: Record<number, string> = {
-  1: 'border-red-200   dark:border-red-800/50 dark:border-l-red-400',
-  2: 'border-amber-200 dark:border-amber-800/50 dark:border-l-amber-400',
-  3: 'border-blue-200  dark:border-blue-800/50 dark:border-l-blue-400',
-  4: 'border-emerald-200 dark:border-emerald-800/50 dark:border-l-emerald-400',
-}
+/** Uniform neutral border for all quadrant cells.
+ * Quadrant is communicated by position + label, not hue.
+ * Category hue lives on the task card stripe, not the container. */
+const CELL_BORDER = 'border-slate-200/70 dark:border-slate-700/40'
 
 /**
- * Extra visual weight for Invest (Q2): subtle ring + shadow keyed to the invest token.
- * Token resolves correctly in both themes — no dark: variants needed here.
+ * Extra visual weight for Invest (Q2): subtle ring + shadow in neutral slate.
+ * Switched from amber token to slate so it doesn't collide with category hue
+ * on amber-category task cards inside the Invest cell.
  * Emphasizes the quadrant by prominence without repositioning it.
  */
 const INVEST_EMPHASIS =
-  'ring-2 ring-[var(--color-quad-invest)]/30 shadow-md shadow-[var(--color-quad-invest)]/10'
+  'ring-2 ring-slate-300/50 dark:ring-slate-600/40 shadow-md shadow-slate-200/40 dark:shadow-slate-900/30'
 
 export interface MatrixLayoutProps {
   buckets: QuadrantBucket[]
@@ -175,9 +173,9 @@ function GridCell({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={[
-        'rounded-[var(--radius-grid-cell)] border border-l-4 w-full',
+        'rounded-[var(--radius-grid-cell)] border border-l-[3px] w-full',
         'px-3 py-2 flex flex-col transition-all duration-300',
-        QUADRANT_BG[bucket.quadrant],
+        CELL_BORDER,
         collapsed ? 'min-h-0' : 'min-h-[220px]',
         dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : '',
         isInvest && !dragOver ? INVEST_EMPHASIS : '',

@@ -992,7 +992,7 @@ export default function App() {
         <>
           <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
           <div className="fixed inset-x-2 top-[env(safe-area-inset-top,2%)] bottom-[2%] z-50 bg-white dark:bg-slate-950 rounded shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden">
-            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
+            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} categories={categories} />
             <button
               onClick={() => setShowCalendar(false)}
               aria-label="Back"

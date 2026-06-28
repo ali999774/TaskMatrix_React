@@ -32,22 +32,10 @@ const TIER_CLASSES: Record<EmphasisTier, string> = {
   muted:  'mb-2 opacity-50',
 }
 
-// ─── Section background tints per quadrant — borders only, no fill ──────────
-const QUADRANT_BG: Record<number, string> = {
-  1: 'border-red-200/70   dark:border-red-800/50 dark:border-l-red-400',
-  2: 'border-amber-200/70 dark:border-amber-800/50 dark:border-l-amber-400',
-  3: 'border-blue-200/70  dark:border-blue-800/50 dark:border-l-blue-400',
-  4: 'border-emerald-200/70 dark:border-emerald-800/50 dark:border-l-emerald-400',
-}
-
-// Left accent uses design tokens from @theme in index.css — flips in dark mode
-// automatically via @layer base overrides. No raw hex here.
-const QUADRANT_ACCENT: Record<Quadrant, string> = {
-  1: 'border-l-[var(--color-quad-do-first)]',
-  2: 'border-l-[var(--color-quad-invest)]',
-  3: 'border-l-[var(--color-quad-delegate)]',
-  4: 'border-l-[var(--color-quad-dont-do)]',
-}
+// ─── Uniform neutral container border ───────────────────────────────────────
+// Quadrant identity is carried by position + QuadrantHeader label.
+// Category hue lives on the task card stripe, not the section container.
+const CELL_BORDER = 'border-slate-200/70 dark:border-slate-700/40'
 
 // HTML5 DnD does not fire on iOS touch — empty-state hint must describe the
 // actual interaction there (long-press → "Move to…" popup in TaskCard).
@@ -180,9 +168,8 @@ function ListQuadrant({
       {/* overflow-hidden clips the QuadrantHeader tint to the rounded corners */}
       <div
         className={[
-          'rounded-xl border border-l-4 overflow-hidden transition-all duration-300',
-          QUADRANT_BG[bucket.quadrant],
-          QUADRANT_ACCENT[bucket.quadrant],
+          'rounded-xl border border-l-[3px] overflow-hidden transition-all duration-300',
+          CELL_BORDER,
           dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.01]' : '',
         ]
           .filter(Boolean)

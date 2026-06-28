@@ -2,7 +2,8 @@ import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
-import { getCategoryDef, CATEGORY_BORDER } from '../lib/categories'
+import { getCategoryDef } from '../lib/categories'
+import { categoryColor } from '../lib/categoryColors'
 import { Pin } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
@@ -189,8 +190,9 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           select-none [-webkit-touch-callout:none]
           active:bg-slate-100 dark:active:bg-slate-700 active:scale-[0.985]
           group cursor-grab active:cursor-grabbing
-          ${isDone ? 'opacity-50' : ''}
-          ${catDef ? `border-l-[3px] ${CATEGORY_BORDER[catDef.color] || ''}` : 'border-l-[3px] border-transparent'}`}
+          border-l-[3px]
+          ${isDone ? 'opacity-50' : ''}`}
+        style={{ borderLeftColor: categoryColor(task.category, categories) }}
       >
         <SwipeableRow
           actions={[
