@@ -956,7 +956,7 @@ export default function App() {
       {showCalendar && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
-          <div className="fixed inset-x-2 sm:inset-x-4 top-[5%] bottom-[5%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-lg mx-auto overflow-hidden">
+          <div className="fixed inset-x-2 top-[2%] bottom-[2%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
               <h1 className="text-[1.0625rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
               <button

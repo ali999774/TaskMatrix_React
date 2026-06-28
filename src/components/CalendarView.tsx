@@ -36,7 +36,7 @@ export default function CalendarView({ getTasksOnDate }: Props) {
   const selectedTasks = selectedDate ? getTasksOnDate(selectedDate) : []
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(100dvh-8rem)]">
+    <div className="flex flex-col h-full">
       {/* Month header */}
       <div className="flex items-center justify-between px-4 py-3">
         <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="Previous month">
@@ -78,7 +78,7 @@ export default function CalendarView({ getTasksOnDate }: Props) {
             <button
               key={d}
               onClick={() => setSelectedDate(isSelected ? null : ds)}
-              className={`flex flex-col items-start rounded-xl text-[0.8125rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[64px] p-1.5 gap-0.5
+              className={`flex flex-col items-start rounded-xl text-[0.875rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[80px] p-2 gap-1
                 ${isToday
                   ? 'bg-blue-600 text-white'
                   : isSelected
@@ -86,16 +86,16 @@ export default function CalendarView({ getTasksOnDate }: Props) {
                   : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}
             >
-              <span className={`text-[0.75rem] font-semibold w-5 text-center ${!isToday && 'text-slate-400 dark:text-slate-500'}`}>{d}</span>
+              <span className={`text-[0.75rem] font-semibold w-6 text-center ${!isToday && 'text-slate-400 dark:text-slate-500'}`}>{d}</span>
               {hasTask && (
                 <div className="flex flex-col gap-px w-full overflow-hidden">
-                  {dayTasks.slice(0, 2).map(t => (
-                    <span key={t.id} className={`text-[0.5625rem] leading-tight truncate w-full ${isToday ? 'text-white/80' : 'text-blue-600 dark:text-blue-400'}`}>
+                  {dayTasks.slice(0, 3).map(t => (
+                    <span key={t.id} className={`text-[0.6875rem] leading-tight truncate w-full ${isToday ? 'text-white/80' : 'text-blue-600 dark:text-blue-400'}`}>
                       {t.title}
                     </span>
                   ))}
-                  {dayTasks.length > 2 && (
-                    <span className={`text-[0.5rem] ${isToday ? 'text-white/50' : 'text-slate-400'}`}>+{dayTasks.length - 2} more</span>
+                  {dayTasks.length > 3 && (
+                    <span className={`text-[0.625rem] ${isToday ? 'text-white/50' : 'text-slate-400'}`}>+{dayTasks.length - 3} more</span>
                   )}
                 </div>
               )}
@@ -106,7 +106,7 @@ export default function CalendarView({ getTasksOnDate }: Props) {
 
       {/* Selected date task list */}
       {selectedDate && (
-        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 max-h-[35%] overflow-y-auto shrink-0">
+        <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 max-h-[45%] overflow-y-auto shrink-0">
           <h3 className="text-[0.8125rem] font-semibold text-slate-500 dark:text-slate-400 mb-2">
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </h3>
