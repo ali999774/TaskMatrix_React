@@ -264,8 +264,21 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     recognitionRef.current = {
       start: () => {
         accumulated = ''
+        clearSilenceTimer()
         currentRec = makeRecorder(false)
         currentRec.start()
+        // Initial timer — auto-stop after 5s if user never speaks
+        silenceTimer = setTimeout(() => {
+          onStatus?.('auto-stop in 1s...')
+          silenceTimer = setTimeout(() => {
+            silenceTimer = null
+            if (currentRec) {
+              const r = currentRec
+              currentRec = null
+              try { r.stop() } catch { /* ignore */ }
+            }
+          }, 1000)
+        }, 4000)
       },
       stop: () => {
         clearSilenceTimer()
