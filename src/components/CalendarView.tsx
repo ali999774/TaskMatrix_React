@@ -33,6 +33,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const todayStr = today.toISOString().split('T')[0]
+  const monthRows = Math.ceil((firstDay + daysInMonth) / 7)
 
   const goToToday = () => {
     setYear(today.getFullYear())
@@ -156,7 +157,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 flex-1 overflow-y-auto" style={{ gridTemplateRows: 'repeat(auto-fill, minmax(0, 1fr))' }}>
+          <div className="grid grid-cols-7 flex-1" style={{ gridTemplateRows: `repeat(${monthRows}, 1fr)` }}>
             {Array.from({ length: firstDay }).map((_, i) => (
               <div key={`empty-${i}`} className="border-b border-r border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20" />
             ))}
