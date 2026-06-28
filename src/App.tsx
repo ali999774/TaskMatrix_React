@@ -390,7 +390,7 @@ export default function App() {
     setSuggesting(false)
     if ('suggested' in result) {
       setSuggestion(result.suggested)
-      setTimeout(() => setSuggestion(''), 8000)
+      setTimeout(() => setSuggestion(''), 10000)
     } else {
       setSuggestion(result.error || 'Could not reach AI')
       setTimeout(() => setSuggestion(''), 4000)
