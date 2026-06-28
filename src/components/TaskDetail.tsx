@@ -26,7 +26,11 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
   const [recurring, setRecurring] = useState(!!task.recurring)
   const [recurFrequency, setRecurFrequency] = useState(task.recur_frequency || 'daily')
   const [recurDays, setRecurDays] = useState<number[]>(task.recur_days || [])
-  const [category, setCategory] = useState(task.category || '')
+  const [category, setCategory] = useState(() => {
+    if (!task.category) return ''
+    const match = categories.find(c => c.label.toLowerCase() === task.category!.toLowerCase())
+    return match ? match.label : task.category
+  })
   const [subtasks, setSubtasks] = useState(task.subtasks || [])
   const [newSubtask, setNewSubtask] = useState('')
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -56,7 +60,11 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     setRecurring(!!task.recurring)
     setRecurFrequency(task.recur_frequency || 'daily')
     setRecurDays(task.recur_days || [])
-    setCategory(task.category || '')
+    setCategory(() => {
+      if (!task.category) return ''
+      const match = categories.find(c => c.label.toLowerCase() === task.category!.toLowerCase())
+      return match ? match.label : task.category
+    })
     setSubtasks(task.subtasks || [])
   }, [task])
 

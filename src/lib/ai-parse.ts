@@ -73,7 +73,7 @@ export async function parseVoiceTranscript(
       title: d.title as string || transcript.trim().slice(0, 60),
       due_date: (d.due_date as string) || null,
       due_time: (d.due_time as string) || null,
-      category: (d.category as string)?.toLowerCase() || null,
+      category: (d.category as string) || null,
       importance: typeof d.importance === 'number' ? Math.min(5, Math.max(1, d.importance)) : 3,
       urgency: typeof d.urgency === 'number' ? Math.min(5, Math.max(1, d.urgency)) : 3,
       notes: (d.notes as string) || null,
