@@ -96,43 +96,62 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950">
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={goToToday}
-            className="text-[0.8125rem] font-medium text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-md active:scale-95 transition-all"
-          >
-            Today
-          </button>
-          <div className="flex items-center gap-0.5">
+      {/* Header bar — two rows on mobile, single row on desktop */}
+      <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-3 pb-2 sm:pb-3 pr-14">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
-              onClick={view === 'week' ? prevWeek : prevMonth}
-              className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-slate-600 dark:text-slate-400"
-              aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
+              onClick={goToToday}
+              className="text-[0.75rem] sm:text-[0.8125rem] font-medium text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md active:scale-95 transition-all shrink-0"
             >
-              <ChevronLeft size={18} />
+              Today
             </button>
-            <button
-              onClick={view === 'week' ? nextWeek : nextMonth}
-              className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-slate-600 dark:text-slate-400"
-              aria-label={view === 'week' ? 'Next week' : 'Next month'}
-            >
-              <ChevronRight size={18} />
-            </button>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                onClick={view === 'week' ? prevWeek : prevMonth}
+                className="p-1 sm:p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-slate-600 dark:text-slate-400"
+                aria-label={view === 'week' ? 'Previous week' : 'Previous month'}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={view === 'week' ? nextWeek : nextMonth}
+                className="p-1 sm:p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-slate-600 dark:text-slate-400"
+                aria-label={view === 'week' ? 'Next week' : 'Next month'}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <h2 className="text-[0.9375rem] sm:text-[1.125rem] font-normal text-slate-800 dark:text-slate-100 truncate">
+              {view === 'week' ? weekLabel : `${MONTHS[month]} ${year}`}
+            </h2>
           </div>
-          <h2 className="text-[1.125rem] font-normal text-slate-800 dark:text-slate-100">
-            {view === 'week' ? weekLabel : `${MONTHS[month]} ${year}`}
-          </h2>
+
+          {/* View toggle — inline on sm+, full-width row on mobile */}
+          <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 shrink-0">
+            {(['day', 'week', 'month', 'schedule'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`text-[0.75rem] capitalize px-2.5 py-1 rounded-md transition-all
+                  ${view === v
+                    ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm font-medium'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* View toggle pills */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+        {/* View toggle row — mobile only */}
+        <div className="flex sm:hidden items-center bg-slate-100 dark:bg-slate-800 mx-4 mb-2 rounded-lg p-0.5">
           {(['day', 'week', 'month', 'schedule'] as const).map(v => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`text-[0.75rem] capitalize px-3 py-1 rounded-md transition-all
+              className={`flex-1 text-[0.6875rem] capitalize py-1.5 rounded-md transition-all text-center
                 ${view === v
                   ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm font-medium'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
