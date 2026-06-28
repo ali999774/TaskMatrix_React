@@ -868,19 +868,21 @@ export default function App() {
       {/* Body: matrix + sticky notes side by side */}
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
       <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
-        <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch w-full mb-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-5 lg:items-start w-full mb-6">
+
+          {/* Today strip */}
+          <div className="lg:col-start-1 lg:row-start-1">
+            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
+          </div>
 
           {/* Matrix column */}
-          <div className="flex-1 min-w-0 w-full flex flex-col">
-
-            {/* Today strip */}
-            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
-
+          <div className="lg:col-start-1 lg:row-start-2 flex flex-col min-w-0 w-full">
             <MatrixScreen
               tasks={filteredTasks}
               onMove={handleMove}
               onFlag={handleFlag}
               onStatusChange={handleStatusChange}
+              onTaskUpdate={updateTask}
               onDelete={handleDeleteTask}
               onTaskClick={setSelectedTask}
               categories={categories}
@@ -898,7 +900,7 @@ export default function App() {
           </div>
 
           {/* Sticky notes sidebar */}
-          <div className="w-full lg:w-80 shrink-0">
+          <div className="lg:col-start-2 lg:row-start-2 w-full shrink-0">
             <StickyWall
               notes={pinnedNotes}
               onDelete={handleDeleteNote}

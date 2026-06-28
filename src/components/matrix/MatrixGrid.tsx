@@ -34,6 +34,9 @@ export interface MatrixLayoutProps {
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
+  expandedTaskId?: string | null
+  onToggleExpand?: (taskId: string) => void
+  onTaskUpdate: (id: string, updates: Partial<Task>) => void
 }
 
 /**
@@ -54,6 +57,9 @@ export default function MatrixGrid({
   onDelete,
   onTaskClick,
   categories,
+  expandedTaskId,
+  onToggleExpand,
+  onTaskUpdate,
 }: MatrixLayoutProps) {
 
   return (
@@ -84,6 +90,9 @@ export default function MatrixGrid({
                 onDelete={onDelete}
                 onTaskClick={onTaskClick}
                 categories={categories}
+                expandedTaskId={expandedTaskId}
+                onToggleExpand={onToggleExpand}
+                onTaskUpdate={onTaskUpdate}
               />
             ))}
           </div>
@@ -113,6 +122,9 @@ function GridCell({
   onDelete,
   onTaskClick,
   categories,
+  expandedTaskId,
+  onToggleExpand,
+  onTaskUpdate,
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
@@ -121,6 +133,9 @@ function GridCell({
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
+  expandedTaskId?: string | null
+  onToggleExpand?: (taskId: string) => void
+  onTaskUpdate: (id: string, updates: Partial<Task>) => void
 }) {
   const [dragOver, setDragOver] = useState(false)
   const [collapsed, setCollapsed] = useState(
@@ -214,6 +229,9 @@ function GridCell({
               onMove={onMove}
               onFlag={onFlag}
               categories={categories}
+              expanded={task.id === expandedTaskId}
+              onToggleExpand={onToggleExpand}
+              onTaskUpdate={onTaskUpdate}
             />
           ))}
 

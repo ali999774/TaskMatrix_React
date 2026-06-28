@@ -349,7 +349,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
       {/* ── Header bar ─────────────────────────────────────────────────── */}
       <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-5 pt-[env(safe-area-inset-top)] pb-2 sm:pb-3 pl-16 sm:pl-14">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-[calc(1rem+env(safe-area-inset-top))] sm:pt-[calc(1.25rem+env(safe-area-inset-top))] pb-3 sm:pb-4 pl-[4.5rem] sm:pl-[4.5rem]">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={goToToday}
@@ -480,11 +480,10 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
               onClick={prevMonth}
               disabled={page === 0}
               aria-label="Previous month"
-              className="pointer-events-auto w-8 h-8 flex items-center justify-center
-                rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm
-                border border-slate-200/60 dark:border-slate-700/60
+              className="pointer-events-auto w-9 h-9 flex items-center justify-center
+                rounded-full bg-slate-200 dark:bg-slate-600
                 text-slate-500 dark:text-slate-400
-                hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100
+                hover:bg-slate-300 dark:hover:bg-slate-500
                 shadow-sm transition-all active:scale-90
                 disabled:opacity-0 disabled:pointer-events-none"
             >
@@ -494,11 +493,10 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
               onClick={nextMonth}
               disabled={page === TOTAL_PANELS - 1}
               aria-label="Next month"
-              className="pointer-events-auto w-8 h-8 flex items-center justify-center
-                rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm
-                border border-slate-200/60 dark:border-slate-700/60
+              className="pointer-events-auto w-9 h-9 flex items-center justify-center
+                rounded-full bg-slate-200 dark:bg-slate-600
                 text-slate-500 dark:text-slate-400
-                hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-100
+                hover:bg-slate-300 dark:hover:bg-slate-500
                 shadow-sm transition-all active:scale-90
                 disabled:opacity-0 disabled:pointer-events-none"
             >

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import type { Quadrant, Task } from '../../types'
 import type { CategoryDef } from '../../lib/categories'
 import { groupTasksByQuadrant } from '../../lib/matrix'
@@ -10,6 +10,7 @@ interface MatrixScreenProps {
   onMove: (taskId: string, toQuadrant: Quadrant) => void
   onFlag: (id: string) => void
   onStatusChange: (id: string, status: string) => void
+  onTaskUpdate: (id: string, updates: Partial<Task>) => void
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
@@ -32,10 +33,17 @@ export default function MatrixScreen({
   onMove,
   onFlag,
   onStatusChange,
+  onTaskUpdate,
   onDelete,
   onTaskClick,
   categories,
 }: MatrixScreenProps) {
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
+
+  const handleToggleExpand = useCallback((taskId: string) => {
+    setExpandedTaskId((prev) => (prev === taskId ? null : taskId))
+  }, [])
+
   // Group ONCE — both layouts consume the same output.
   const buckets = useMemo(() => groupTasksByQuadrant(tasks), [tasks])
 
@@ -44,9 +52,12 @@ export default function MatrixScreen({
     onMove,
     onFlag,
     onStatusChange,
+    onTaskUpdate,
     onDelete,
     onTaskClick,
     categories,
+    expandedTaskId,
+    onToggleExpand: handleToggleExpand,
   }
 
   return (

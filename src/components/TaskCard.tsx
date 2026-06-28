@@ -4,9 +4,10 @@ import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { getCategoryDef } from '../lib/categories'
 import { categoryColor } from '../lib/categoryColors'
-import { Pin } from 'lucide-react'
+import { Pin, ChevronDown, Check } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
+import { AnimatePresence, motion } from 'framer-motion'
 import CheckCircle from './matrix/CheckCircle'
 import SwipeableRow from './SwipeableRow'
 
@@ -18,6 +19,9 @@ interface Props {
   onMove: (id: string, toQuadrant: Quadrant) => void
   onFlag: (id: string) => void
   categories?: CategoryDef[]
+  expanded?: boolean
+  onToggleExpand?: (taskId: string) => void
+  onTaskUpdate?: (id: string, updates: Partial<Task>) => void
 }
 
 function dueLabel(dateStr: string): { text: string; urgent: boolean } {
@@ -33,7 +37,18 @@ function dueLabel(dateStr: string): { text: string; urgent: boolean } {
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
-export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMove, onFlag, categories = [] }: Props) {
+export default function TaskCard({
+  task,
+  onStatusChange,
+  onDelete,
+  onClick,
+  onMove,
+  onFlag,
+  categories = [],
+  expanded,
+  onToggleExpand,
+  onTaskUpdate,
+}: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
   const [showMove, setShowMove] = useState(false)
@@ -107,6 +122,16 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
   const catDef = getCategoryDef(categories, task.category)
   const isDone = task.status === 'done'
 
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0
+  const totalSubtasks = hasSubtasks ? task.subtasks!.length : 0
+  let checkedCount = 0
+
+  if (hasSubtasks) {
+    task.subtasks!.forEach((st) => {
+      if (st.done) checkedCount++
+    })
+  }
+
   const cardInner = (
     <div
       className="flex items-center gap-1.5"
@@ -127,7 +152,7 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         >
           {task.title}
         </p>
-        {(task.category || dueInfo) && (
+        {(task.category || dueInfo || hasSubtasks) && (
           <p className="text-[0.65625rem] sm:text-[0.75rem] leading-relaxed mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
             {dueInfo && (
               <span className={dueInfo.urgent ? 'text-red-500 dark:text-red-400 font-medium' : 'text-slate-400 dark:text-slate-500'}>
@@ -140,6 +165,14 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
             {task.category && (
               <span className="text-blue-500 dark:text-blue-400">
                 #{catDef?.display || task.category}
+              </span>
+            )}
+            {hasSubtasks && (task.category || dueInfo) && (
+              <span className="text-slate-300 dark:text-slate-600">·</span>
+            )}
+            {hasSubtasks && (
+              <span className="bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-[4px] text-[0.6rem] font-semibold leading-none">
+                {checkedCount}/{totalSubtasks}
               </span>
             )}
           </p>
@@ -171,6 +204,25 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
           aria-hidden="true"
         />
       </button>
+      {hasSubtasks && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={(e) => {
+            e.stopPropagation()
+            haptics('light')
+            onToggleExpand?.(task.id)
+          }}
+          onTouchEnd={(e) => e.stopPropagation()}
+          className="shrink-0 flex items-center justify-center w-[30px] h-[44px] rounded transition-colors text-slate-300 hover:text-slate-400 dark:text-slate-600 dark:hover:text-slate-500"
+        >
+          <ChevronDown
+            size={18}
+            className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+      )}
     </div>
   )
 
@@ -222,6 +274,74 @@ export default function TaskCard({ task, onStatusChange, onDelete, onClick, onMo
         >
           {cardInner}
         </SwipeableRow>
+
+        {/* Expanded Subtasks */}
+        <AnimatePresence>
+          {expanded && hasSubtasks && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div
+                className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50 space-y-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {task.subtasks!.map((st, i) => {
+                  const isChecked = st.done || false
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        haptics('light')
+                        const newSubtasks = [...task.subtasks!]
+                        newSubtasks[i] = { ...st, done: !st.done }
+                        onTaskUpdate?.(task.id, { subtasks: newSubtasks })
+                      }}
+                      className="flex items-start gap-2.5 w-full text-left py-1.5 px-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+                    >
+                      <div
+                        className={`shrink-0 mt-0.5 w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors ${
+                          isChecked
+                            ? 'bg-slate-400 border-slate-400 dark:bg-slate-500 dark:border-slate-500 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}
+                      >
+                        {isChecked && <Check size={12} strokeWidth={3} />}
+                      </div>
+                      <span
+                        className={`text-[0.78125rem] sm:text-[0.875rem] leading-snug flex-1 ${
+                          isChecked
+                            ? 'line-through text-slate-400 dark:text-slate-500'
+                            : 'text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {st.title}
+                      </span>
+                    </button>
+                  )
+                })}
+                {checkedCount === totalSubtasks && (
+                  <div className="pt-3 pb-1 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics('success')
+                        onStatusChange(task.id, 'done')
+                      }}
+                      className="text-[0.75rem] font-semibold text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 px-4 py-2 rounded-full transition-colors active:scale-95 shadow-sm"
+                    >
+                      Mark task done?
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Move popup */}

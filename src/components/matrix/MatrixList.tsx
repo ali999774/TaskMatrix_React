@@ -50,6 +50,9 @@ export interface MatrixLayoutProps {
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
+  expandedTaskId?: string | null
+  onToggleExpand?: (taskId: string) => void
+  onTaskUpdate: (id: string, updates: Partial<Task>) => void
 }
 
 /**
@@ -67,6 +70,9 @@ export default function MatrixList({
   onDelete,
   onTaskClick,
   categories,
+  expandedTaskId,
+  onToggleExpand,
+  onTaskUpdate,
 }: MatrixLayoutProps) {
   const orderedBuckets = useMemo(() => {
     const byId = Object.fromEntries(
@@ -89,6 +95,9 @@ export default function MatrixList({
           onDelete={onDelete}
           onTaskClick={onTaskClick}
           categories={categories}
+          expandedTaskId={expandedTaskId}
+          onToggleExpand={onToggleExpand}
+          onTaskUpdate={onTaskUpdate}
         />
       ))}
     </div>
@@ -107,6 +116,9 @@ function ListQuadrant({
   onDelete,
   onTaskClick,
   categories,
+  expandedTaskId,
+  onToggleExpand,
+  onTaskUpdate,
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
@@ -115,6 +127,9 @@ function ListQuadrant({
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
+  expandedTaskId?: string | null
+  onToggleExpand?: (taskId: string) => void
+  onTaskUpdate: (id: string, updates: Partial<Task>) => void
 }) {
   const qId = QUADRANT_ID_MAP[bucket.quadrant]
   const tierCls = TIER_CLASSES[EMPHASIS[qId]]
@@ -205,6 +220,9 @@ function ListQuadrant({
                 onMove={onMove}
                 onFlag={onFlag}
                 categories={categories}
+                expanded={task.id === expandedTaskId}
+                onToggleExpand={onToggleExpand}
+                onTaskUpdate={onTaskUpdate}
               />
             ))}
 
