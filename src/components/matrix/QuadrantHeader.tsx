@@ -1,11 +1,19 @@
 import type { Quadrant } from '../../types'
 
-/** Quadrant-specific accent colors for count badge and icon. */
-const HEADER_ACCENT: Record<Quadrant, string> = {
-  1: 'text-red-500 dark:text-red-400',
-  2: 'text-amber-500 dark:text-amber-400',
-  3: 'text-blue-500 dark:text-blue-400',
-  4: 'text-emerald-500 dark:text-emerald-400',
+/** Quadrant-specific accent colors for left borders (used in grid/list) */
+export const QUADRANT_BORDER_ACCENT: Record<Quadrant, string> = {
+  1: 'border-l-red-400/80 dark:border-l-[#f87171]/70',
+  2: 'border-l-sky-400/80 dark:border-l-[#38bdf8]/70',
+  3: 'border-l-violet-400/80 dark:border-l-[#a78bfa]/70',
+  4: 'border-l-slate-400/80 dark:border-l-[#64748b]/70',
+}
+
+/** Quadrant-specific accent colors for count badge, icon, and header text. */
+export const HEADER_ACCENT: Record<Quadrant, string> = {
+  1: 'text-red-400/90 dark:text-[#f87171]/80',
+  2: 'text-sky-400/90 dark:text-[#38bdf8]/80',
+  3: 'text-violet-400/90 dark:text-[#a78bfa]/80',
+  4: 'text-slate-400/90 dark:text-[#64748b]/80',
 }
 
 interface QuadrantHeaderProps {
@@ -42,7 +50,7 @@ export default function QuadrantHeader({
       {/* Label + subtitle + count */}
       <div className="flex-1 min-w-0" aria-hidden="true">
         <div className="flex items-baseline gap-1.5">
-          <h3 className="text-[0.71875rem] sm:text-[0.8125rem] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-300">{label}</h3>
+          <h3 className={`text-[0.71875rem] sm:text-[0.8125rem] font-semibold uppercase tracking-wider ${HEADER_ACCENT[quadrant]}`}>{label}</h3>
           <span className="text-[0.65625rem] sm:text-[0.71875rem] font-medium text-slate-300 dark:text-slate-600">· {count}</span>
         </div>
         <p className="text-[0.59375rem] sm:text-[0.65625rem] text-slate-400/80 dark:text-slate-500/80 leading-tight">{subtitle}</p>

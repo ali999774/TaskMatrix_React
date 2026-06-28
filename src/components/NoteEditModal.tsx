@@ -3,14 +3,7 @@ import { Trash2 } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
 
-const COLORS = ['red', 'amber', 'blue', 'green'] as const
 
-const COLOR_BG: Record<string, string> = {
-  red: 'bg-red-400',
-  amber: 'bg-amber-400',
-  blue: 'bg-blue-400',
-  green: 'bg-green-400',
-}
 
 interface Props {
   note: StickyNote
@@ -67,7 +60,6 @@ function insertFormatting(
 export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props) {
   const [title, setTitle] = useState(note.title || '')
   const [content, setContent] = useState(note.content || '')
-  const [color, setColor] = useState(note.color || 'red')
   const [pinned, setPinned] = useState(!!note.pinned)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -92,12 +84,11 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       onSave(noteRef.current.id, {
         title: title.trim() || null,
         content: content.trim(),
-        color,
         pinned,
       })
     }, 600)
     return () => clearTimeout(saveTimerRef.current)
-  }, [title, content, color, pinned])
+  }, [title, content, pinned])
 
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
@@ -111,7 +102,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
     setTitle(note.title || '')
     setContent(note.content || '')
-    setColor(note.color || 'red')
     setPinned(!!note.pinned)
   }, [note])
 
@@ -283,21 +273,8 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono min-h-[300px]"
           />
 
-          {/* Color picker + delete */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-2">Color</p>
-              <div className="flex gap-2">
-                {COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setColor(c)}
-                    className={`w-10 h-10 rounded-full ${COLOR_BG[c]} transition-transform border-2
-                      ${color === c ? 'scale-110 border-slate-800 dark:border-white' : 'border-transparent hover:scale-110'} min-h-[44px] min-w-[44px]`}
-                  />
-                ))}
-              </div>
-            </div>
+          {/* Delete */}
+          <div className="flex items-center justify-end">
             {confirmDelete ? (
               <div className="flex items-center gap-2 shrink-0 self-end">
                 <span className="text-[0.8125rem] font-medium text-slate-700 dark:text-slate-300">Delete note?</span>

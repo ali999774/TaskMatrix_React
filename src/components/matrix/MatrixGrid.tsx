@@ -4,7 +4,7 @@ import { QUADRANT_ID_MAP } from '../../types'
 import type { Quadrant, Task } from '../../types'
 import type { CategoryDef } from '../../lib/categories'
 import type { QuadrantBucket } from '../../lib/matrix'
-import QuadrantHeader from './QuadrantHeader'
+import QuadrantHeader, { QUADRANT_BORDER_ACCENT } from './QuadrantHeader'
 import TaskCard from '../TaskCard'
 
 // Overflow cap: show this many tasks per cell before truncating
@@ -175,6 +175,7 @@ function GridCell({
       className={[
         'rounded-[var(--radius-grid-cell)] border border-l-[3px] w-full',
         'px-3 py-2 flex flex-col transition-all duration-300',
+        QUADRANT_BORDER_ACCENT[bucket.quadrant],
         CELL_BORDER,
         collapsed ? 'min-h-0' : 'min-h-[220px]',
         dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.02]' : '',

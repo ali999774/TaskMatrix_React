@@ -18,12 +18,7 @@ interface Props {
   onNewBlank?: () => void
 }
 
-const LEFT_ACCENT: Record<string, string> = {
-  red: 'border-l-red-400 dark:border-l-red-400',
-  amber: 'border-l-amber-400 dark:border-l-amber-400',
-  blue: 'border-l-blue-400 dark:border-l-blue-400',
-  green: 'border-l-green-400 dark:border-l-green-400',
-}
+
 
 export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, onShowDeleted, sidebar, onReorder, onNewBlank }: Props) {
   const [input, setInput] = useState('')
@@ -167,7 +162,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
                     style={{ userSelect: 'none' }}
                     className={`group p-3 rounded-lg border text-[0.875rem] cursor-grab active:cursor-grabbing transition-all
                       bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700
-                      border-l-[3px] ${LEFT_ACCENT[note.color ?? 'red'] || LEFT_ACCENT.red}
+                      border-l-[3px] border-l-yellow-300 dark:border-l-yellow-400/80
                       ${draggedId === note.id ? 'opacity-40 scale-[0.97]' : ''}
                       ${dragOverId === note.id
                         ? dropAbove

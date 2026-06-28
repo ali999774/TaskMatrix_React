@@ -4,7 +4,7 @@ import type { Quadrant, Task, QuadrantId } from '../../types'
 import { QUADRANT_ID_MAP } from '../../types'
 import type { CategoryDef } from '../../lib/categories'
 import type { QuadrantBucket } from '../../lib/matrix'
-import QuadrantHeader from './QuadrantHeader'
+import QuadrantHeader, { QUADRANT_BORDER_ACCENT } from './QuadrantHeader'
 import TaskCard from '../TaskCard'
 
 // ─── Display order — list-local presentation decision ────────────────────────
@@ -169,6 +169,7 @@ function ListQuadrant({
       <div
         className={[
           'rounded-xl border border-l-[3px] overflow-hidden transition-all duration-300',
+          QUADRANT_BORDER_ACCENT[bucket.quadrant],
           CELL_BORDER,
           dragOver ? 'ring-2 ring-slate-400 dark:ring-slate-500 scale-[1.01]' : '',
         ]

@@ -4,12 +4,7 @@ import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 import SwipeableRow from './SwipeableRow'
 import type { SwipeAction } from './SwipeableRow'
 
-const COLOR_ACCENT: Record<string, string> = {
-  red: 'border-l-red-400 dark:border-l-red-400',
-  amber: 'border-l-amber-400 dark:border-l-amber-400',
-  blue: 'border-l-blue-400 dark:border-l-blue-400',
-  green: 'border-l-green-400 dark:border-l-green-400',
-}
+
 
 // Filled pushpin, fill=currentColor so it inherits the white action-button text
 // color — unlike the 📌 emoji, which renders in its native red and ignores CSS color.
@@ -198,7 +193,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                     <div
                       key={note.id}
                       className={`flex items-start gap-2 p-3 rounded-lg border bg-white dark:bg-slate-800
-                        border-slate-200 dark:border-slate-700 border-l-[3px] ${COLOR_ACCENT[note.color ?? 'red'] || COLOR_ACCENT.red}`}
+                        border-slate-200 dark:border-slate-700 border-l-[3px] border-l-yellow-300 dark:border-l-yellow-400/80`}
                     >
                       <div className="flex-1 min-w-0">
                         {note.title && (
@@ -294,7 +289,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                       aria-hidden="true"
                       className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
                         bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
-                        ${COLOR_ACCENT[note.color ?? 'red'] || COLOR_ACCENT.red}`}
+                        border-l-yellow-300 dark:border-l-yellow-400/80`}
                     >
                       {note.title && (
                         <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100">{note.title}</p>
