@@ -234,6 +234,17 @@ export default function App() {
   const [pendingUndo, setPendingUndo] = useState<{ message: string; onUndo: () => void } | null>(null)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Recurring stop confirm — replaces ugly window.confirm() with a snackbar
+  const recurringResolveRef = useRef<((v: boolean) => void) | null>(null)
+  const [recurringConfirm, setRecurringConfirm] = useState<{ title: string } | null>(null)
+
+  const confirmStopRecurring = (task: Task): Promise<boolean> => {
+    return new Promise((resolve) => {
+      recurringResolveRef.current = resolve
+      setRecurringConfirm({ title: task.title })
+    })
+  }
+
   const showUndo = (message: string, onUndo: () => void) => {
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
     setPendingUndo({ message, onUndo })
@@ -272,12 +283,12 @@ export default function App() {
   // When a task is marked done, show an undo snackbar for 5s.
   // The task leaves the active matrix immediately (matrix filters status='todo').
   // No auto-delete timer — done tasks persist in CompletedSection until manually cleared.
-  const handleStatusChange = (id: string, status: string) => {
+  const handleStatusChange = async (id: string, status: string) => {
     let preventSpawn = false
     const task = tasks.find((t) => t.id === id)
     
     if (status === 'done' && task?.recurring) {
-      preventSpawn = window.confirm('This is a recurring task. Do you want to STOP it from recurring in the future?\n\n(Click OK to end the series, Cancel to spawn the next occurrence)')
+      preventSpawn = await confirmStopRecurring(task)
     }
     
     updateStatus(id, status, preventSpawn)
@@ -892,6 +903,37 @@ export default function App() {
           fontScale={fontScale}
           onFontScaleChange={setFontScale}
         />
+      )}
+
+      {/* Recurring stop confirm snackbar */}
+      {recurringConfirm && (
+        <div
+          role="alertdialog"
+          aria-label="Stop recurring task"
+          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50
+            flex items-center gap-2 bg-slate-800 dark:bg-slate-700 text-white
+            rounded-xl shadow-lg px-4 py-2 max-w-[calc(100vw-2rem)]"
+        >
+          <span className="text-[0.875rem] truncate">Stop “{recurringConfirm.title}” from recurring?</span>
+          <button
+            onClick={() => {
+              recurringResolveRef.current?.(true)
+              setRecurringConfirm(null)
+            }}
+            className="text-[0.8125rem] font-semibold text-red-400 hover:text-red-300 px-2 py-1 rounded-lg min-h-[44px] shrink-0"
+          >
+            Stop
+          </button>
+          <button
+            onClick={() => {
+              recurringResolveRef.current?.(false)
+              setRecurringConfirm(null)
+            }}
+            className="text-[0.8125rem] font-semibold text-blue-300 hover:text-blue-200 px-2 py-1 rounded-lg min-h-[44px] shrink-0"
+          >
+            Keep
+          </button>
+        </div>
       )}
 
       {/* Undo snackbar — sits above the bottom nav */}
