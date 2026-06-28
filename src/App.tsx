@@ -19,8 +19,9 @@ import TodayStrip from './components/TodayStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
+import CalendarView from './components/CalendarView'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon } from 'lucide-react'
+import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
@@ -222,6 +223,7 @@ export default function App() {
   const cameFromNotesModal = useRef(false)
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
   const [suggestion, setSuggestion] = useState('')
@@ -351,9 +353,13 @@ export default function App() {
     }
   }, [focusQuickAdd])
 
+  // Calendar helpers
+  const hasTasksOnDate = (dateStr: string) => tasks.some((t) => t.due_date === dateStr)
+  const getTasksOnDate = (dateStr: string) => tasks.filter((t) => t.due_date === dateStr)
+
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
   // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
-  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings)
+  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar)
   const savedScrollY = useRef(0)
   useEffect(() => {
     if (hasModal) {
@@ -948,6 +954,22 @@ export default function App() {
       )}
 
       {/* Recurring stop confirm snackbar */}
+      {showCalendar && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+            <h1 className="text-[1.125rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
+            <button
+              onClick={() => setShowCalendar(false)}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400"
+              aria-label="Close calendar"
+            >
+              ✕
+            </button>
+          </div>
+          <CalendarView tasks={tasks} hasTasksOnDate={hasTasksOnDate} getTasksOnDate={getTasksOnDate} />
+        </div>
+      )}
+
       {recurringConfirm && (
         <div
           role="alertdialog"
@@ -1028,6 +1050,13 @@ export default function App() {
             aria-label="Pomodoro timer"
           >
             <Timer size={26} strokeWidth={2} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => setShowCalendar(true)}
+            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
+            aria-label="Calendar"
+          >
+            <CalendarDays size={26} strokeWidth={2} aria-hidden="true" />
           </button>
           <button
             onClick={toggleTheme}
