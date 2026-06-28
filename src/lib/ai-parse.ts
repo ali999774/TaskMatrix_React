@@ -245,16 +245,21 @@ export async function getMorningBrief(
     estimated_duration?: number | null
     subtasks?: { title: string; done: boolean }[]
   }>,
-  recentCompletions?: number
+  recentCompletions?: number,
+  model?: string,
+  baseUrl?: string,
+  calendarContext?: string
 ): Promise<MorningBrief | { error: string }> {
   const taskList = formatTaskList(tasks)
-  const extra = recentCompletions != null
-    ? `\n\nRecently completed today: ${recentCompletions} tasks.`
-    : ''
+  const parts = [taskList]
+  if (recentCompletions != null) parts.push(`\n\nRecently completed today: ${recentCompletions} tasks.`)
+  if (calendarContext) parts.push(`\n\nTODAY\'S CALENDAR:\n${calendarContext}\n\nFactor these events into your suggestions — don't suggest work during known events.`)
 
   const result = await callEdgeFn({
-    transcript: taskList + extra,
+    transcript: parts.join(''),
     mode: 'morning-brief',
+    model: model || 'deepseek-v4-flash',
+    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
   })
 
   if ('error' in result) return result
@@ -268,11 +273,15 @@ export async function getDayPlan(
     due_time?: string | null; category?: string | null; notes?: string | null
     estimated_duration?: number | null
     subtasks?: { title: string; done: boolean }[]
-  }>
+  }>,
+  model?: string,
+  baseUrl?: string,
 ): Promise<DayPlan | { error: string }> {
   const result = await callEdgeFn({
     transcript: formatTaskList(tasks),
     mode: 'day-plan',
+    model: model || 'deepseek-v4-flash',
+    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
   })
 
   if ('error' in result) return result
@@ -287,7 +296,9 @@ export async function getWhatNext(
     subtasks?: { title: string; done: boolean }[]
   }>,
   todayCompletions: string[],
-  minutesWorking?: number
+  minutesWorking?: number,
+  model?: string,
+  baseUrl?: string,
 ): Promise<WhatNext | { error: string }> {
   const taskList = formatTaskList(tasks)
   const ctx = [
@@ -303,6 +314,8 @@ export async function getWhatNext(
   const result = await callEdgeFn({
     transcript: ctx,
     mode: 'what-next',
+    model: model || 'deepseek-v4-flash',
+    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
   })
 
   if ('error' in result) return result

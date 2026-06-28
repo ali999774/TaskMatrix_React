@@ -7,6 +7,7 @@ import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { usePushNotifications } from './hooks/usePushNotifications'
+import { useGoogleCalendar } from './hooks/useGoogleCalendar'
 import { useUserSettings } from './hooks/useUserSettings'
 import { useFontScale } from './hooks/useFontScale'
 import MatrixScreen from './components/matrix/MatrixScreen'
@@ -20,6 +21,7 @@ import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import CalendarView from './components/CalendarView'
+import CalendarStrip from './components/CalendarStrip'
 import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
@@ -243,6 +245,9 @@ export default function App() {
   // Register push notifications on iOS native
   usePushNotifications(userId)
 
+  // Google Calendar — opt-in calendar integration
+  const gcal = useGoogleCalendar()
+
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
   const { fontScale, setFontScale } = useFontScale()
 
@@ -301,7 +306,11 @@ export default function App() {
     const t = setTimeout(() => {
       const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
       setMorningBriefLoading(true)
-      getMorningBrief(active, completedTodayRef.current.length).then(result => {
+      // Include calendar context if connected
+      const calContext = (gcal.todayEventsText && gcal.todayEventsText !== 'No calendar events today.')
+        ? gcal.todayEventsText
+        : undefined
+      getMorningBrief(active, completedTodayRef.current.length, aiSettings.model, getAIBaseUrl(), calContext).then(result => {
         setMorningBriefLoading(false)
         if ('error' in result) {
           setMorningBriefError(result.error)
@@ -517,7 +526,7 @@ export default function App() {
     setSuggesting(true)
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 25)
     const minutesWorking = Math.round((Date.now() - sessionStartTime) / 60000)
-    const result = await getWhatNext(active, completedTodayRef.current, minutesWorking)
+    const result = await getWhatNext(active, completedTodayRef.current, minutesWorking, aiSettings.model, getAIBaseUrl())
     setSuggesting(false)
     if ('title' in result) {
       const parts: string[] = [result.title]
@@ -542,11 +551,29 @@ export default function App() {
     }
   }
 
+  const handleMorningBrief = () => {
+    setMorningBriefDismissed(false)
+    setMorningBriefCollapsed(false)
+    setMorningBriefLoading(true)
+    setMorningBriefError(null)
+    const today = new Date().toISOString().split('T')[0]
+    const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
+    getMorningBrief(active, completedTodayRef.current.length, aiSettings.model, getAIBaseUrl()).then(result => {
+      setMorningBriefLoading(false)
+      if ('error' in result) {
+        setMorningBriefError(result.error)
+      } else {
+        setMorningBrief(result)
+        localStorage.setItem('tm-last-morning-brief', today)
+      }
+    })
+  }
+
   const handlePlanDay = async () => {
     setDayPlanLoading(true)
     setShowDayPlan(true)
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
-    const result = await getDayPlan(active)
+    const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl())
     setDayPlanLoading(false)
     if ('error' in result) {
       setDayPlanError(result.error)
@@ -897,6 +924,8 @@ export default function App() {
                     <span aria-hidden="true">🎯 What next?</span>
                   </button>
                 )}
+                <button onClick={handleMorningBrief} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-90 min-h-[44px] shrink-0" title="Morning Brief" aria-label="Morning Brief"><span aria-hidden="true">☀️</span></button>
+                <button onClick={handlePlanDay} disabled={dayPlanLoading} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] shrink-0 disabled:opacity-50" title="Plan my day" aria-label="Plan my day"><span aria-hidden="true">📋</span></button>
                 <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button>
                 <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out"><span aria-hidden="true">⏻</span></button>
               </div>
@@ -909,9 +938,17 @@ export default function App() {
                     <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[160px]">
                       {aiSettings.enabled && (
+                        <>
                         <button onClick={() => { handleSuggest(); setShowMenu(false) }} disabled={suggesting} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                           <span aria-hidden="true">🎯 What next?</span>
                         </button>
+                        <button onClick={() => { handleMorningBrief(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                          <span aria-hidden="true">☀️ Morning Brief</span>
+                        </button>
+                        <button onClick={() => { handlePlanDay(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                          <span aria-hidden="true">📋 Plan My Day</span>
+                        </button>
+                        </>
                       )}
                       <button onClick={() => { setShowSettings(true); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                         ⚙️ Settings
@@ -986,7 +1023,16 @@ export default function App() {
       <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-5 lg:items-start w-full mb-6">
 
-          {/* ── AI Briefs: Morning Brief → Day Plan ─────────────── */}
+          {/* ── AI Briefs: Calendar → Morning Brief → Day Plan ──── */}
+          {/* Calendar strip — shows today's Google Calendar events */}
+          <div className="lg:col-span-2">
+            <CalendarStrip
+              events={gcal.todayEvents}
+              isConnected={gcal.isConnected}
+              isLoading={gcal.isLoading}
+              onConnect={gcal.connect}
+            />
+          </div>
           {aiSettings.enabled && !morningBriefDismissed && (
             <div className="lg:col-span-2">
               <MorningBrief
