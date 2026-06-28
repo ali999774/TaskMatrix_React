@@ -404,7 +404,8 @@ export default function App() {
       setTimeout(() => setSuggestion(''), 10000)
     } else {
       setSuggestion(result.error || 'Could not reach AI')
-      setTimeout(() => setSuggestion(''), 4000)
+      setSuggestionIsError(true)
+      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
     }
   }
 
