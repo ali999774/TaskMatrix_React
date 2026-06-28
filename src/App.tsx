@@ -356,6 +356,12 @@ export default function App() {
   // Calendar helpers
   const getTasksOnDate = (dateStr: string) => tasks.filter((t) => t.due_date === dateStr)
 
+  const handleCalendarAddTask = (title: string, dateStr: string) => {
+    const defaults = QUADRANT_DEFAULTS[context === 'all' ? 1 : 1]
+    addTask(title, defaults.importance, defaults.urgency, undefined, { due_date: dateStr })
+    // Don't close calendar — user might want to add more tasks for this date
+  }
+
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
   // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
   const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar)
@@ -967,7 +973,7 @@ export default function App() {
                 ✕
               </button>
             </div>
-            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} />
+            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
           </div>
         </>)}
 

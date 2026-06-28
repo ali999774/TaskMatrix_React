@@ -5,16 +5,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 interface Props {
   tasks: Task[]
   getTasksOnDate: (dateStr: string) => Task[]
+  onAddTask: (title: string, dateStr: string) => void
 }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
-export default function CalendarView({ getTasksOnDate }: Props) {
+export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [newTaskTitle, setNewTaskTitle] = useState('')
 
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -110,6 +112,24 @@ export default function CalendarView({ getTasksOnDate }: Props) {
           <h3 className="text-[0.8125rem] font-semibold text-slate-500 dark:text-slate-400 mb-2">
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </h3>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (newTaskTitle.trim()) {
+                onAddTask(newTaskTitle.trim(), selectedDate)
+                setNewTaskTitle('')
+              }
+            }}
+            className="mb-2"
+          >
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="+ Add task for this date…"
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[0.8125rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 dark:focus:border-blue-600 placeholder-slate-400 dark:placeholder-slate-600"
+            />
+          </form>
           {selectedTasks.length === 0 ? (
             <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 italic">No tasks due</p>
           ) : (
