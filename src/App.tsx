@@ -74,6 +74,13 @@ export default function App() {
   const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceTaskQuickAction, setVoiceTaskQuickAction] = useState(false)
   const [voiceNoteQuickAction, setVoiceNoteQuickAction] = useState(false)
+
+  // Auto-navigate to notes when voice-note quick action is triggered
+  useEffect(() => {
+    if (voiceNoteQuickAction) {
+      setShowNotesModal(true)
+    }
+  }, [voiceNoteQuickAction])
   const [focusQuickAdd, setFocusQuickAdd] = useState(false)
   const quickAddRef = useRef<HTMLInputElement>(null)
 
