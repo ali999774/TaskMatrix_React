@@ -4,14 +4,13 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Props {
   tasks: Task[]
-  hasTasksOnDate: (dateStr: string) => boolean
   getTasksOnDate: (dateStr: string) => Task[]
 }
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
-export default function CalendarView({ hasTasksOnDate, getTasksOnDate }: Props) {
+export default function CalendarView({ getTasksOnDate }: Props) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -70,7 +69,8 @@ export default function CalendarView({ hasTasksOnDate, getTasksOnDate }: Props) 
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const d = i + 1
           const ds = dateStr(d)
-          const hasTask = hasTasksOnDate(ds)
+          const dayTasks = getTasksOnDate(ds)
+          const hasTask = dayTasks.length > 0
           const isToday = ds === todayStr
           const isSelected = ds === selectedDate
 
@@ -78,7 +78,7 @@ export default function CalendarView({ hasTasksOnDate, getTasksOnDate }: Props) 
             <button
               key={d}
               onClick={() => setSelectedDate(isSelected ? null : ds)}
-              className={`aspect-square flex flex-col items-center justify-center rounded-xl text-[0.875rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[40px]
+              className={`flex flex-col items-start rounded-xl text-[0.8125rem] font-medium transition-all active:scale-90 motion-reduce:scale-100 min-h-[64px] p-1.5 gap-0.5
                 ${isToday
                   ? 'bg-blue-600 text-white'
                   : isSelected
@@ -86,9 +86,18 @@ export default function CalendarView({ hasTasksOnDate, getTasksOnDate }: Props) 
                   : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}
             >
-              <span>{d}</span>
+              <span className={`text-[0.75rem] font-semibold w-5 text-center ${!isToday && 'text-slate-400 dark:text-slate-500'}`}>{d}</span>
               {hasTask && (
-                <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                <div className="flex flex-col gap-px w-full overflow-hidden">
+                  {dayTasks.slice(0, 2).map(t => (
+                    <span key={t.id} className={`text-[0.5625rem] leading-tight truncate w-full ${isToday ? 'text-white/80' : 'text-blue-600 dark:text-blue-400'}`}>
+                      {t.title}
+                    </span>
+                  ))}
+                  {dayTasks.length > 2 && (
+                    <span className={`text-[0.5rem] ${isToday ? 'text-white/50' : 'text-slate-400'}`}>+{dayTasks.length - 2} more</span>
+                  )}
+                </div>
               )}
             </button>
           )

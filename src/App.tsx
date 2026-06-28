@@ -354,7 +354,6 @@ export default function App() {
   }, [focusQuickAdd])
 
   // Calendar helpers
-  const hasTasksOnDate = (dateStr: string) => tasks.some((t) => t.due_date === dateStr)
   const getTasksOnDate = (dateStr: string) => tasks.filter((t) => t.due_date === dateStr)
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
@@ -957,7 +956,7 @@ export default function App() {
       {showCalendar && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
-          <div className="fixed inset-x-4 top-[10%] bottom-[10%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-md mx-auto overflow-hidden">
+          <div className="fixed inset-x-2 sm:inset-x-4 top-[5%] bottom-[5%] z-50 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl flex flex-col max-w-lg mx-auto overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 shrink-0">
               <h1 className="text-[1.0625rem] font-bold text-slate-800 dark:text-slate-100">Calendar</h1>
               <button
@@ -968,7 +967,7 @@ export default function App() {
                 ✕
               </button>
             </div>
-            <CalendarView tasks={tasks} hasTasksOnDate={hasTasksOnDate} getTasksOnDate={getTasksOnDate} />
+            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} />
           </div>
         </>)}
 
