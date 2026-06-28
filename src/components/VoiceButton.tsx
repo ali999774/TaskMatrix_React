@@ -210,7 +210,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
                 try { r.stop() } catch { /* ignore */ }
               }
             }, 1000)
-          }, 4000) // 5s total silence → auto-stop
+          }, 2000) // 3s total silence → auto-stop
         }
       }
 
@@ -267,7 +267,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         clearSilenceTimer()
         currentRec = makeRecorder(false)
         currentRec.start()
-        // Initial timer — auto-stop after 5s if user never speaks
+        // Initial timer — auto-stop after 3s if user never speaks
         silenceTimer = setTimeout(() => {
           onStatus?.('auto-stop in 1s...')
           silenceTimer = setTimeout(() => {
@@ -278,7 +278,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
               try { r.stop() } catch { /* ignore */ }
             }
           }, 1000)
-        }, 4000)
+        }, 2000)
       },
       stop: () => {
         clearSilenceTimer()
