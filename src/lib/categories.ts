@@ -55,7 +55,8 @@ export const CATEGORY_RING: Record<string, string> = {
 }
 
 export function getCategoryDef(categories: CategoryDef[], label: string | null | undefined): CategoryDef | undefined {
-  return categories.find(c => c.label === label)
+  if (!label) return undefined
+  return categories.find(c => c.label.toLowerCase() === label.toLowerCase())
 }
 
 export function categoryDisplay(categories: CategoryDef[], label: string | null | undefined): string {

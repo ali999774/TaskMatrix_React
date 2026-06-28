@@ -499,6 +499,7 @@ export default function App() {
           { due_date: p.due_date || undefined, due_time: p.due_time || undefined,
             notes: p.notes || undefined,
             reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
+            pinned: p.pinned || undefined,
             recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
         return
       }
@@ -562,6 +563,7 @@ export default function App() {
           p.category || undefined,
           { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined,
             reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
+            pinned: p.pinned || undefined,
             recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined }
         )
         setVoiceTaskStatus('task created!')

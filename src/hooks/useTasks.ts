@@ -244,7 +244,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     importance: number,
     urgency: number,
     category?: string,
-    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string; recurring?: boolean; recur_frequency?: string | null; recur_days?: number[] | null }
+    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string; pinned?: boolean; recurring?: boolean; recur_frequency?: string | null; recur_days?: number[] | null }
   ) => {
     if (!userId) return
     const isRecurring = opts?.recurring === true && !!opts?.recur_frequency
@@ -258,7 +258,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       status: 'todo',
       subtasks: [],
       tags: [],
-      pinned: false,
+      pinned: opts?.pinned === true || false,
       recurring: isRecurring || false,
       recur_frequency: isRecurring ? (opts!.recur_frequency || null) : null,
       recur_days: isRecurring ? (opts!.recur_days || null) : null,
