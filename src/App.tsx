@@ -573,7 +573,7 @@ export default function App() {
   const handlePlanDay = async () => {
     setDayPlanLoading(true)
     setShowDayPlan(true)
-    const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
+    const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
     const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl())
     setDayPlanLoading(false)
     if ('error' in result) {
