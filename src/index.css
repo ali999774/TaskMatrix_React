@@ -62,6 +62,13 @@
   --color-pomodoro-text-hero:  #FFFFFF;   /* large time display (on dark bg)  */
   --color-pomodoro-text-label: #8E8E93;   /* mode label muted (on dark bg)    */
 
+  /* ── Navbar height — single source of truth ────────────────────────────── */
+  /* Icon row: 48px h-12 + pt-2.5 (10px) + pb-1 (4px) = ~62px ≈ 4rem.      */
+  /* 5rem gives a comfortable gap above the home-indicator safe area.         */
+  /* Referenced by: pb-nav-safe utility, calendar panel bottom inset,         */
+  /* and any content padding that must clear the fixed bottom nav.            */
+  --navbar-height:         5rem;
+
   /* ── Radius scale ───────────────────────────────────────────────────────── */
   --radius-card:           15px;
   --radius-chip:           16px;
@@ -93,6 +100,7 @@
     --color-surface:        #FFFFFF;
     --color-text-primary:   #1C1C1E;
     --color-text-muted:     #8E8E93;
+    --navbar-height:        5rem;
   }
 
   /* .dark class strategy (matches App.tsx useTheme which toggles .dark on <html>) */
@@ -191,7 +199,7 @@ body::-webkit-scrollbar {
   }
   /* Combined: bottom-nav height + safe area */
   .pb-nav-safe {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--navbar-height) + env(safe-area-inset-bottom));
   }
 }
 
