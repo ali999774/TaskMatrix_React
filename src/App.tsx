@@ -622,7 +622,14 @@ export default function App() {
 
     // Save as sticky note
     try {
-      const note = await addNote(formatVoiceNote(content))
+      const shouldPin = /\bpin\b/i.test(transcript)
+      if (shouldPin) {
+        content = transcript
+          .replace(/\bpin this note[:;,\s-]*/i, '')
+          .replace(/^pin[:;,\s-]+/i, '')
+          .trim() || transcript.trim()
+      }
+      const note = await addNote(formatVoiceNote(content), shouldPin)
       if (note) {
         setEditingNote(note)
         setTimeout(() => setEditingNote(null), 2000)

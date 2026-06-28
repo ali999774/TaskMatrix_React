@@ -150,7 +150,7 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
     }
   }, [userId])
 
-  const addNote = useCallback(async (content: string) => {
+  const addNote = useCallback(async (content: string, pinned = false) => {
     if (!userId) return null
     const note: StickyNote = {
       id: crypto.randomUUID(),
@@ -159,7 +159,7 @@ export function useStickyNotes(userId: string | null, offlineQueue?: OfflineQueu
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
       position_x: Math.floor(Math.random() * 200),
       position_y: Math.floor(Math.random() * 200),
-      pinned: false,
+      pinned,
     } as StickyNote
     setNotes((prev) => [note, ...prev])
     if (offlineQueue && !offlineQueue.online) {
