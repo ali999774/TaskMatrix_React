@@ -13,6 +13,9 @@ interface ParsedTask {
   importance?: number
   urgency?: number
   notes?: string | null
+  recurring?: boolean
+  recur_frequency?: string | null
+  recur_days?: number[] | null
 }
 
 async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{ data: Record<string, unknown> } | { error: string }> {
@@ -74,6 +77,9 @@ export async function parseVoiceTranscript(
       importance: typeof d.importance === 'number' ? Math.min(5, Math.max(1, d.importance)) : 3,
       urgency: typeof d.urgency === 'number' ? Math.min(5, Math.max(1, d.urgency)) : 3,
       notes: (d.notes as string) || null,
+      recurring: d.recurring === true,
+      recur_frequency: (d.recur_frequency as string) || null,
+      recur_days: Array.isArray(d.recur_days) ? (d.recur_days as number[]) : null,
     },
   }
 }

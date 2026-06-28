@@ -244,9 +244,10 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     importance: number,
     urgency: number,
     category?: string,
-    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string }
+    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string; recurring?: boolean; recur_frequency?: string | null; recur_days?: number[] | null }
   ) => {
     if (!userId) return
+    const isRecurring = opts?.recurring === true && !!opts?.recur_frequency
     const newTask: Partial<Task> = {
       id: crypto.randomUUID(),
       user_id: userId,
@@ -258,12 +259,14 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       subtasks: [],
       tags: [],
       pinned: false,
-      recurring: false,
+      recurring: isRecurring || false,
+      recur_frequency: isRecurring ? (opts!.recur_frequency || null) : null,
+      recur_days: isRecurring ? (opts!.recur_days || null) : null,
+      series_id: isRecurring ? crypto.randomUUID() : null,
       due_date: opts?.due_date || null,
       due_time: opts?.due_time || null,
       reminder: opts?.reminder || null,
       notes: opts?.notes || null,
-      series_id: null,
     }
     // Assign series_id if it's recurring (handled by TaskDetail when initially saving recurring options)
     // Note: since the initial addTask has recurring=false and it's updated in TaskDetail, 
