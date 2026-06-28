@@ -236,12 +236,19 @@ export default function App() {
 
   // Recurring stop confirm — replaces ugly window.confirm() with a snackbar
   const recurringResolveRef = useRef<((v: boolean) => void) | null>(null)
+  const recurringTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [recurringConfirm, setRecurringConfirm] = useState<{ title: string } | null>(null)
 
   const confirmStopRecurring = (task: Task): Promise<boolean> => {
     return new Promise((resolve) => {
       recurringResolveRef.current = resolve
       setRecurringConfirm({ title: task.title })
+      // Auto-dismiss after 6s — default to keep recurring (non-destructive)
+      recurringTimerRef.current = setTimeout(() => {
+        recurringTimerRef.current = null
+        resolve(false)
+        setRecurringConfirm(null)
+      }, 6000)
     })
   }
 
@@ -917,6 +924,7 @@ export default function App() {
           <span className="text-[0.8125rem] shrink-0">Stop recurring?</span>
           <button
             onClick={() => {
+              if (recurringTimerRef.current) { clearTimeout(recurringTimerRef.current); recurringTimerRef.current = null }
               recurringResolveRef.current?.(true)
               setRecurringConfirm(null)
             }}
@@ -926,6 +934,7 @@ export default function App() {
           </button>
           <button
             onClick={() => {
+              if (recurringTimerRef.current) { clearTimeout(recurringTimerRef.current); recurringTimerRef.current = null }
               recurringResolveRef.current?.(false)
               setRecurringConfirm(null)
             }}
