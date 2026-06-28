@@ -192,17 +192,9 @@ export default function App() {
 
       active = false // prevent re-entry from duplicate listener
       await Browser.close()
-      // Extract tokens from URL hash (Google OAuth PKCE flow)
-      const hash = callbackUrl.split('#')[1]
-      if (hash) {
-        const params = new URLSearchParams(hash)
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({ access_token, refresh_token })
-        }
-      }
-      // Fallback: try code exchange for PKCE code flow
+      // PKCE code exchange — Google OAuth redirects with ?code=... in the query string.
+      // The code verifier is stored by supabase-js internally; exchangeCodeForSession
+      // completes the flow without tokens ever appearing in a URL.
       const qs = callbackUrl.includes('?') ? callbackUrl.split('?')[1] : ''
       const code = new URLSearchParams(qs).get('code')
       if (code) {
