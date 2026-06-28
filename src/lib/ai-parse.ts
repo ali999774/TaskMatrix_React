@@ -135,3 +135,196 @@ export async function suggestCategory(
 
   return category ? { category } : { error: `unknown category: ${raw}` }
 }
+
+// ── AI BRIEF TYPES ──────────────────────────────────────────────
+
+export interface MorningBrief {
+  greeting: string
+  summary: string
+  overdue: { title: string; id: string; days: number }[]
+  due_today: { title: string; id: string }[]
+  focus_areas: string[]
+  momentum: string
+  tip: string
+}
+
+export interface DayPlanItem {
+  id: string
+  title: string
+  rationale: string
+  suggested_duration: string
+  batch_hint?: string
+}
+
+export interface DayPlan {
+  plan: DayPlanItem[]
+  pacing: string
+  total_estimated: string
+  energy_tip: string
+}
+
+export interface WhatNext {
+  title: string
+  id: string | null
+  why: string | null
+  break_suggestion?: string | null
+}
+
+export interface WeeklyReview {
+  summary: string
+  stats: {
+    completed: number
+    completion_rate: number
+    best_day: string
+    most_productive_category: string | null
+  }
+  wins: string[]
+  patterns: string[]
+  suggestions: string[]
+  stale_tasks: { title: string; id: string; days_stale: number }[]
+  mood: string
+}
+
+// ── AI BRIEF API FUNCTIONS ──────────────────────────────────────
+
+function formatTaskList(tasks: Array<{
+  id: string
+  title: string
+  quadrant?: number
+  importance?: number
+  urgency?: number
+  status?: string
+  due_date?: string | null
+  due_time?: string | null
+  category?: string | null
+  notes?: string | null
+  estimated_duration?: number | null
+  pinned?: boolean
+  subtasks?: { title: string; done: boolean }[]
+  updated_at?: string | null
+}>): string {
+  if (tasks.length === 0) return 'No active tasks.'
+
+  const lines: string[] = []
+  const qLabel = (q?: number) => {
+    if (q === 1) return 'Do First'
+    if (q === 2) return 'Schedule'
+    if (q === 3) return 'Delegate'
+    if (q === 4) return "Don't Do"
+    return 'No quadrant'
+  }
+
+  for (const t of tasks) {
+    const parts: string[] = [
+      `[${t.id}] "${t.title}"`,
+      `quadrant: ${qLabel(t.quadrant)}`,
+      `importance: ${t.importance ?? '?'}/5`,
+      `urgency: ${t.urgency ?? '?'}/5`,
+      `status: ${t.status || 'todo'}`,
+    ]
+    if (t.due_date) parts.push(`due: ${t.due_date}`)
+    if (t.due_time) parts.push(`at ${t.due_time}`)
+    if (t.category) parts.push(`#${t.category}`)
+    if (t.estimated_duration) parts.push(`est: ${t.estimated_duration}min`)
+    if (t.notes) parts.push(`notes: ${t.notes.slice(0, 100)}`)
+    if (t.subtasks && t.subtasks.length > 0) {
+      const done = t.subtasks.filter(s => s.done).length
+      parts.push(`subtasks: ${done}/${t.subtasks.length} done`)
+    }
+    lines.push(parts.join(' | '))
+  }
+
+  return lines.join('\n')
+}
+
+export async function getMorningBrief(
+  tasks: Array<{
+    id: string; title: string; quadrant?: number; importance?: number
+    urgency?: number; status?: string; due_date?: string | null
+    due_time?: string | null; category?: string | null; notes?: string | null
+    estimated_duration?: number | null
+    subtasks?: { title: string; done: boolean }[]
+  }>,
+  recentCompletions?: number
+): Promise<MorningBrief | { error: string }> {
+  const taskList = formatTaskList(tasks)
+  const extra = recentCompletions != null
+    ? `\n\nRecently completed today: ${recentCompletions} tasks.`
+    : ''
+
+  const result = await callEdgeFn({
+    transcript: taskList + extra,
+    mode: 'morning-brief',
+  })
+
+  if ('error' in result) return result
+  return result.data as unknown as MorningBrief
+}
+
+export async function getDayPlan(
+  tasks: Array<{
+    id: string; title: string; quadrant?: number; importance?: number
+    urgency?: number; status?: string; due_date?: string | null
+    due_time?: string | null; category?: string | null; notes?: string | null
+    estimated_duration?: number | null
+    subtasks?: { title: string; done: boolean }[]
+  }>
+): Promise<DayPlan | { error: string }> {
+  const result = await callEdgeFn({
+    transcript: formatTaskList(tasks),
+    mode: 'day-plan',
+  })
+
+  if ('error' in result) return result
+  return result.data as unknown as DayPlan
+}
+
+export async function getWhatNext(
+  tasks: Array<{
+    id: string; title: string; quadrant?: number; importance?: number
+    urgency?: number; status?: string; due_date?: string | null
+    due_time?: string | null; category?: string | null; notes?: string | null
+    subtasks?: { title: string; done: boolean }[]
+  }>,
+  todayCompletions: string[],
+  minutesWorking?: number
+): Promise<WhatNext | { error: string }> {
+  const taskList = formatTaskList(tasks)
+  const ctx = [
+    taskList,
+    todayCompletions.length > 0
+      ? `\n\nCompleted today: ${todayCompletions.join(', ')}`
+      : '\n\nNothing completed yet today.',
+    minutesWorking != null
+      ? `\n\nWorking for ~${minutesWorking} minutes so far.`
+      : '',
+  ].join('')
+
+  const result = await callEdgeFn({
+    transcript: ctx,
+    mode: 'what-next',
+  })
+
+  if ('error' in result) return result
+  return result.data as unknown as WhatNext
+}
+
+export async function getWeeklyReview(
+  weekStats: {
+    completed: number
+    total: number
+    best_day: string
+    most_productive_category: string | null
+    stale_tasks: { title: string; id: string; days_stale: number }[]
+    completion_by_day: { day: string; count: number }[]
+  }
+): Promise<WeeklyReview | { error: string }> {
+  const transcript = JSON.stringify(weekStats, null, 2)
+  const result = await callEdgeFn({
+    transcript,
+    mode: 'weekly-review',
+  })
+
+  if ('error' in result) return result
+  return result.data as unknown as WeeklyReview
+}

@@ -24,7 +24,12 @@ import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { speechSupported, formatVoiceNote } from './lib/speech'
-import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory } from './lib/ai-parse'
+import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory, getMorningBrief, getDayPlan, getWhatNext } from './lib/ai-parse'
+import type { MorningBrief as MorningBriefData, DayPlan as DayPlanData } from './lib/ai-parse'
+import MorningBrief from './components/MorningBrief'
+import DayPlan from './components/DayPlan'
+// WeeklyReview component ready — wire when weekly-review mode is triggered
+// import WeeklyReview from './components/WeeklyReview'
 import { listenForReminderTaps, defaultReminder } from './lib/notifications'
 import { useAISettings } from './hooks/useAISettings'
 import { QUADRANT_DEFAULTS } from './types'
@@ -87,6 +92,20 @@ export default function App() {
   const [quickAction, setQuickAction] = useState<string | null>(null)
   const [voiceTaskQuickAction, setVoiceTaskQuickAction] = useState(false)
   const [voiceNoteQuickAction, setVoiceNoteQuickAction] = useState(false)
+  const siriTextRef = useRef<string | null>(null)  // survives closure staleness for Siri handler
+  const [pendingSiriText, setPendingSiriText] = useState<string | null>(null)
+
+  // Process Siri-dictated text once userId is available (cold-start gate)
+  useEffect(() => {
+    if (userId && pendingSiriText) {
+      siriTextRef.current = pendingSiriText
+      setQuickAdd(pendingSiriText)
+      setPendingSiriText(null)
+      handleQuickAdd(1).catch(() => {
+        addTaskRef.current(pendingSiriText, 5, 5)
+      })
+    }
+  }, [userId, pendingSiriText])
 
   // Auto-navigate to notes when voice-note quick action is triggered
   useEffect(() => {
@@ -112,6 +131,12 @@ export default function App() {
         if (action === 'new-note') setQuickAction('new-note')
         if (action === 'voice-task') setVoiceTaskQuickAction(true)
         if (action === 'voice-note') setVoiceNoteQuickAction(true)
+      }
+      // Cold-start Siri Shortcut with dictated text — queue until userId ready
+      if (launch?.url?.startsWith('taskmatrix://quick-add')) {
+        const url = new URL(launch.url.replace('taskmatrix://', 'https://'))
+        const text = url.searchParams.get('text')
+        if (text) setPendingSiriText(decodeURIComponent(text))
       }
     }).catch(err => {
       console.error('[App] getSession failed', err)
@@ -184,9 +209,15 @@ export default function App() {
         return
       }
 
-      // Siri Shortcut deep link: taskmatrix://quick-add
-      if (callbackUrl === 'taskmatrix://quick-add') {
-        setFocusQuickAdd(true)
+      // Siri Shortcut deep link: taskmatrix://quick-add[?text=...]
+      if (callbackUrl.startsWith('taskmatrix://quick-add')) {
+        const url = new URL(callbackUrl.replace('taskmatrix://', 'https://'))
+        const text = url.searchParams.get('text')
+        if (text) {
+          const decoded = decodeURIComponent(text)
+          setQuickAdd(decoded)
+          setPendingSiriText(decoded)
+        }
         return
       }
 
@@ -216,6 +247,8 @@ export default function App() {
   const { fontScale, setFontScale } = useFontScale()
 
   const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
+  const addTaskRef = useRef(addTask)
+  addTaskRef.current = addTask  // always current — dodges stale closure in []-dep effects
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, restoreNote, fetchDeletedNotes, permanentlyDeleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const { categories, updateCategories } = useUserSettings(userId, offlineQueue)
   const [quickAdd, setQuickAdd] = useState('')
@@ -235,12 +268,60 @@ export default function App() {
   const [suggesting, setSuggesting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
 
+  // ── AI Briefs ─────────────────────────────────────────────────
+  const [morningBrief, setMorningBrief] = useState<MorningBriefData | null>(null)
+  const [morningBriefLoading, setMorningBriefLoading] = useState(false)
+  const [morningBriefError, setMorningBriefError] = useState<string | null>(null)
+  const [morningBriefCollapsed, setMorningBriefCollapsed] = useState(false)
+  const [morningBriefDismissed, setMorningBriefDismissed] = useState(false)
+  const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
+  const [dayPlanLoading, setDayPlanLoading] = useState(false)
+  const [dayPlanError, setDayPlanError] = useState<string | null>(null)
+  const [showDayPlan, setShowDayPlan] = useState(false)
+  const [sessionStartTime] = useState(() => Date.now())
+  // Completed task titles today — used by What Next for context
+  const completedTodayRef = useRef<string[]>([])
+
   // Auto-close mobile menu after 5s
   useEffect(() => {
     if (!showMenu) return
     const t = setTimeout(() => setShowMenu(false), 5000)
     return () => clearTimeout(t)
   }, [showMenu])
+
+  // ── Morning Brief: first-open-of-day detection ─────────────────
+  useEffect(() => {
+    if (!userId || tasksLoading || !aiSettings.enabled) return
+    if (morningBriefDismissed) return
+    const today = new Date().toISOString().split('T')[0]
+    const lastBrief = localStorage.getItem('tm-last-morning-brief')
+    if (lastBrief === today) return
+
+    // Wait for tasks to settle (avoid firing on empty initial load)
+    const t = setTimeout(() => {
+      const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
+      setMorningBriefLoading(true)
+      getMorningBrief(active, completedTodayRef.current.length).then(result => {
+        setMorningBriefLoading(false)
+        if ('error' in result) {
+          setMorningBriefError(result.error)
+        } else {
+          setMorningBrief(result)
+          localStorage.setItem('tm-last-morning-brief', today)
+        }
+      })
+    }, 1500)
+
+    return () => clearTimeout(t)
+  }, [userId, tasksLoading, aiSettings.enabled, morningBriefDismissed])
+
+  // Reset voice-task quick-action flag once recording starts, so it
+  // re-arms for the next Siri / force-touch invocation.
+  useEffect(() => {
+    if (voiceTaskStatus === 'listening' && voiceTaskQuickAction) {
+      setVoiceTaskQuickAction(false)
+    }
+  }, [voiceTaskStatus, voiceTaskQuickAction])
 
   // Generic undo snackbar — holds a message + restore action for 5s. Covers task
   // delete, task complete-dismiss, and note delete, so any single destructive
@@ -304,7 +385,8 @@ export default function App() {
   // When a task is marked done, show an undo snackbar for 5s.
   // The task leaves the active matrix immediately (matrix filters status='todo').
   // No auto-delete timer — done tasks persist in CompletedSection until manually cleared.
-  const handleStatusChange = async (id: string, status: string) => {
+  // Track completions for What Next context — wraps the original handler
+  const _origHandleStatusChange = async (id: string, status: string) => {
     let preventSpawn = false
     const task = tasks.find((t) => t.id === id)
     
@@ -322,6 +404,16 @@ export default function App() {
       // Task un-completed — clear any pending snackbar.
       clearUndo()
     }
+  }
+
+  const handleStatusChange = async (id: string, status: string) => {
+    if (status === 'done') {
+      const task = tasks.find(t => t.id === id)
+      if (task && !completedTodayRef.current.includes(task.title)) {
+        completedTodayRef.current.push(task.title)
+      }
+    }
+    _origHandleStatusChange(id, status)
   }
 
   const handleClearCompleted = async () => {
@@ -371,7 +463,7 @@ export default function App() {
       )
       if (!('error' in result)) {
         const p = result.parsed
-        addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
+        addTaskRef.current(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
           { due_date: dateStr, due_time: p.due_time || undefined, notes: p.notes || undefined,
             pinned: p.pinned || undefined,
             recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
@@ -423,21 +515,43 @@ export default function App() {
       return
     }
     setSuggesting(true)
-    const list = filteredTasks
-      .filter(t => t.status !== 'done')
-      .slice(0, 20)
-      .map(t => `- [${t.importance},${t.urgency}] ${t.title}${t.due_date ? ` (due ${t.due_date})` : ''}`)
-      .join('\n')
-    const result = await suggestNextTask(list)
+    const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 25)
+    const minutesWorking = Math.round((Date.now() - sessionStartTime) / 60000)
+    const result = await getWhatNext(active, completedTodayRef.current, minutesWorking)
     setSuggesting(false)
-    if ('suggested' in result) {
-      setSuggestion(result.suggested)
+    if ('title' in result) {
+      const parts: string[] = [result.title]
+      if (result.why) parts.push(`— ${result.why}`)
+      if (result.break_suggestion) parts.push(`| 💡 ${result.break_suggestion}`)
+      setSuggestion(parts.join(' '))
       setSuggestionIsError(false)
-      setTimeout(() => setSuggestion(''), 10000)
+      setTimeout(() => setSuggestion(''), 12000)
     } else {
-      setSuggestion(result.error || 'Could not reach AI')
-      setSuggestionIsError(true)
-      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+      // Fallback to old suggestNextTask if new mode fails
+      const list = active.map(t => `- [${t.importance},${t.urgency}] ${t.title}${t.due_date ? ` (due ${t.due_date})` : ''}`).join('\n')
+      const fallback = await suggestNextTask(list)
+      if ('suggested' in fallback) {
+        setSuggestion(fallback.suggested)
+        setSuggestionIsError(false)
+        setTimeout(() => setSuggestion(''), 10000)
+      } else {
+        setSuggestion(result.error || fallback.error || 'Could not reach AI')
+        setSuggestionIsError(true)
+        setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+      }
+    }
+  }
+
+  const handlePlanDay = async () => {
+    setDayPlanLoading(true)
+    setShowDayPlan(true)
+    const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
+    const result = await getDayPlan(active)
+    setDayPlanLoading(false)
+    if ('error' in result) {
+      setDayPlanError(result.error)
+    } else {
+      setDayPlan(result)
     }
   }
 
@@ -548,16 +662,18 @@ export default function App() {
 
 
   const handleQuickAdd = async (q: Quadrant) => {
-    const title = quickAdd.trim()
+    const overrideText = siriTextRef.current
+    if (overrideText) siriTextRef.current = null
+    const title = (overrideText ?? quickAdd).trim()
     if (!title) return
-    setQuickAdd('')
+    if (!overrideText) setQuickAdd('')
 
     // AI path: parse typed text like voice
     if (aiSettings.enabled) {
       const result = await parseVoiceTranscript(title, aiSettings.model, getAIBaseUrl(), categories.map(c => c.label))
       if (!('error' in result)) {
         const p = result.parsed
-        addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
+        addTaskRef.current(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
           { due_date: p.due_date || undefined, due_time: p.due_time || undefined,
             notes: p.notes || undefined,
             reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
@@ -578,7 +694,7 @@ export default function App() {
       }
     }
 
-    addTask(title, defaults.importance, defaults.urgency, autoCategory)
+    addTaskRef.current(title, defaults.importance, defaults.urgency, autoCategory)
   }
 
   const handleQuickAddKeyDown = (e: React.KeyboardEvent) => {
@@ -689,7 +805,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-clip w-full max-w-full">
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200/60 dark:border-slate-800/40 pt-safe">
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
@@ -832,7 +948,7 @@ export default function App() {
           TODO (deferred: needs device — SPEC-category-ux.md "Visual implementation"):
           give each selected pill its category colour identity via CATEGORY_BADGE/CATEGORY_RING.
           Visual styling is eyeball-gated; not implemented here. */}
-      <div className="px-3 sm:px-6 py-2 border-b border-slate-200/60 dark:border-slate-800/40 bg-white/60 dark:bg-slate-950/60">
+      <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] sm:top-[calc(env(safe-area-inset-top)+4.25rem)] z-30 px-3 sm:px-6 py-2 border-b border-slate-200/60 dark:border-slate-800/40 bg-white/80 dark:bg-slate-950/80 backdrop-blur">
         <div className="flex gap-1.5 overflow-x-auto">
           <button
             key="all"
@@ -869,6 +985,31 @@ export default function App() {
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
       <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-5 lg:items-start w-full mb-6">
+
+          {/* ── AI Briefs: Morning Brief → Day Plan ─────────────── */}
+          {aiSettings.enabled && !morningBriefDismissed && (
+            <div className="lg:col-span-2">
+              <MorningBrief
+                brief={morningBrief}
+                loading={morningBriefLoading}
+                error={morningBriefError}
+                collapsed={morningBriefCollapsed}
+                onToggle={() => setMorningBriefCollapsed(v => !v)}
+                onDismiss={() => setMorningBriefDismissed(true)}
+                onPlanDay={handlePlanDay}
+              />
+            </div>
+          )}
+          {showDayPlan && (
+            <div className="lg:col-span-2">
+              <DayPlan
+                plan={dayPlan}
+                loading={dayPlanLoading}
+                error={dayPlanError}
+                onClose={() => { setShowDayPlan(false); setDayPlan(null); setDayPlanError(null) }}
+              />
+            </div>
+          )}
 
           {/* Today strip */}
           <div className="lg:col-start-1 lg:row-start-1">
