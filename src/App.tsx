@@ -521,7 +521,7 @@ export default function App() {
 
     // AI path: parse typed text like voice
     if (aiSettings.enabled) {
-      const result = await parseVoiceTranscript(title, aiSettings.model, getAIBaseUrl())
+      const result = await parseVoiceTranscript(title, aiSettings.model, getAIBaseUrl(), categories.map(c => c.label))
       if (!('error' in result)) {
         const p = result.parsed
         addTask(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
@@ -578,7 +578,8 @@ export default function App() {
       const result = await parseVoiceTranscript(
         transcript,
         aiSettings.model,
-        getAIBaseUrl()
+        getAIBaseUrl(),
+        categories.map(c => c.label)
       )
       if ('error' in result) {
         setVoiceTaskStatus(result.error)

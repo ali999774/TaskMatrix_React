@@ -61,11 +61,14 @@ async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{
 export async function parseVoiceTranscript(
   transcript: string,
   model: string = 'deepseek-v4-flash',
-  baseUrl: string = 'https://api.deepseek.com/v1'
+  baseUrl: string = 'https://api.deepseek.com/v1',
+  categories?: string[]
 ): Promise<{ parsed: ParsedTask } | { error: string }> {
   if (!transcript.trim()) return { error: 'empty transcript' }
 
-  const result = await callEdgeFn({ transcript, model, baseUrl })
+  const body: Record<string, unknown> = { transcript, model, baseUrl }
+  if (categories && categories.length > 0) body.categories = categories
+  const result = await callEdgeFn(body)
   if ('error' in result) return result
 
   const d = result.data
