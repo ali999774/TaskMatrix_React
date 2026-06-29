@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
       headers: {
         'Access-Control-Allow-Origin': isAllowed ? origin : ALLOWED_ORIGINS[0],
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info, x-supabase-api-version, prefer',
         'Access-Control-Max-Age': '86400',
       },
     });
@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { transcript, model, baseUrl, mode } = body;
+    const { transcript, model, baseUrl, mode, briefOutput } = body;
     const targetUrl = `${baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`;
 
     // ── KEY SELECTION ───────────────────────────────────────────
@@ -121,39 +121,91 @@ Rules:
 - No markdown formatting (no **bold**, no # headers)
 - Just clean, readable plain text`;
 
-    // ── NEW: MORNING BRIEF ───────────────────────────────────────
-    } else if (mode === 'morning-brief') {
-      maxTokens = 1024;
-      systemPrompt = `You are a supportive daily planning assistant. Given the user's active tasks, produce a brief morning orientation.
+    // ── MORNING BRIEF ────────────────────────────────────────────
+    } else if (mode === 'morning-brief' || mode === 'morningbrief') {
+      maxTokens = 512;
+      const userGoal = body.userGoal || '';
+      systemPrompt = `You are the planning intelligence inside TaskMatrix, a task-management app.
+You generate a brief morning triage for one user. Your job is JUDGMENT, not
+enumeration: the user can already see their full task list in the app, so repeating
+it back adds nothing. You earn your place only by adding triage they don't already
+have — what matters most, what to batch, what's at risk of being crowded out.
 
-Today is ${today}.
+USER CONTEXT (user-provided; may be empty):
+${userGoal || '(empty — judge by conventional signals only)'}
 
-Return ONLY valid JSON — no markdown, no code fences:
+INPUT: today's tasks, each with title, due/overdue status, and category.
 
+YOUR BRIEF MUST DO THREE THINGS:
+
+1. NAME THE ONE THING. Identify the single most consequential task for today — not
+   the most overdue, the most consequential. Significance beats urgency. A
+   high-importance task due soon usually outranks several overdue trivial ones. State
+   it in one sentence and why it matters.
+
+2. PROTECT IMPORTANT-BUT-NOT-URGENT WORK. This is your most important function.
+   Explicitly flag any high-significance task at risk of being crowded out by a pile
+   of urgent-trivial ones, and recommend protecting time for it. If the list is mostly
+   errands plus one or two things that actually move the user's life forward, make sure
+   those one or two are not buried.
+
+3. BATCH THE REST. Group trivial/errand tasks into a single batched recommendation
+   (e.g. "the grocery and hardware items are one trip"). Do not analyze, estimate, or
+   give individual rationale to trivial tasks. If an item is plainly not a real task
+   (e.g. "leave computer on," "make coffee"), do not feature it.
+
+HARD RULES:
+- Do NOT relist tasks the user can already see. Reference them; don't reproduce them.
+- Do NOT invent time estimates. Vague precision ("5 min", "30 min") is noise. Mention
+  duration only when it informs a real decision (e.g. "this needs a focused block").
+- No motivational filler. No "fresh start," "renewed energy," "you've got this." Every
+  sentence must carry information or a decision. Test: if a sentence would be true on
+  any day for any user, delete it.
+- Advice must be specific to THIS list. If your tip would survive swapping out all the
+  user's tasks, it is too generic — rewrite it.
+- You MAY end with one light, specific observation about today's actual list (e.g.
+  "five of six overdue items are groceries — one trip clears the backlog"). Never
+  generic encouragement. Never a quote. Skip it if nothing genuine comes to mind.
+- Be brief. A morning brief is read in fifteen seconds.
+
+TONE: Direct, peer-level, lightly wry — a sharp chief of staff, not a coach. Respect
+the user's intelligence and their time.
+
+OUTPUT FORMAT: Return a JSON object with exactly these fields:
 {
-  "greeting": "short warm greeting (1 sentence)",
-  "summary": "2-3 sentence overview of the day ahead: how many due today, any overdue, what's looking good",
-  "overdue": [{"title": "task title", "id": "task-id", "days": number}],
-  "due_today": [{"title": "task title", "id": "task-id"}],
-  "focus_areas": ["1-3 themes for the day based on task clusters"],
-  "momentum": "1 sentence about recent progress — positive and encouraging",
-  "tip": "1 brief productivity tip relevant to their current load"
+  "headline":   "one short sentence — the overall shape of the day",
+  "topPriority":"the single most consequential task and why, one sentence",
+  "protect":    "the important-not-urgent task to guard, and a time recommendation —
+                 or null if nothing qualifies",
+  "batch":      "the batched-errands recommendation — or null if nothing to batch",
+  "closer":     "one specific wry observation, or null"
 }
+Return ONLY the JSON. The app renders these fields; do not add prose outside them.`;
 
-Rules:
-- overdue: only tasks with due_date before today. Include days overdue.
-- due_today: tasks due today OR created yesterday and still active
-- focus_areas: group tasks thematically (e.g. "admin catch-up", "patient follow-ups")
-- momentum: acknowledge recent completions if provided. Be encouraging, not mechanical.
-- tip: make it practical and specific to their task mix. Not generic.
-- If there are no tasks at all, make the greeting welcoming and suggest capturing the first thing on their mind.`;
-
-    // ── NEW: DAY PLAN ────────────────────────────────────────────
-    } else if (mode === 'day-plan') {
+    // ── DAY PLAN ────────────────────────────────────────────────
+    } else if (mode === 'day-plan' || mode === 'dayplan') {
       maxTokens = 1536;
-      systemPrompt = `You are a strategic day planner. Given the user's active tasks, produce a sequenced action plan.
+      const briefContext = briefOutput
+        ? `\nBRIEF CONCLUSION (the priority call already made — honor it):\n${briefOutput}\nThe most consequential task identified in the brief MUST get a protected, well-placed block. Do not bury it beneath low-stakes tasks just because they are older or overdue.\n`
+        : '';
 
-Today is ${today}.
+      systemPrompt = `You are the day-sequencing intelligence inside TaskMatrix. The user has already received a morning brief that identified their priorities. Your job is to turn today's tasks into an ORDERED execution sequence that respects that triage — not to re-rank from scratch.
+${briefContext}
+INPUT: today's tasks with title, due/overdue status, category.
+
+SEQUENCING PRINCIPLES (in priority order):
+1. SIGNIFICANCE OVER AGE. An overdue errand does not outrank a significant task due soon. Do not front-load the sequence with trivial overdue items. This is the most common sequencing mistake — avoid it.
+2. PROTECT ONE DEEP BLOCK. The single most important task gets a focused block placed when energy is typically highest (mid-morning unless context says otherwise). Guard it from fragmentation.
+3. BATCH THE TRIVIAL. Group errands, calls, and quick personal tasks into single batched slots ("one shopping trip," "a batch of quick calls"). Do not give each trivial task its own numbered step with its own rationale.
+4. MOMENTUM, BRIEFLY. You may open with ONE genuine quick win to build momentum, but only one, and only if it's real. Do not pad the front of the day with busywork disguised as a warm-up.
+
+HARD RULES:
+- Only estimate durations where the estimate informs a real decision (e.g. "block ~2h"). Do not assign invented minute-counts to every item. Never estimate non-tasks.
+- Silently drop items that are not real tasks (e.g. "leave computer on"). Do not feature, estimate, or sequence them.
+- Each step's rationale must say something specific to THAT task's place in the day, not a generic label. "Group with other calls" is acceptable only if there are other calls.
+- The full plan should be scannable in under 30 seconds. Prefer fewer, meaningful steps over an exhaustive list. Batched items count as one step.
+
+TONE: A sharp chief of staff laying out the day. Decisive, brief, respects the user's time and intelligence.
 
 Return ONLY valid JSON — no markdown, no code fences:
 
@@ -162,26 +214,18 @@ Return ONLY valid JSON — no markdown, no code fences:
     {
       "id": "task-id",
       "title": "task title",
-      "rationale": "why this order — 1 sentence max",
-      "suggested_duration": "e.g. 20 min, 45 min, 2h",
-      "batch_hint": "optional: what other tasks to group with this one"
+      "rationale": "why this order — specific to this task's place in the day",
+      "suggested_duration": "only when it informs a real decision, e.g. 'block ~2h'",
+      "batch_hint": "optional: group with other similar tasks"
     }
   ],
   "pacing": "1 sentence about how to pace the day",
   "total_estimated": "total time estimate, e.g. ~3.5h",
-  "energy_tip": "when to tackle the hardest thing vs when to coast"
-}
-
-Rules:
-- Order by: overdue first → due today → important non-urgent → quick wins
-- rationale: be specific about WHY this order. Not "it's important" but "this is blocking the patient follow-up calls scheduled for 2pm"
-- batch_hint: group similar tasks (calls together, admin together, clinical together)
-- Only include active tasks (status is todo or in_progress, not completed/archived)
-- 5-12 tasks in the plan. Quality over quantity.
-- If 0 tasks: return empty plan array with a gentle nudge to capture something.`;
+  "energy_tip": "one specific, lightly wry observation about today's actual shape"
+}`;
 
     // ── NEW: WHAT-NEXT V2 ────────────────────────────────────────
-    } else if (mode === 'what-next') {
+    } else if (mode === 'what-next' || mode === 'whatnext') {
       responseFormat = {};
       systemPrompt = `You are a mid-session productivity coach. Given the full task list plus what's been completed today, suggest the single best next task.
 
@@ -258,7 +302,7 @@ Rules:
     const llmBody: Record<string, unknown> = {
       model: model || 'deepseek-v4-flash',
       messages,
-      temperature: (mode === 'classify' || mode === 'what-next') ? 0 : 0.1,
+      temperature: (mode === 'classify' || mode === 'what-next' || mode === 'whatnext') ? 0 : 0.1,
       max_tokens: maxTokens,
     };
 
@@ -321,7 +365,7 @@ Rules:
     }
 
     // New modes — parse JSON and return
-    if (mode === 'morning-brief') {
+    if (mode === 'morning-brief' || mode === 'morningbrief') {
       try {
         const parsed = JSON.parse(content);
         return new Response(JSON.stringify(parsed), {
@@ -336,7 +380,7 @@ Rules:
       }
     }
 
-    if (mode === 'day-plan') {
+    if (mode === 'day-plan' || mode === 'dayplan') {
       try {
         const parsed = JSON.parse(content);
         return new Response(JSON.stringify(parsed), {
@@ -351,7 +395,7 @@ Rules:
       }
     }
 
-    if (mode === 'what-next') {
+    if (mode === 'what-next' || mode === 'whatnext') {
       try {
         const parsed = JSON.parse(content);
         return new Response(JSON.stringify(parsed), {

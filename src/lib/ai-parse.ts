@@ -139,13 +139,11 @@ export async function suggestCategory(
 // ── AI BRIEF TYPES ──────────────────────────────────────────────
 
 export interface MorningBrief {
-  greeting: string
-  summary: string
-  overdue: { title: string; id: string; days: number }[]
-  due_today: { title: string; id: string }[]
-  focus_areas: string[]
-  momentum: string
-  tip: string
+  headline: string    // overall shape of the day, one sentence
+  topPriority: string // single most consequential task + why
+  protect: string | null   // important-not-urgent task to guard, or null
+  batch: string | null     // batched-errands recommendation, or null
+  closer: string | null    // wry observation, or null
 }
 
 export interface DayPlanItem {
@@ -276,12 +274,14 @@ export async function getDayPlan(
   }>,
   model?: string,
   baseUrl?: string,
+  briefOutput?: string,
 ): Promise<DayPlan | { error: string }> {
   const result = await callEdgeFn({
     transcript: formatTaskList(tasks),
     mode: 'day-plan',
     model: model || 'deepseek-v4-flash',
     baseUrl: baseUrl || 'https://api.deepseek.com/v1',
+    briefOutput: briefOutput || undefined,
   })
 
   if ('error' in result) return result

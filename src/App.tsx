@@ -280,7 +280,6 @@ export default function App() {
   const [morningBrief, setMorningBrief] = useState<MorningBriefData | null>(null)
   const [morningBriefLoading, setMorningBriefLoading] = useState(false)
   const [morningBriefError, setMorningBriefError] = useState<string | null>(null)
-  const [morningBriefCollapsed, setMorningBriefCollapsed] = useState(false)
   const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
   const [dayPlanLoading, setDayPlanLoading] = useState(false)
   const [dayPlanError, setDayPlanError] = useState<string | null>(null)
@@ -319,10 +318,6 @@ export default function App() {
       const cached = JSON.parse(raw)
       if (cached.brief && cached.timestamp && cached.timestamp >= getMostRecent4AM()) {
         cachedBriefRef.current = cached.brief
-        setBriefChipCounts({
-          overdue: cached.brief.overdue?.length ?? 0,
-          dueToday: cached.brief.due_today?.length ?? 0,
-        })
       }
     } catch { /* corrupted cache — ignore */ }
   }, [userId, tasksLoading, aiSettings.enabled])
@@ -331,7 +326,6 @@ export default function App() {
   // task data — free client-side filter, no API call needed.
   useEffect(() => {
     if (!userId || tasksLoading || !aiSettings.enabled) return
-    if (cachedBriefRef.current) return // cache already provides counts
     if (tasks.length === 0) return
 
     const today = localTodayStr()
@@ -579,7 +573,6 @@ export default function App() {
   }
 
   const handleMorningBrief = () => {
-    setMorningBriefCollapsed(false)
 
     // If we have a valid cached brief, use it — no API call
     if (cachedBriefRef.current) {
@@ -605,10 +598,6 @@ export default function App() {
         const cacheData = { brief: result, timestamp: Date.now(), date: today }
         try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(cacheData)) } catch { /* quota exceeded — ignore */ }
         cachedBriefRef.current = result
-        setBriefChipCounts({
-          overdue: result.overdue?.length ?? 0,
-          dueToday: result.due_today?.length ?? 0,
-        })
       }
     })
   }
@@ -633,7 +622,12 @@ export default function App() {
     setDayPlanLoading(true)
     setDayPlanError(null)
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
-    const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl())
+    // Pass morning brief context if available so the day plan respects its triage
+    const brief = morningBrief || cachedBriefRef.current
+    const briefContext = brief
+      ? `${brief.headline}\nTop priority: ${brief.topPriority}${brief.protect ? `\nProtect: ${brief.protect}` : ''}`
+      : undefined
+    const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl(), briefContext)
     setDayPlanLoading(false)
     if ('error' in result) {
       setDayPlanError(result.error)
@@ -1372,15 +1366,12 @@ export default function App() {
             brief={morningBrief}
             loading={morningBriefLoading}
             error={morningBriefError}
-            collapsed={morningBriefCollapsed}
-            onToggle={() => setMorningBriefCollapsed(v => !v)}
             onDismiss={() => setSheetContent(null)}
             onPlanDay={() => { setSheetContent('plan'); handlePlanDay() }}
             onRetry={() => {
               setMorningBriefError(null)
               try { localStorage.removeItem(BRIEF_CACHE_KEY) } catch { /* ignore */ }
               cachedBriefRef.current = null
-              setBriefChipCounts(null)
               handleMorningBrief()
             }}
           />
