@@ -1,6 +1,6 @@
 // DayPlan — AI-sequenced action plan, expanded from MorningBrief
 
-import { X, Zap, Clock, ArrowRight } from 'lucide-react'
+import { X, Zap, Clock, ArrowRight, RefreshCw } from 'lucide-react'
 import type { DayPlan as DayPlanData } from '../lib/ai-parse'
 
 interface Props {
@@ -8,9 +8,10 @@ interface Props {
   loading: boolean
   error: string | null
   onClose: () => void
+  onRefresh?: () => void
 }
 
-export default function DayPlan({ plan, loading, error, onClose }: Props) {
+export default function DayPlan({ plan, loading, error, onClose, onRefresh }: Props) {
   if (error) {
     return (
       <div className="mx-3 mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[0.8125rem] text-amber-700 dark:text-amber-300">
@@ -61,6 +62,11 @@ export default function DayPlan({ plan, loading, error, onClose }: Props) {
         <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="Close">
           <X className="w-4 h-4 text-slate-400" />
         </button>
+        {onRefresh && (
+          <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="Refresh day plan">
+            <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+        )}
       </div>
 
       {/* Plan items */}

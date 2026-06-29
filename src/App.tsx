@@ -23,6 +23,7 @@ import SettingsModal from './components/SettingsModal'
 import CalendarView from './components/CalendarView'
 import CalendarStrip from './components/CalendarStrip'
 import BriefEntryChip from './components/BriefEntryChip'
+import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
@@ -280,22 +281,25 @@ export default function App() {
   const [morningBriefLoading, setMorningBriefLoading] = useState(false)
   const [morningBriefError, setMorningBriefError] = useState<string | null>(null)
   const [morningBriefCollapsed, setMorningBriefCollapsed] = useState(false)
-  const [morningBriefDismissed, setMorningBriefDismissed] = useState(false)
   const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
   const [dayPlanLoading, setDayPlanLoading] = useState(false)
   const [dayPlanError, setDayPlanError] = useState<string | null>(null)
-  const [showDayPlan, setShowDayPlan] = useState(false)
+  // Which content the bottom sheet is showing: null = closed
+  const [sheetContent, setSheetContent] = useState<'brief' | 'plan' | null>(null)
   const [sessionStartTime] = useState(() => Date.now())
   // Completed task titles today — used by What Next for context
   const completedTodayRef = useRef<string[]>([])
 
   // ── Morning Brief: cache-first, no auto-generate ────────────────
   const BRIEF_CACHE_KEY = 'tm-cached-morning-brief'
-  const [morningBriefRequested, setMorningBriefRequested] = useState(false)
   // Counts for the entry chip — populated from cache, even when brief not displayed
   const [briefChipCounts, setBriefChipCounts] = useState<{ overdue: number; dueToday: number } | null>(null)
   // Holds cached brief data (avoids re-parsing localStorage on every tap)
   const cachedBriefRef = useRef<MorningBriefData | null>(null)
+
+  // Day Plan cache — same 4 AM boundary as morning brief
+  const DAY_PLAN_CACHE_KEY = 'tm-cached-day-plan'
+  const cachedDayPlanRef = useRef<DayPlanData | null>(null)
 
   /** Most-recent 4:00 AM local time as epoch ms — cache boundary. */
   function getMostRecent4AM(): number {
@@ -509,7 +513,7 @@ export default function App() {
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
   // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
-  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar)
+  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar || sheetContent)
   const savedScrollY = useRef(0)
   useEffect(() => {
     if (hasModal) {
@@ -575,8 +579,6 @@ export default function App() {
   }
 
   const handleMorningBrief = () => {
-    setMorningBriefRequested(true)
-    setMorningBriefDismissed(false)
     setMorningBriefCollapsed(false)
 
     // If we have a valid cached brief, use it — no API call
@@ -611,9 +613,25 @@ export default function App() {
     })
   }
 
-  const handlePlanDay = async () => {
+  const handlePlanDay = async (forceRefresh = false) => {
+    // Try cache first (unless forced refresh)
+    if (!forceRefresh) {
+      try {
+        const raw = localStorage.getItem(DAY_PLAN_CACHE_KEY)
+        if (raw) {
+          const cached = JSON.parse(raw)
+          if (cached.plan && cached.timestamp && cached.timestamp >= getMostRecent4AM()) {
+            cachedDayPlanRef.current = cached.plan
+            setDayPlan(cached.plan)
+            return
+          }
+        }
+      } catch { /* ignore */ }
+    }
+
+    // Generate fresh
     setDayPlanLoading(true)
-    setShowDayPlan(true)
+    setDayPlanError(null)
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
     const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl())
     setDayPlanLoading(false)
@@ -621,6 +639,10 @@ export default function App() {
       setDayPlanError(result.error)
     } else {
       setDayPlan(result)
+      // Save to cache
+      const cacheData = { plan: result, timestamp: Date.now() }
+      try { localStorage.setItem(DAY_PLAN_CACHE_KEY, JSON.stringify(cacheData)) } catch { /* ignore */ }
+      cachedDayPlanRef.current = result
     }
   }
 
@@ -966,8 +988,8 @@ export default function App() {
                     <span aria-hidden="true">🎯 What next?</span>
                   </button>
                 )}
-                <button onClick={handleMorningBrief} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-90 min-h-[44px] shrink-0" title="Morning Brief" aria-label="Morning Brief"><span aria-hidden="true">☀️</span></button>
-                <button onClick={handlePlanDay} disabled={dayPlanLoading} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] shrink-0 disabled:opacity-50" title="Plan my day" aria-label="Plan my day"><span aria-hidden="true">📋</span></button>
+                <button onClick={() => { setSheetContent('brief'); handleMorningBrief() }} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-90 min-h-[44px] shrink-0" title="Morning Brief" aria-label="Morning Brief"><span aria-hidden="true">☀️</span></button>
+                <button onClick={() => { setSheetContent('plan'); handlePlanDay() }} disabled={dayPlanLoading} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] shrink-0 disabled:opacity-50" title="Plan my day" aria-label="Plan my day"><span aria-hidden="true">📋</span></button>
                 <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button>
                 <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out"><span aria-hidden="true">⏻</span></button>
               </div>
@@ -984,10 +1006,10 @@ export default function App() {
                         <button onClick={() => { handleSuggest(); setShowMenu(false) }} disabled={suggesting} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                           <span aria-hidden="true">🎯 What next?</span>
                         </button>
-                        <button onClick={() => { handleMorningBrief(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        <button onClick={() => { setSheetContent('brief'); handleMorningBrief(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                           <span aria-hidden="true">☀️ Morning Brief</span>
                         </button>
-                        <button onClick={() => { handlePlanDay(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        <button onClick={() => { setSheetContent('plan'); handlePlanDay(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                           <span aria-hidden="true">📋 Plan My Day</span>
                         </button>
                         </>
@@ -1075,36 +1097,6 @@ export default function App() {
               onConnect={gcal.connect}
             />
           </div>
-          {aiSettings.enabled && !morningBriefDismissed && morningBriefRequested && (
-            <div className="lg:col-span-2">
-              <MorningBrief
-                brief={morningBrief}
-                loading={morningBriefLoading}
-                error={morningBriefError}
-                collapsed={morningBriefCollapsed}
-                onToggle={() => setMorningBriefCollapsed(v => !v)}
-                onDismiss={() => setMorningBriefDismissed(true)}
-                onPlanDay={handlePlanDay}
-                onRetry={() => {
-                  setMorningBriefError(null)
-                  try { localStorage.removeItem(BRIEF_CACHE_KEY) } catch { /* ignore */ }
-                  cachedBriefRef.current = null
-                  setBriefChipCounts(null)
-                  handleMorningBrief()
-                }}
-              />
-            </div>
-          )}
-          {showDayPlan && (
-            <div className="lg:col-span-2">
-              <DayPlan
-                plan={dayPlan}
-                loading={dayPlanLoading}
-                error={dayPlanError}
-                onClose={() => { setShowDayPlan(false); setDayPlan(null); setDayPlanError(null) }}
-              />
-            </div>
-          )}
 
           {/* ── Brief entry chip ──────────────────────────────── */}
           {aiSettings.enabled && (
@@ -1114,7 +1106,7 @@ export default function App() {
                 dueTodayCount={briefChipCounts?.dueToday ?? null}
                 loading={morningBriefLoading}
                 error={morningBriefError}
-                onTap={handleMorningBrief}
+                onTap={() => { setSheetContent('brief'); handleMorningBrief() }}
               />
             </div>
           )}
@@ -1363,6 +1355,50 @@ export default function App() {
           </button>
         </div>
       </nav>
+
+      {/* ── AI Briefs Bottom Sheet ────────────────────────────── */}
+      <BottomSheet
+        open={sheetContent !== null}
+        onClose={() => {
+          setSheetContent(null)
+          if (sheetContent === 'plan') {
+            setDayPlan(null)
+            setDayPlanError(null)
+          }
+        }}
+      >
+        {sheetContent === 'brief' && (
+          <MorningBrief
+            brief={morningBrief}
+            loading={morningBriefLoading}
+            error={morningBriefError}
+            collapsed={morningBriefCollapsed}
+            onToggle={() => setMorningBriefCollapsed(v => !v)}
+            onDismiss={() => setSheetContent(null)}
+            onPlanDay={() => { setSheetContent('plan'); handlePlanDay() }}
+            onRetry={() => {
+              setMorningBriefError(null)
+              try { localStorage.removeItem(BRIEF_CACHE_KEY) } catch { /* ignore */ }
+              cachedBriefRef.current = null
+              setBriefChipCounts(null)
+              handleMorningBrief()
+            }}
+          />
+        )}
+        {sheetContent === 'plan' && (
+          <DayPlan
+            plan={dayPlan}
+            loading={dayPlanLoading}
+            error={dayPlanError}
+            onRefresh={() => handlePlanDay(true)}
+            onClose={() => {
+              setSheetContent(null)
+              setDayPlan(null)
+              setDayPlanError(null)
+            }}
+          />
+        )}
+      </BottomSheet>
     </div>
     </ErrorBoundary>
   )
