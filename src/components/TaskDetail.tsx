@@ -227,17 +227,19 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     >
       <div
         ref={sheetRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
           border border-slate-200 dark:border-slate-700 overflow-hidden
           max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden">
+        {/* Drag handle — touch handlers live here only so the scrollable body doesn't trigger dismiss */}
+        <div
+          className="flex justify-center pt-2 pb-0 max-sm:block hidden touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
 
