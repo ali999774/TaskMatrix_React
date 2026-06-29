@@ -1110,13 +1110,10 @@ export default function App() {
             </div>
           )}
 
-          {/* Today strip */}
-          <div className="lg:col-start-1 lg:row-start-1">
+          {/* Today strip + matrix + heatmap — left column */}
+          <div className="flex flex-col min-w-0 w-full">
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
-          </div>
 
-          {/* Matrix column */}
-          <div className="lg:col-start-1 lg:row-start-2 flex flex-col min-w-0 w-full">
             <MatrixScreen
               tasks={filteredTasks}
               onMove={handleMove}
@@ -1139,8 +1136,8 @@ export default function App() {
 
           </div>
 
-          {/* Sticky notes sidebar */}
-          <div className="lg:col-start-2 lg:row-start-2 w-full shrink-0">
+          {/* Sticky notes sidebar — auto-placed in col 2, same row as left column */}
+          <div className="w-full shrink-0">
             <StickyWall
               notes={pinnedNotes}
               onDelete={handleDeleteNote}
