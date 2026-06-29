@@ -32,11 +32,11 @@ export default function CalendarStrip({ events, isConnected, isLoading, onConnec
     if (dismissed) return null
 
     return (
-      <div className="mx-3 mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 relative group">
+      <div className="mx-3 mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 relative">
         <button
           onClick={onConnect}
           disabled={isLoading}
-          className="w-full flex items-center gap-2 text-[0.8125rem] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-h-[44px] disabled:opacity-50"
+          className="w-full flex items-center gap-2 text-[0.8125rem] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-h-[44px] disabled:opacity-50 pr-8"
         >
           <Calendar className="w-4 h-4 flex-shrink-0" />
           {isLoading ? 'Connecting…' : '📅 Connect Google Calendar to see today\'s events'}
@@ -44,11 +44,11 @@ export default function CalendarStrip({ events, isConnected, isLoading, onConnec
         <button
           onClick={(e) => { e.stopPropagation(); handleDismiss() }}
           aria-label="Dismiss"
-          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center
-            text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800
-            opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px] min-w-[44px]"
+          className="absolute top-1 right-1 flex items-center justify-center
+            text-slate-300 dark:text-slate-600 hover:text-slate-500 dark:hover:text-slate-400
+            min-h-[44px] min-w-[44px]"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     )
