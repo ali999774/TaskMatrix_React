@@ -1,5 +1,6 @@
 import type { Task, Quadrant } from '../types'
 import { importanceUrgencyToQuadrant, QUADRANT_LABELS, QUADRANT_SUBTITLES } from '../types'
+import { parseLocalDate } from './dates'
 
 /**
  * Breakpoint (px) at which the matrix switches from list → grid layout.
@@ -33,6 +34,13 @@ export function groupTasksByQuadrant(tasks: Task[]): QuadrantBucket[] {
   const buckets: Record<Quadrant, Task[]> = { 1: [], 2: [], 3: [], 4: [] }
   for (const t of tasks) {
     if (t.status !== 'todo') continue
+    // Hide tasks due strictly in the future (e.g. recurring clones not yet due)
+    if (t.due_date) {
+      const due = parseLocalDate(t.due_date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (due.getTime() > today.getTime()) continue
+    }
     const q = importanceUrgencyToQuadrant(t.importance, t.urgency)
     buckets[q].push(t)
   }

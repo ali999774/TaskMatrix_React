@@ -213,6 +213,7 @@ export default function TaskCard({
             haptics('light')
             onToggleExpand?.(task.id)
           }}
+          onTouchStart={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
           className="shrink-0 flex items-center justify-center w-[30px] h-[44px] rounded transition-colors text-slate-300 hover:text-slate-400 dark:text-slate-600 dark:hover:text-slate-500"
         >
@@ -288,6 +289,7 @@ export default function TaskCard({
               <div
                 className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50 space-y-1"
                 onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
               >
                 {task.subtasks!.map((st, i) => {
                   const isChecked = st.done || false

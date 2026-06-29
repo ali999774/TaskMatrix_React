@@ -20,13 +20,23 @@ function getNextDueDate(
     base.setDate(base.getDate() + 1)
   } else if (frequency === 'weekly') {
     const targetDays = recurDays && recurDays.length > 0 ? recurDays : [base.getDay()]
-    // Find the next matching day
     for (let i = 1; i <= 7; i++) {
       base.setDate(base.getDate() + 1)
       if (targetDays.includes(base.getDay())) break
     }
+  } else if (frequency === 'biweekly') {
+    const targetDays = recurDays && recurDays.length > 0 ? recurDays : [base.getDay()]
+    base.setDate(base.getDate() + 14)
+    for (let i = 1; i <= 7; i++) {
+      if (targetDays.includes(base.getDay())) break
+      base.setDate(base.getDate() + 1)
+    }
   } else if (frequency === 'monthly') {
     base.setMonth(base.getMonth() + 1)
+  } else if (frequency === 'quarterly') {
+    base.setMonth(base.getMonth() + 3)
+  } else if (frequency === 'semiannually') {
+    base.setMonth(base.getMonth() + 6)
   }
 
   const y = base.getFullYear()

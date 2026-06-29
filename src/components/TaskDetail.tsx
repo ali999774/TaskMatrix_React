@@ -125,15 +125,15 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
       recurring: checked,
       recur_frequency: checked ? recurFrequency : null,
       recur_interval: checked ? 1 : null,
-      recur_days: checked ? (recurFrequency === 'weekly' ? recurDays : null) : null,
+      recur_days: checked ? (recurFrequency === 'weekly' || recurFrequency === 'biweekly' ? recurDays : null) : null,
       series_id: checked ? (task.series_id || crypto.randomUUID()) : null,
     })
   }
 
   const handleRecurFrequencyChange = (freq: string) => {
     setRecurFrequency(freq)
-    const days = freq === 'weekly' ? (recurDays.length > 0 ? recurDays : [new Date().getDay()]) : null
-    if (freq === 'weekly') setRecurDays(days || [])
+    const days = (freq === 'weekly' || freq === 'biweekly') ? (recurDays.length > 0 ? recurDays : [new Date().getDay()]) : null
+    if (freq === 'weekly' || freq === 'biweekly') setRecurDays(days || [])
     save({ recur_frequency: freq, recur_days: days })
   }
 
@@ -382,10 +382,13 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
+                    <option value="biweekly">Every 2 Weeks</option>
                     <option value="monthly">Monthly</option>
+                    <option value="quarterly">Every 3 Months</option>
+                    <option value="semiannually">Every 6 Months</option>
                   </select>
 
-                  {recurFrequency === 'weekly' && (
+                  {(recurFrequency === 'weekly' || recurFrequency === 'biweekly') && (
                     <div className="flex gap-1">
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((label, i) => (
                         <button

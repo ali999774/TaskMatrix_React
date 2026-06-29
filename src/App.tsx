@@ -1215,6 +1215,9 @@ export default function App() {
           onAISettingsChange={updateAISettings}
           fontScale={fontScale}
           onFontScaleChange={setFontScale}
+          gcalIsConnected={gcal.isConnected}
+          gcalConnect={gcal.connect}
+          gcalDisconnect={gcal.disconnect}
         />
       )}
 

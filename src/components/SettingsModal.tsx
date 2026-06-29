@@ -13,13 +13,16 @@ interface Props {
   onAISettingsChange: (update: Partial<AISettings>) => void
   fontScale: number
   onFontScaleChange: (scale: number) => void
+  gcalIsConnected: boolean
+  gcalConnect: () => Promise<{ success: boolean; error?: string }>
+  gcalDisconnect: () => void
 }
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange }: Props) {
+export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange, gcalIsConnected, gcalConnect, gcalDisconnect }: Props) {
   const [items, setItems] = useState<CategoryDef[]>(() =>
     categories.map(c => ({ ...c }))
   )
@@ -31,6 +34,20 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
+
+  // Google Calendar connect state (local — resets on modal close)
+  const [gcalConnecting, setGcalConnecting] = useState(false)
+  const [gcalError, setGcalError] = useState<string | null>(null)
+
+  const handleGcalConnect = async () => {
+    setGcalConnecting(true)
+    setGcalError(null)
+    const result = await gcalConnect()
+    setGcalConnecting(false)
+    if (!result.success && result.error) {
+      setGcalError(result.error)
+    }
+  }
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === overlayRef.current) onClose()
@@ -282,6 +299,51 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
           {/* Divider */}
           <hr className="border-slate-200 dark:border-slate-700" />
+
+          {/* Google Calendar */}
+          <div>
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+              📅 Google Calendar
+            </label>
+            {gcalIsConnected ? (
+              <>
+                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+                  Connected. Today's events appear on the home screen.
+                </p>
+                <button
+                  onClick={gcalDisconnect}
+                  className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
+                    border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400
+                    hover:bg-red-50 dark:hover:bg-red-950/20 transition-all
+                    active:scale-[0.98] min-h-[44px]"
+                >
+                  Disconnect Google Calendar
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+                  Connect to see today's events on the home screen.
+                </p>
+                <button
+                  onClick={handleGcalConnect}
+                  disabled={gcalConnecting}
+                  className="w-full px-4 py-2.5 text-[0.875rem] font-medium rounded-lg
+                    bg-blue-600 text-white hover:bg-blue-700 transition-all
+                    active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2
+                    disabled:opacity-50"
+                >
+                  {gcalConnecting ? 'Connecting…' : 'Connect Google Calendar'}
+                </button>
+                {gcalError && (
+                  <p className="text-[0.75rem] text-red-500 mt-2">{gcalError}</p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-700" />
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
               Categories
@@ -435,12 +497,12 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               Siri Shortcut
             </p>
             <p className="text-[0.8125rem] text-slate-500 dark:text-slate-400 mb-3">
-              Add the shortcut, then say "Hey Siri, Add Task" to open quick-add instantly.
+              Add the shortcut, then say "Hey Siri, Add Task" to dictate a task — works even when locked.
             </p>
             <button
               onClick={async () => {
                 try {
-                  await AppLauncher.openUrl({ url: 'https://www.icloud.com/shortcuts/a1d8b3c387074bed841c94e3af23e8de' })
+                  await AppLauncher.openUrl({ url: 'https://www.icloud.com/shortcuts/00a60107b3ef4dd78ad957a27d0affdb' })
                 } catch {
                   // no-op — don't crash the modal
                 }

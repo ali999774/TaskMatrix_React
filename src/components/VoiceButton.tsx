@@ -20,6 +20,7 @@ type SpeechRecognitionLike = any
 export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤', autoStart = false }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
+  const [recReady, setRecReady] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listenerRef = useRef<any>(null) // native plugin listener handle
@@ -121,6 +122,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           try {
             await SpeechRecognition.stop()
           } catch { /* ignore */ }
+          setListening(false)
           // Get final result
           try {
             const result = await SpeechRecognition.getLastPartialResult()
@@ -157,6 +159,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           }
         },
       }
+      setRecReady(true)
     } catch (err) {
       console.warn('[Voice] Native speech setup failed:', err)
       setUnsupported(true)
@@ -282,6 +285,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       },
       stop: () => {
         clearSilenceTimer()
+        setListening(false)
         const r = currentRec
         currentRec = null
         if (r) r.stop()
@@ -293,6 +297,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         if (r) r.abort()
       },
     }
+    setRecReady(true)
   }, [onStatus])
 
   useEffect(() => {
@@ -346,15 +351,19 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
   }
 
-  // Auto-start recording (used by iOS home screen quick action)
+  // Auto-start recording (used by iOS home screen quick action / Siri Shortcut)
   const autoStarted = useRef(false)
   useEffect(() => {
-    if (!autoStart || autoStarted.current) return
-    if (recognitionRef.current && !listening) {
+    if (!autoStart) {
+      autoStarted.current = false
+      return
+    }
+    if (autoStarted.current) return
+    if (recReady && !listening) {
       autoStarted.current = true
       toggle()
     }
-  }, [autoStart, listening, recognitionRef.current])
+  }, [autoStart, listening, recReady])
 
   if (unsupported) return null
 
