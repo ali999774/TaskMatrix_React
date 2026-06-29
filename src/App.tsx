@@ -22,9 +22,11 @@ import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import CalendarView from './components/CalendarView'
 import CalendarStrip from './components/CalendarStrip'
+import BriefEntryChip from './components/BriefEntryChip'
 import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
+import { localTodayStr } from './lib/dates'
 import { speechSupported, formatVoiceNote } from './lib/speech'
 import { parseVoiceTranscript, suggestNextTask, formatNoteContent, suggestCategory, getMorningBrief, getDayPlan, getWhatNext } from './lib/ai-parse'
 import type { MorningBrief as MorningBriefData, DayPlan as DayPlanData } from './lib/ai-parse'
@@ -279,7 +281,6 @@ export default function App() {
   const [morningBriefError, setMorningBriefError] = useState<string | null>(null)
   const [morningBriefCollapsed, setMorningBriefCollapsed] = useState(false)
   const [morningBriefDismissed, setMorningBriefDismissed] = useState(false)
-  const [morningBriefRetry, setMorningBriefRetry] = useState(0)
   const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
   const [dayPlanLoading, setDayPlanLoading] = useState(false)
   const [dayPlanError, setDayPlanError] = useState<string | null>(null)
@@ -288,42 +289,63 @@ export default function App() {
   // Completed task titles today — used by What Next for context
   const completedTodayRef = useRef<string[]>([])
 
+  // ── Morning Brief: cache-first, no auto-generate ────────────────
+  const BRIEF_CACHE_KEY = 'tm-cached-morning-brief'
+  const [morningBriefRequested, setMorningBriefRequested] = useState(false)
+  // Counts for the entry chip — populated from cache, even when brief not displayed
+  const [briefChipCounts, setBriefChipCounts] = useState<{ overdue: number; dueToday: number } | null>(null)
+  // Holds cached brief data (avoids re-parsing localStorage on every tap)
+  const cachedBriefRef = useRef<MorningBriefData | null>(null)
+
+  /** Most-recent 4:00 AM local time as epoch ms — cache boundary. */
+  function getMostRecent4AM(): number {
+    const now = new Date()
+    const fourAM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0)
+    if (now < fourAM) fourAM.setDate(fourAM.getDate() - 1) // before 4 AM → still yesterday's window
+    return fourAM.getTime()
+  }
+
+  // On mount / user sign-in: load cached brief for chip counts.
+  // Deliberately does NOT auto-display the brief — only populates counts.
+  useEffect(() => {
+    if (!userId || tasksLoading || !aiSettings.enabled) return
+    try {
+      const raw = localStorage.getItem(BRIEF_CACHE_KEY)
+      if (!raw) return
+      const cached = JSON.parse(raw)
+      if (cached.brief && cached.timestamp && cached.timestamp >= getMostRecent4AM()) {
+        cachedBriefRef.current = cached.brief
+        setBriefChipCounts({
+          overdue: cached.brief.overdue?.length ?? 0,
+          dueToday: cached.brief.due_today?.length ?? 0,
+        })
+      }
+    } catch { /* corrupted cache — ignore */ }
+  }, [userId, tasksLoading, aiSettings.enabled])
+
+  // Fallback: when no cached brief exists, compute chip counts from live
+  // task data — free client-side filter, no API call needed.
+  useEffect(() => {
+    if (!userId || tasksLoading || !aiSettings.enabled) return
+    if (cachedBriefRef.current) return // cache already provides counts
+    if (tasks.length === 0) return
+
+    const today = localTodayStr()
+    const overdueCount = tasks.filter(t =>
+      t.due_date && t.due_date < today && t.status !== 'done'
+    ).length
+    const dueTodayCount = tasks.filter(t =>
+      t.due_date === today && t.status !== 'done'
+    ).length
+    setBriefChipCounts({ overdue: overdueCount, dueToday: dueTodayCount })
+  }, [userId, tasksLoading, aiSettings.enabled, tasks])
+
   // Auto-close mobile menu after 5s
   useEffect(() => {
     if (!showMenu) return
     const t = setTimeout(() => setShowMenu(false), 5000)
     return () => clearTimeout(t)
   }, [showMenu])
-
-  // ── Morning Brief: first-open-of-day detection ─────────────────
-  useEffect(() => {
-    if (!userId || tasksLoading || !aiSettings.enabled) return
-    if (morningBriefDismissed) return
-    const today = new Date().toISOString().split('T')[0]
-    const lastBrief = localStorage.getItem('tm-last-morning-brief')
-    if (lastBrief === today) return
-
-    // Wait for tasks to settle (avoid firing on empty initial load)
-    const t = setTimeout(() => {
-      const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
-      setMorningBriefLoading(true)
-      // Include calendar context if connected
-      const calContext = (gcal.todayEventsText && gcal.todayEventsText !== 'No calendar events today.')
-        ? gcal.todayEventsText
-        : undefined
-      getMorningBrief(active, completedTodayRef.current.length, aiSettings.model, getAIBaseUrl(), calContext).then(result => {
-        setMorningBriefLoading(false)
-        if ('error' in result) {
-          setMorningBriefError(result.error)
-        } else {
-          setMorningBrief(result)
-          localStorage.setItem('tm-last-morning-brief', today)
-        }
-      })
-    }, 1500)
-
-    return () => clearTimeout(t)
-  }, [userId, tasksLoading, aiSettings.enabled, morningBriefDismissed, morningBriefRetry])
 
   // Reset voice-task quick-action flag once recording starts, so it
   // re-arms for the next Siri / force-touch invocation.
@@ -553,19 +575,38 @@ export default function App() {
   }
 
   const handleMorningBrief = () => {
+    setMorningBriefRequested(true)
     setMorningBriefDismissed(false)
     setMorningBriefCollapsed(false)
+
+    // If we have a valid cached brief, use it — no API call
+    if (cachedBriefRef.current) {
+      setMorningBrief(cachedBriefRef.current)
+      return
+    }
+
+    // No cache — generate fresh
     setMorningBriefLoading(true)
     setMorningBriefError(null)
     const today = new Date().toISOString().split('T')[0]
     const active = tasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived')
-    getMorningBrief(active, completedTodayRef.current.length, aiSettings.model, getAIBaseUrl()).then(result => {
+    const calContext = (gcal.todayEventsText && gcal.todayEventsText !== 'No calendar events today.')
+      ? gcal.todayEventsText
+      : undefined
+    getMorningBrief(active, completedTodayRef.current.length, aiSettings.model, getAIBaseUrl(), calContext).then(result => {
       setMorningBriefLoading(false)
       if ('error' in result) {
         setMorningBriefError(result.error)
       } else {
         setMorningBrief(result)
-        localStorage.setItem('tm-last-morning-brief', today)
+        // Save to cache so it survives reloads
+        const cacheData = { brief: result, timestamp: Date.now(), date: today }
+        try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(cacheData)) } catch { /* quota exceeded — ignore */ }
+        cachedBriefRef.current = result
+        setBriefChipCounts({
+          overdue: result.overdue?.length ?? 0,
+          dueToday: result.due_today?.length ?? 0,
+        })
       }
     })
   }
@@ -1034,7 +1075,7 @@ export default function App() {
               onConnect={gcal.connect}
             />
           </div>
-          {aiSettings.enabled && !morningBriefDismissed && (
+          {aiSettings.enabled && !morningBriefDismissed && morningBriefRequested && (
             <div className="lg:col-span-2">
               <MorningBrief
                 brief={morningBrief}
@@ -1046,8 +1087,10 @@ export default function App() {
                 onPlanDay={handlePlanDay}
                 onRetry={() => {
                   setMorningBriefError(null)
-                  localStorage.removeItem('tm-last-morning-brief')
-                  setMorningBriefRetry(n => n + 1)
+                  try { localStorage.removeItem(BRIEF_CACHE_KEY) } catch { /* ignore */ }
+                  cachedBriefRef.current = null
+                  setBriefChipCounts(null)
+                  handleMorningBrief()
                 }}
               />
             </div>
@@ -1059,6 +1102,19 @@ export default function App() {
                 loading={dayPlanLoading}
                 error={dayPlanError}
                 onClose={() => { setShowDayPlan(false); setDayPlan(null); setDayPlanError(null) }}
+              />
+            </div>
+          )}
+
+          {/* ── Brief entry chip ──────────────────────────────── */}
+          {aiSettings.enabled && (
+            <div className="lg:col-span-2">
+              <BriefEntryChip
+                overdueCount={briefChipCounts?.overdue ?? null}
+                dueTodayCount={briefChipCounts?.dueToday ?? null}
+                loading={morningBriefLoading}
+                error={morningBriefError}
+                onTap={handleMorningBrief}
               />
             </div>
           )}
