@@ -1,7 +1,8 @@
 // CalendarStrip — today's Google Calendar events, shown above the matrix
 // Appears only when calendar is connected and events exist
 
-import { Calendar, Clock, ExternalLink } from 'lucide-react'
+import { useState } from 'react'
+import { Calendar, Clock, ExternalLink, X } from 'lucide-react'
 import type { CalendarEvent } from '../lib/gcal'
 
 interface Props {
@@ -12,10 +13,26 @@ interface Props {
 }
 
 export default function CalendarStrip({ events, isConnected, isLoading, onConnect }: Props) {
-  // Not connected — show connect prompt
+  // One-time dismissible nudge — once dismissed, never shown again
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem('tm-calendar-nudge-dismissed') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const handleDismiss = () => {
+    setDismissed(true)
+    try { localStorage.setItem('tm-calendar-nudge-dismissed', 'true') } catch {}
+  }
+
+  // Not connected — show connect prompt (unless dismissed)
   if (!isConnected) {
+    if (dismissed) return null
+
     return (
-      <div className="mx-3 mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600">
+      <div className="mx-3 mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 relative group">
         <button
           onClick={onConnect}
           disabled={isLoading}
@@ -23,6 +40,15 @@ export default function CalendarStrip({ events, isConnected, isLoading, onConnec
         >
           <Calendar className="w-4 h-4 flex-shrink-0" />
           {isLoading ? 'Connecting…' : '📅 Connect Google Calendar to see today\'s events'}
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleDismiss() }}
+          aria-label="Dismiss"
+          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center
+            text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800
+            opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px] min-w-[44px]"
+        >
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
     )
