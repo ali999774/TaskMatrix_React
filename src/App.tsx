@@ -317,6 +317,11 @@ export default function App() {
       if (!raw) return
       const cached = JSON.parse(raw)
       if (cached.brief && cached.timestamp && cached.timestamp >= getMostRecent4AM()) {
+        // Guard against old prompt-shape cache (pre June-2026 judgment-first migration)
+        if (!cached.brief.headline) {
+          localStorage.removeItem(BRIEF_CACHE_KEY)
+          return
+        }
         cachedBriefRef.current = cached.brief
       }
     } catch { /* corrupted cache — ignore */ }
@@ -575,7 +580,7 @@ export default function App() {
   const handleMorningBrief = () => {
 
     // If we have a valid cached brief, use it — no API call
-    if (cachedBriefRef.current) {
+    if (cachedBriefRef.current?.headline) {
       setMorningBrief(cachedBriefRef.current)
       return
     }
