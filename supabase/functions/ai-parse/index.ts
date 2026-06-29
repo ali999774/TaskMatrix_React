@@ -282,6 +282,7 @@ Rules:
 - category: infer from context. Suggest one of: Work, Personal, Health, Learning, Clinic, Dev, Finance, Errands, Home. Return null if unclear.
 - importance: 1-5 (3 = normal). Higher if they say "urgent", "critical", "important", "priority". Lower if "whenever", "no rush", "low priority".
 - urgency: 1-5 (3 = normal). Higher if deadline is soon or they sound pressed. Lower if no deadline mentioned.
+- lead_days: integer number of days BEFORE the due date the user wants to start seeing / be reminded of this task. Extract ONLY when explicitly stated, e.g. "remind me three days before" → 3, "a week ahead" → 7, "the day before" → 1. Do NOT infer or guess a lead time from the task's content or type. If the user says nothing about lead/advance notice, return null. Never default to 0.
 - notes: any extra detail, context, or subtasks they mentioned. Return null if none.`;
     }
 

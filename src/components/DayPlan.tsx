@@ -2,6 +2,8 @@
 
 import { X, Zap, Clock, ArrowRight, RefreshCw } from 'lucide-react'
 import type { DayPlan as DayPlanData } from '../lib/ai-parse'
+import type { Task } from '../types'
+import CheckCircle from './matrix/CheckCircle'
 
 interface Props {
   plan: DayPlanData | null
@@ -9,9 +11,15 @@ interface Props {
   error: string | null
   onClose: () => void
   onRefresh?: () => void
+  // Real tasks, so each plan line can resolve its id to a live task and become
+  // actionable (complete / open) instead of read-only prose.
+  tasks?: Task[]
+  onComplete?: (id: string) => void
+  onTaskClick?: (task: Task) => void
 }
 
-export default function DayPlan({ plan, loading, error, onClose, onRefresh }: Props) {
+export default function DayPlan({ plan, loading, error, onClose, onRefresh, tasks, onComplete, onTaskClick }: Props) {
+  const taskById = new Map((tasks ?? []).map((t) => [t.id, t]))
   if (error) {
     return (
       <div className="mx-3 mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[0.8125rem] text-amber-700 dark:text-amber-300">
@@ -71,38 +79,54 @@ export default function DayPlan({ plan, loading, error, onClose, onRefresh }: Pr
 
       {/* Plan items */}
       <div className="px-4 py-2 space-y-0.5">
-        {plan.plan.map((item: DayPlanData['plan'][0], i: number) => (
-          <div
-            key={item.id || i}
-            className="flex items-start gap-3 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-0"
-          >
-            {/* Number */}
-            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[0.6875rem] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
-              {i + 1}
-            </span>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="text-[0.8125rem] font-medium text-slate-800 dark:text-slate-100">
-                {item.title}
-              </div>
-              <div className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
-                {item.rationale}
-              </div>
-              {item.batch_hint && (
-                <div className="mt-1 text-[0.6875rem] text-blue-600 dark:text-blue-400 italic">
-                  {item.batch_hint}
-                </div>
+        {plan.plan.map((item: DayPlanData['plan'][0], i: number) => {
+          // Resolve the model-supplied id to a live task. When matched, the row
+          // gets a working checkbox + opens details on tap; otherwise it stays
+          // read-only (model may reference a non-existent / stale id).
+          const task = item.id ? taskById.get(item.id) : undefined
+          const isDone = task?.status === 'done'
+          return (
+            <div
+              key={item.id || i}
+              className="flex items-start gap-2.5 py-2.5 border-b border-slate-50 dark:border-slate-800/50 last:border-0"
+            >
+              {/* Checkbox when matched to a real task, else the step number */}
+              {task && onComplete ? (
+                <CheckCircle status={task.status} onToggle={() => onComplete(task.id)} />
+              ) : (
+                <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[0.6875rem] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
               )}
-            </div>
 
-            {/* Duration */}
-            <span className="text-[0.6875rem] text-slate-400 flex items-center gap-1 flex-shrink-0">
-              <Clock className="w-3 h-3" />
-              {item.suggested_duration}
-            </span>
-          </div>
-        ))}
+              {/* Content — tappable to open the real task when matched */}
+              <button
+                type="button"
+                disabled={!task || !onTaskClick}
+                onClick={() => task && onTaskClick?.(task)}
+                className="flex-1 min-w-0 text-left disabled:cursor-default"
+              >
+                <div className={`text-[0.8125rem] font-medium ${isDone ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+                  {item.title}
+                </div>
+                <div className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {item.rationale}
+                </div>
+                {item.batch_hint && (
+                  <div className="mt-1 text-[0.6875rem] text-blue-600 dark:text-blue-400 italic">
+                    {item.batch_hint}
+                  </div>
+                )}
+              </button>
+
+              {/* Duration */}
+              <span className="text-[0.6875rem] text-slate-400 flex items-center gap-1 flex-shrink-0">
+                <Clock className="w-3 h-3" />
+                {item.suggested_duration}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {/* Footer with pacing + energy tip */}

@@ -17,6 +17,9 @@ interface ParsedTask {
   recurring?: boolean
   recur_frequency?: string | null
   recur_days?: number[] | null
+  // Explicitly stated lead time only (e.g. "remind me three days before" → 3).
+  // null when the user said nothing about lead — never inferred from content.
+  lead_days?: number | null
 }
 
 async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{ data: Record<string, unknown> } | { error: string }> {
@@ -85,6 +88,9 @@ export async function parseVoiceTranscript(
       recurring: d.recurring === true,
       recur_frequency: (d.recur_frequency as string) || null,
       recur_days: Array.isArray(d.recur_days) ? (d.recur_days as number[]) : null,
+      // Only accept an explicitly extracted number; anything else stays null
+      // (unset). Preserves an explicit 0; never coalesces unset→0.
+      lead_days: typeof d.lead_days === 'number' ? Math.max(0, Math.round(d.lead_days)) : null,
     },
   }
 }
