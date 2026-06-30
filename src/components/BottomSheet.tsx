@@ -107,7 +107,7 @@ export default function BottomSheet({ open, onClose, children }: Props) {
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div className="fixed inset-0 z-50 flex items-stretch justify-center">
           {/* Backdrop scrim */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -132,9 +132,10 @@ export default function BottomSheet({ open, onClose, children }: Props) {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="relative w-full max-w-lg max-h-[85vh] bg-white dark:bg-slate-900
+            className="relative w-full max-w-lg h-full bg-white dark:bg-slate-900
               rounded-t-2xl shadow-2xl border border-slate-200 dark:border-slate-700
               overflow-hidden flex flex-col
+              pt-[env(safe-area-inset-top)]
               pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
             {/* Drag handle */}
