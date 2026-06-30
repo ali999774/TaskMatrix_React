@@ -235,7 +235,8 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="📌 Note title (with emoji)..."
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+            className="w-full bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 text-[1rem] text-amber-950 dark:text-amber-100 placeholder-amber-300 dark:placeholder-amber-700 outline-none focus:border-amber-400 dark:focus:border-amber-500 transition-colors"
+            style={{ fontFamily: 'ui-rounded, system-ui, sans-serif' }}
           />
 
           {/* Formatting toolbar */}
@@ -270,7 +271,11 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
 1. numbered`}
             rows={14}
             autoFocus
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono min-h-[300px]"
+            className="w-full bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 text-[1rem] text-amber-950 dark:text-amber-100 placeholder-amber-300 dark:placeholder-amber-700 outline-none focus:border-amber-400 dark:focus:border-amber-500 transition-colors resize-none min-h-[280px] shadow-[2px_3px_8px_rgba(0,0,0,0.08)]"
+            style={{
+              fontFamily: 'ui-rounded, -apple-system-handwriting, "Segoe Print", cursive',
+              transform: 'rotate(-0.3deg)',
+            }}
           />
 
           {/* Pin toggle */}
