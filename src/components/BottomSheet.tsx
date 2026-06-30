@@ -20,6 +20,10 @@ export default function BottomSheet({ open, onClose, children }: Props) {
   const touchCurrentY = useRef(0)
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only initiate drag-to-dismiss from the drag handle — otherwise
+    // scrolling inside the content area triggers an accidental dismiss.
+    const target = e.target as HTMLElement
+    if (!target.closest('[data-drag-handle]')) return
     touchStartY.current = e.touches[0].clientY
   }, [])
 
@@ -134,7 +138,7 @@ export default function BottomSheet({ open, onClose, children }: Props) {
               pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+            <div data-drag-handle className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-8 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
             </div>
 
