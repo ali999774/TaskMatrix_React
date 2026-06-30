@@ -1,6 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Dexie, { type Table } from 'dexie'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { coalesceMutations } from '../lib/coalesce'
+
+// Transport error = dead socket / no server response. NOT a server rejection.
+// Server rejections carry a PostgREST code (e.g. '42501' RLS, '23505' unique) or
+// a 4xx status; those won't fix on blind retry. Anything we can't classify is
+// treated as transport (keep, don't drop) — never lose data on uncertainty.
+function isTransportError(error: unknown): boolean {
+  if (!error) return false
+  const e = error as { message?: string; code?: string; status?: number }
+  if (typeof e.code === 'string' && e.code.length > 0) return false
+  if (typeof e.status === 'number' && e.status >= 400 && e.status < 500) return false
+  const msg = (e.message ?? '').toLowerCase()
+  return msg === '' || msg.includes('failed to fetch') || msg.includes('networkerror')
+    || msg.includes('network error') || msg.includes('load failed')
+    || msg.includes('unreachable') || msg.includes('disconnected') || msg.includes('timeout')
+}
 
 interface QueuedMutation {
   id?: number
@@ -109,34 +125,54 @@ export function useOfflineQueue(userId: string | null, supabase: SupabaseClient 
     flushingRef.current = true
     setIsFlushing(true)
 
-    for (const item of fresh) {
-      // [TM][QUEUE-REPLAY] log every mutation being replayed from the offline queue
-      // eslint-disable-next-line no-console
-      console.log('[TM][QUEUE-REPLAY]', item.table, item.operation, item.recordId, 'payload ->', JSON.stringify(item.payload ?? null))
-      try {
-        const ck = item.conflictKey ?? 'id'
-        switch (item.operation) {
-          case 'create': {
-            // Full payload — upsert is safe because user_id is included
-            const record = { [ck]: item.recordId, ...(item.payload || {}) }
-            await supabase.from(item.table).upsert(record, { onConflict: ck })
-            break
-          }
-          case 'update': {
-            // Partial payload — use update().eq() to avoid the INSERT branch of
-            // upsert, which would fail RLS when user_id is absent from the payload
-            await supabase.from(item.table).update(item.payload || {}).eq(ck, item.recordId)
-            break
-          }
-          case 'delete':
-            await supabase.from(item.table).delete().eq(ck, item.recordId)
-            break
-        }
-        // Remove from queue on success
-        if (item.id !== undefined) await db.mutations.delete(item.id)
-      } catch (err) {
-        console.warn('[OfflineQueue] Flush failed for', item, err)
+    // Fold every queued mutation that targets the same (table, recordId) into one
+    // effective write. Replaying a multi-step change (e.g. complete→undo) as a
+    // single write keeps the record atomic — a flaky reconnect can no longer apply
+    // only half of it.
+    const coalesced = coalesceMutations(fresh)
+
+    for (const m of coalesced) {
+      if (m.operation === 'noop') {
+        // Steps cancelled out (e.g. created then deleted offline): send nothing,
+        // but still clear the folded rows.
+        for (const id of m.sourceIds) await db.mutations.delete(id)
+        continue
       }
+
+      console.log('[TM][QUEUE-REPLAY]', m.table, m.operation, m.recordId,
+        'payload ->', JSON.stringify(m.payload ?? null))
+
+      let result: { error: unknown }
+      try {
+        const ck = m.conflictKey ?? 'id'
+        if (m.operation === 'create') {
+          // Full payload — upsert is safe because user_id is included
+          result = await supabase.from(m.table).upsert({ [ck]: m.recordId, ...m.payload }, { onConflict: ck })
+        } else if (m.operation === 'update') {
+          // Partial payload — use update().eq() to avoid the INSERT branch of
+          // upsert, which would fail RLS when user_id is absent from the payload
+          result = await supabase.from(m.table).update(m.payload).eq(ck, m.recordId)
+        } else {
+          result = await supabase.from(m.table).delete().eq(ck, m.recordId)
+        }
+      } catch (err) {
+        result = { error: err } // some environments throw instead of resolving { error }
+      }
+
+      if (result.error) {
+        if (isTransportError(result.error)) {
+          // Dead socket: keep this mutation queued and STOP. A partial flush is what
+          // splits a record. Retry on next reconnect.
+          console.warn('[TM][QUEUE-HALT] transport failure — keeping queued', m.recordId, result.error)
+          break
+        }
+        console.warn('[TM][QUEUE-DROP] server rejected — dropping', m.recordId, result.error)
+        for (const id of m.sourceIds) await db.mutations.delete(id)
+        continue
+      }
+
+      // Success: clear all folded rows.
+      for (const id of m.sourceIds) await db.mutations.delete(id)
     }
 
     const remaining = await db.mutations.count()
