@@ -75,7 +75,19 @@
   --radius-grid-cell:      18px;
   --radius-icon-tile:      10px;
 
-  /* ── Font family — iOS system stack ────────────────────────────────────── */
+  /* ── Brief insight semantic colors ──────────────────────────────────────── */
+  /* Reusable across MorningBrief + DayPlan; not one-off per-component.        */
+  --color-brief-urgent:         #e0512f;
+  --color-brief-urgent-soft:    #fdece6;
+  --color-brief-urgent-border:  #f2c4b8;
+  --color-brief-protect:        #1f8f5f;
+  --color-brief-protect-soft:   #e8f6ee;
+  --color-brief-protect-border: #b8e0cc;
+  --color-brief-batch:          #b8860b;
+  --color-brief-batch-soft:     #fbf3e0;
+  --color-brief-batch-border:   #f0d78c;
+
+  /* ── Font family ── iOS system stack ────────────────────────────────────── */
   --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text",
                       "Helvetica Neue", Arial, sans-serif;
 }
@@ -116,6 +128,17 @@
     --color-text-primary:   #FFFFFF;
     --color-text-muted:     #98989F;
 
+    /* Brief insight dark overrides */
+    --color-brief-urgent:         #ff6b4a;
+    --color-brief-urgent-soft:    #2d1814;
+    --color-brief-urgent-border:  #5c2a22;
+    --color-brief-protect:        #2ecc71;
+    --color-brief-protect-soft:   #0d1f16;
+    --color-brief-protect-border: #1a4a2e;
+    --color-brief-batch:          #daa520;
+    --color-brief-batch-soft:     #1f180a;
+    --color-brief-batch-border:   #4a3a14;
+
     /* Pomodoro dark overrides */
     --color-pomodoro-track:     #48484A;
     --color-pomodoro-work:      #34D399;  /* work arc — emerald green (dark) */
@@ -137,6 +160,17 @@
       --color-surface:        #1C1C1E;
       --color-text-primary:   #FFFFFF;
       --color-text-muted:     #98989F;
+
+      /* Brief insight dark overrides */
+      --color-brief-urgent:         #ff6b4a;
+      --color-brief-urgent-soft:    #2d1814;
+      --color-brief-urgent-border:  #5c2a22;
+      --color-brief-protect:        #2ecc71;
+      --color-brief-protect-soft:   #0d1f16;
+      --color-brief-protect-border: #1a4a2e;
+      --color-brief-batch:          #daa520;
+      --color-brief-batch-soft:     #1f180a;
+      --color-brief-batch-border:   #4a3a14;
 
       /* Pomodoro dark overrides */
       --color-pomodoro-track:     #48484A;

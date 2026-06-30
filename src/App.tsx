@@ -1390,6 +1390,7 @@ export default function App() {
             loading={morningBriefLoading}
             error={morningBriefError}
             tasks={filteredTasks}
+            categories={categories}
             onComplete={(id) => handleStatusChange(id, 'done')}
             onTaskClick={(task) => { setSheetContent(null); setSelectedTask(task) }}
             onDismiss={() => setSheetContent(null)}
