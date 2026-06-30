@@ -19,11 +19,39 @@ const ALI_CATEGORIES: CategoryDef[] = [
   { label: 'personal', display: 'Personal', color: 'emerald', icon: 'user' },
 ]
 
+// Emoji → Lucide migration map (one-time upgrade for existing categories)
+const EMOJI_MIGRATION: Record<string, string> = {
+  '👤': 'user',
+  '💼': 'briefcase-business',
+  '❤️': 'heart',
+  '📚': 'graduation-cap',
+  '🏥': 'stethoscope',
+  '🏗': 'rocket',
+  '💻': 'monitor',
+  '📌': 'plus',
+}
+
+/** Upgrade emoji icons to Lucide icon names in-place. Returns true if anything changed. */
+function migrateIcons(categories: CategoryDef[]): boolean {
+  let changed = false
+  for (const c of categories) {
+    if (c.icon && c.icon in EMOJI_MIGRATION) {
+      c.icon = EMOJI_MIGRATION[c.icon]
+      changed = true
+    }
+  }
+  return changed
+}
+
 export function useUserSettings(userId: string | null, offlineQueue?: OfflineQueue) {
   const [categories, setCategories] = useState<CategoryDef[]>(() => {
     try {
       const cached = localStorage.getItem(LS_KEY)
-      if (cached) return JSON.parse(cached) as CategoryDef[]
+      if (cached) {
+        const parsed = JSON.parse(cached) as CategoryDef[]
+        migrateIcons(parsed)
+        return parsed
+      }
     } catch { /* ignore invalid cached JSON */ }
     return DEFAULT_CATEGORIES
   })
@@ -41,8 +69,17 @@ export function useUserSettings(userId: string | null, offlineQueue?: OfflineQue
         .maybeSingle()
 
       if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
-        setCategories(data.categories as CategoryDef[])
-        localStorage.setItem(LS_KEY, JSON.stringify(data.categories))
+        const cats = data.categories as CategoryDef[]
+        const changed = migrateIcons(cats)
+        setCategories(cats)
+        localStorage.setItem(LS_KEY, JSON.stringify(cats))
+        // If we upgraded emoji icons, persist the migration back to Supabase
+        if (changed) {
+          supabase
+            .from('user_settings')
+            .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' })
+            .then(() => {})
+        }
       } else {
         // No settings yet — migrate Ali's existing categories if they have tasks
         await migrateExisting(userId)
@@ -67,6 +104,7 @@ export function useUserSettings(userId: string | null, offlineQueue?: OfflineQue
       }, (payload) => {
         const row = payload.new as { categories: CategoryDef[] }
         if (row.categories && Array.isArray(row.categories)) {
+          migrateIcons(row.categories)
           setCategories(row.categories)
           localStorage.setItem(LS_KEY, JSON.stringify(row.categories))
         }

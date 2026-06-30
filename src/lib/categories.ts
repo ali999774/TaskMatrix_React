@@ -13,7 +13,7 @@ export interface CategoryDef {
   icon: string    // Lucide icon name (e.g., "stethoscope") or emoji fallback
 }
 
-export const MAX_CATEGORIES = 7
+export const MAX_CATEGORIES = 4
 
 // Available Lucide icons for category selection
 export const CATEGORY_ICON_NAMES = [
