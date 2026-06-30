@@ -18,6 +18,11 @@ interface Props {
   onTaskClick?: (task: Task) => void
 }
 
+/** Only show a duration badge when there's a real estimate to display. */
+function hasDuration(d: string | undefined): boolean {
+  return !!(d && d.trim())
+}
+
 export default function DayPlan({ plan, loading, error, onClose, onRefresh, tasks, onComplete, onTaskClick }: Props) {
   const taskById = new Map((tasks ?? []).map((t) => [t.id, t]))
   if (error) {
@@ -47,7 +52,7 @@ export default function DayPlan({ plan, loading, error, onClose, onRefresh, task
     return (
       <div className="mx-3 mb-3 p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200">📋 Your Day Plan</span>
+          <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200">Your Day Plan</span>
           <button onClick={onClose} className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]" aria-label="Back">
             <span aria-hidden="true" className="text-[1rem]">←</span>
           </button>
@@ -67,7 +72,7 @@ export default function DayPlan({ plan, loading, error, onClose, onRefresh, task
           <span aria-hidden="true" className="text-[1rem]">←</span>
         </button>
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200">📋 Your Day Plan</span>
+          <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200">Your Day Plan</span>
           <span className="text-[0.6875rem] text-slate-400">{plan.total_estimated}</span>
         </div>
         {onRefresh && (
@@ -85,6 +90,8 @@ export default function DayPlan({ plan, loading, error, onClose, onRefresh, task
           // read-only (model may reference a non-existent / stale id).
           const task = item.id ? taskById.get(item.id) : undefined
           const isDone = task?.status === 'done'
+          const showDuration = hasDuration(item.suggested_duration)
+
           return (
             <div
               key={item.id || i}
@@ -100,30 +107,36 @@ export default function DayPlan({ plan, loading, error, onClose, onRefresh, task
               )}
 
               {/* Content — tappable to open the real task when matched */}
-              <button
-                type="button"
-                disabled={!task || !onTaskClick}
-                onClick={() => task && onTaskClick?.(task)}
-                className="flex-1 min-w-0 text-left disabled:cursor-default"
-              >
-                <div className={`text-[0.8125rem] font-medium ${isDone ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
-                  {item.title}
-                </div>
-                <div className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {item.rationale}
-                </div>
-                {item.batch_hint && (
-                  <div className="mt-1 text-[0.6875rem] text-blue-600 dark:text-blue-400 italic">
-                    {item.batch_hint}
+              <div className="flex-1 min-w-0">
+                <button
+                  type="button"
+                  disabled={!task || !onTaskClick}
+                  onClick={() => task && onTaskClick?.(task)}
+                  className="text-left disabled:cursor-default"
+                >
+                  <div className={`text-[0.8125rem] font-medium ${isDone ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+                    {item.title}
                   </div>
-                )}
-              </button>
+                  <div className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
+                    {item.rationale}
+                  </div>
+                </button>
 
-              {/* Duration */}
-              <span className="text-[0.6875rem] text-slate-400 flex items-center gap-1 flex-shrink-0">
-                <Clock className="w-3 h-3" />
-                {item.suggested_duration}
-              </span>
+                {/* Batch hint — pill button with own hit target */}
+                {item.batch_hint && (
+                  <span className="inline-block mt-1.5 text-[0.6875rem] font-medium text-[var(--color-brief-batch)] bg-[var(--color-brief-batch-soft)] border border-[var(--color-brief-batch-border)] rounded-full px-2.5 py-0.5 min-h-[28px] flex items-center">
+                    {item.batch_hint}
+                  </span>
+                )}
+              </div>
+
+              {/* Duration badge — only when there's a real estimate */}
+              {showDuration && (
+                <span className="text-[0.6875rem] text-slate-500 dark:text-slate-400 flex items-center gap-1 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 mt-0.5">
+                  <Clock className="w-3 h-3" />
+                  {item.suggested_duration}
+                </span>
+              )}
             </div>
           )
         })}
