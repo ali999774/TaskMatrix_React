@@ -292,7 +292,7 @@ export default function App() {
   const completedTodayRef = useRef<string[]>([])
 
   // ── Morning Brief: cache-first, no auto-generate ────────────────
-  const BRIEF_CACHE_KEY = 'tm-cached-morning-brief'
+  const BRIEF_CACHE_KEY = 'tm-cached-morning-brief-v3'
   // Counts for the entry chip — populated from cache, even when brief not displayed
   const [briefChipCounts, setBriefChipCounts] = useState<{ overdue: number; dueToday: number } | null>(null)
   // Holds cached brief data (avoids re-parsing localStorage on every tap)
@@ -319,8 +319,8 @@ export default function App() {
       if (!raw) return
       const cached = JSON.parse(raw)
       if (cached.brief && cached.timestamp && cached.timestamp >= getMostRecent4AM()) {
-        // Guard against old prompt-shape cache (pre June-2026 judgment-first migration)
-        if (!cached.brief.headline) {
+        // Guard against old prompt-shape cache (pre-v3 structured-card migration)
+        if (!cached.brief.title || !cached.brief.cards) {
           localStorage.removeItem(BRIEF_CACHE_KEY)
           return
         }
@@ -583,7 +583,7 @@ export default function App() {
   const handleMorningBrief = () => {
 
     // If we have a valid cached brief, use it — no API call
-    if (cachedBriefRef.current?.headline) {
+    if (cachedBriefRef.current?.title) {
       setMorningBrief(cachedBriefRef.current)
       return
     }
@@ -632,8 +632,9 @@ export default function App() {
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
     // Pass morning brief context if available so the day plan respects its triage
     const brief = morningBrief || cachedBriefRef.current
-    const briefContext = brief
-      ? `${brief.headline}\nTop priority: ${brief.topPriority}${brief.protect ? `\nProtect: ${brief.protect}` : ''}`
+    const briefContext = brief?.cards?.length
+      ? brief.cards.map((c: { headline: string; support: string; kind: string }) =>
+          `${c.kind}: ${c.headline} — ${c.support}`).join('\n')
       : undefined
     const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl(), briefContext)
     setDayPlanLoading(false)

@@ -86,6 +86,12 @@
   --color-brief-batch:          #b8860b;
   --color-brief-batch-soft:     #fbf3e0;
   --color-brief-batch-border:   #f0d78c;
+  --color-brief-quickwin:       #0d9488;
+  --color-brief-quickwin-soft:  #f0fdfa;
+  --color-brief-quickwin-border:#99f6e4;
+  --color-brief-admin:          #64748b;
+  --color-brief-admin-soft:     #f1f5f9;
+  --color-brief-admin-border:   #cbd5e1;
 
   /* ── Font family ── iOS system stack ────────────────────────────────────── */
   --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text",
@@ -138,6 +144,12 @@
     --color-brief-batch:          #daa520;
     --color-brief-batch-soft:     #1f180a;
     --color-brief-batch-border:   #4a3a14;
+    --color-brief-quickwin:       #2dd4bf;
+    --color-brief-quickwin-soft:  #0f1e1b;
+    --color-brief-quickwin-border:#134e4a;
+    --color-brief-admin:          #94a3b8;
+    --color-brief-admin-soft:     #1a1d23;
+    --color-brief-admin-border:   #334155;
 
     /* Pomodoro dark overrides */
     --color-pomodoro-track:     #48484A;
@@ -171,6 +183,12 @@
       --color-brief-batch:          #daa520;
       --color-brief-batch-soft:     #1f180a;
       --color-brief-batch-border:   #4a3a14;
+      --color-brief-quickwin:       #2dd4bf;
+      --color-brief-quickwin-soft:  #0f1e1b;
+      --color-brief-quickwin-border:#134e4a;
+      --color-brief-admin:          #94a3b8;
+      --color-brief-admin-soft:     #1a1d23;
+      --color-brief-admin-border:   #334155;
 
       /* Pomodoro dark overrides */
       --color-pomodoro-track:     #48484A;

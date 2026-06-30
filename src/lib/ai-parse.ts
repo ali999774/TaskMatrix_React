@@ -63,8 +63,8 @@ async function callEdgeFn(body: Record<string, unknown>, attempt = 1): Promise<{
 
 export async function parseVoiceTranscript(
   transcript: string,
-  model: string = 'deepseek-v4-flash',
-  baseUrl: string = 'https://api.deepseek.com/v1',
+  model: string = 'gpt-4o-mini',
+  baseUrl: string = 'https://api.openai.com/v1',
   categories?: string[]
 ): Promise<{ parsed: ParsedTask } | { error: string }> {
   if (!transcript.trim()) return { error: 'empty transcript' }
@@ -118,8 +118,8 @@ export async function suggestNextTask(
 
 export async function formatNoteContent(
   transcript: string,
-  model: string = 'deepseek-v4-flash',
-  baseUrl: string = 'https://api.deepseek.com/v1'
+  model: string = 'gpt-4o-mini',
+  baseUrl: string = 'https://api.openai.com/v1'
 ): Promise<{ formatted: string } | { error: string }> {
   if (!transcript.trim()) return { error: 'empty transcript' }
   const result = await callEdgeFn({ transcript, model, baseUrl, mode: 'format' })
@@ -144,12 +144,16 @@ export async function suggestCategory(
 
 // ── AI BRIEF TYPES ──────────────────────────────────────────────
 
+export interface BriefCard {
+  headline: string
+  support: string
+  kind: 'priority' | 'protect' | 'batch' | 'quickwin' | 'admin'
+}
+
 export interface MorningBrief {
-  headline: string    // overall shape of the day, one sentence
-  topPriority: string // single most consequential task + why
-  protect: string | null   // important-not-urgent task to guard, or null
-  batch: string | null     // batched-errands recommendation, or null
-  closer: string | null    // wry observation, or null
+  title: string
+  date_label: string
+  cards: BriefCard[]
 }
 
 export interface DayPlanItem {
@@ -262,8 +266,8 @@ export async function getMorningBrief(
   const result = await callEdgeFn({
     transcript: parts.join(''),
     mode: 'morning-brief',
-    model: model || 'deepseek-v4-flash',
-    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
+    model: model || 'gpt-4o',
+    baseUrl: baseUrl || 'https://api.openai.com/v1',
   })
 
   if ('error' in result) return result
@@ -285,8 +289,8 @@ export async function getDayPlan(
   const result = await callEdgeFn({
     transcript: formatTaskList(tasks),
     mode: 'day-plan',
-    model: model || 'deepseek-v4-flash',
-    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
+    model: model || 'gpt-4o',
+    baseUrl: baseUrl || 'https://api.openai.com/v1',
     briefOutput: briefOutput || undefined,
   })
 
@@ -320,8 +324,8 @@ export async function getWhatNext(
   const result = await callEdgeFn({
     transcript: ctx,
     mode: 'what-next',
-    model: model || 'deepseek-v4-flash',
-    baseUrl: baseUrl || 'https://api.deepseek.com/v1',
+    model: model || 'gpt-4o-mini',
+    baseUrl: baseUrl || 'https://api.openai.com/v1',
   })
 
   if ('error' in result) return result
