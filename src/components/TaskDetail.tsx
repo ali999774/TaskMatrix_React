@@ -356,7 +356,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                 <option value="">None</option>
                 {categories.map((cat) => (
                   <option key={cat.label} value={cat.label}>
-                    {cat.icon} {cat.display}
+                    {cat.display}
                   </option>
                 ))}
               </select>

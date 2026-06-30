@@ -13,10 +13,10 @@ interface OfflineQueue {
 
 // Ali's pre-existing categories for the migration path
 const ALI_CATEGORIES: CategoryDef[] = [
-  { label: 'clinic', display: 'Clinic', color: 'red', icon: '🏥' },
-  { label: 'practice-launch', display: 'Launch', color: 'amber', icon: '🏗' },
-  { label: 'dev', display: 'Dev', color: 'blue', icon: '💻' },
-  { label: 'personal', display: 'Personal', color: 'emerald', icon: '👤' },
+  { label: 'clinic', display: 'Clinic', color: 'red', icon: 'stethoscope' },
+  { label: 'practice-launch', display: 'Launch', color: 'amber', icon: 'rocket' },
+  { label: 'dev', display: 'Dev', color: 'blue', icon: 'monitor' },
+  { label: 'personal', display: 'Personal', color: 'emerald', icon: 'user' },
 ]
 
 export function useUserSettings(userId: string | null, offlineQueue?: OfflineQueue) {

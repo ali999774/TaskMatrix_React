@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
 import type { CategoryDef } from '../lib/categories'
-import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, MAX_CATEGORIES } from '../lib/categories'
+import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
 import { FONT_SCALES } from '../hooks/useFontScale'
 
@@ -82,7 +82,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
   const add = () => {
     if (items.length >= MAX_CATEGORIES) return
-    const newItem: CategoryDef = { label: '', display: '', color: 'blue', icon: '📌' }
+    const newItem: CategoryDef = { label: '', display: '', color: 'blue', icon: 'plus' }
     setItems([...items, newItem])
     setEditingIdx(items.length)
   }
@@ -396,7 +396,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     </div>
 
                     {/* Icon + display */}
-                    <span className="text-[1rem] shrink-0">{cat.icon || '📌'}</span>
+                    <CategoryIcon icon={cat.icon || 'plus'} className="w-4 h-4 shrink-0" />
                     <span className="flex-1 text-[0.875rem] text-slate-700 dark:text-slate-300 truncate">
                       {cat.display || '(new category)'}
                     </span>
@@ -465,16 +465,23 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Icon (emoji)</label>
-                        <input
-                          type="text"
-                          value={cat.icon}
-                          onChange={(e) => update(idx, { icon: e.target.value || '📌' })}
-                          maxLength={4}
-                          className="w-16 bg-white dark:bg-slate-800 border border-slate-200 
-                            dark:border-slate-700 rounded-lg px-3 py-2 text-[1.25rem] text-center
-                            outline-none focus:border-blue-400 transition-colors"
-                        />
+                        <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Icon</label>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {CATEGORY_ICON_NAMES.map((name) => (
+                            <button
+                              key={name}
+                              onClick={() => update(idx, { icon: name })}
+                              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-90
+                                ${cat.icon === name
+                                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 ring-2 ring-blue-400/30'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                }`}
+                              aria-label={`Icon: ${name}`}
+                            >
+                              <CategoryIcon icon={name} className="w-4 h-4" />
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}

@@ -1,18 +1,80 @@
+import { createElement, type FC } from 'react'
+import {
+  User, Monitor, Terminal, Rocket, Stethoscope, Heart, Ellipsis, Plus,
+  BriefcaseBusiness, GraduationCap, BellRing, Car, ShoppingCart, PiggyBank,
+  Home, Coffee, Dumbbell, Plane, BookOpen, Music, Film, Camera, Globe,
+  type LucideIcon,
+} from 'lucide-react'
+
 export interface CategoryDef {
   label: string   // stored on task.category (e.g., "clinic")
   display: string // shown in UI (e.g., "Clinic")
   color: string   // tailwind color key (e.g., "red")
-  icon: string    // emoji (e.g., "🏥")
+  icon: string    // Lucide icon name (e.g., "stethoscope") or emoji fallback
 }
 
 export const MAX_CATEGORIES = 7
 
-export const DEFAULT_CATEGORIES: CategoryDef[] = [
-  { label: 'work', display: 'Work', color: 'blue', icon: '💼' },
-  { label: 'personal', display: 'Personal', color: 'emerald', icon: '👤' },
-  { label: 'health', display: 'Health', color: 'green', icon: '❤️' },
-  { label: 'learning', display: 'Learning', color: 'purple', icon: '📚' },
+// Available Lucide icons for category selection
+export const CATEGORY_ICON_NAMES = [
+  'briefcase-business', 'user', 'monitor', 'terminal', 'rocket',
+  'stethoscope', 'heart', 'bell-ring', 'car', 'shopping-cart',
+  'piggy-bank', 'home', 'coffee', 'dumbbell', 'plane',
+  'book-open', 'music', 'film', 'camera', 'globe',
+  'graduation-cap', 'ellipsis', 'plus',
+] as const
+
+export type CategoryIconName = typeof CATEGORY_ICON_NAMES[number]
+
+const ICON_COMPONENTS: Record<CategoryIconName, LucideIcon> = {
+  'briefcase-business': BriefcaseBusiness,
+  'user': User,
+  'monitor': Monitor,
+  'terminal': Terminal,
+  'rocket': Rocket,
+  'stethoscope': Stethoscope,
+  'heart': Heart,
+  'bell-ring': BellRing,
+  'car': Car,
+  'shopping-cart': ShoppingCart,
+  'piggy-bank': PiggyBank,
+  'home': Home,
+  'coffee': Coffee,
+  'dumbbell': Dumbbell,
+  'plane': Plane,
+  'book-open': BookOpen,
+  'music': Music,
+  'film': Film,
+  'camera': Camera,
+  'globe': Globe,
+  'graduation-cap': GraduationCap,
+  'ellipsis': Ellipsis,
+  'plus': Plus,
+}
+
+/** Render a category icon — Lucide icon if recognized, emoji/symbol as fallback */
+export function renderCategoryIcon(icon: string, className = 'w-4 h-4'): React.ReactNode {
+  const name = icon as CategoryIconName
+  if (name in ICON_COMPONENTS) {
+    return createElement(ICON_COMPONENTS[name], { className })
+  }
+  // Emoji or custom string — render as-is
+  return createElement('span', { className }, icon)
+}
+
+/** Icon component for use in JSX — Lucide if recognized, emoji fallback */
+export const CategoryIcon: FC<{ icon: string; className?: string }> = ({ icon, className = 'w-4 h-4' }) => {
+  return renderCategoryIcon(icon, className) as React.ReactElement
+}
+
+export const CATEGORY_DEFAULTS: CategoryDef[] = [
+  { label: 'personal', display: 'Personal', color: 'emerald', icon: 'user' },
+  { label: 'work', display: 'Work', color: 'blue', icon: 'briefcase-business' },
+  { label: 'health', display: 'Health', color: 'red', icon: 'heart' },
+  { label: 'learning', display: 'Learning', color: 'purple', icon: 'graduation-cap' },
 ]
+
+export const DEFAULT_CATEGORIES = CATEGORY_DEFAULTS
 
 export const CATEGORY_COLORS = ['slate', 'red', 'amber', 'emerald', 'blue', 'purple', 'pink'] as const
 
@@ -63,5 +125,5 @@ export function getCategoryDef(categories: CategoryDef[], label: string | null |
 
 export function categoryDisplay(categories: CategoryDef[], label: string | null | undefined): string {
   const def = getCategoryDef(categories, label)
-  return def ? `${def.icon} ${def.display}` : (label || 'None')
+  return def ? def.display : (label || 'None')
 }

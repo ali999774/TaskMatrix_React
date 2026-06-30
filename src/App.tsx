@@ -40,6 +40,7 @@ import { listenForReminderTaps, defaultReminder } from './lib/notifications'
 import { useAISettings } from './hooks/useAISettings'
 import { QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
+import { CategoryIcon } from './lib/categories'
 
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
@@ -1073,13 +1074,14 @@ export default function App() {
               aria-label={`Filter by ${cat.display}`}
               aria-pressed={context === cat.label}
               onClick={() => setContext(cat.label)}
-              className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center
+              className={`text-[0.75rem] px-3 py-2 rounded-full font-medium transition-all active:scale-95 motion-reduce:scale-100 active:opacity-80 min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5
                 ${context === cat.label
                   ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
                   : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
             >
-              <span aria-hidden="true">{cat.icon} {cat.display}</span>
+              <CategoryIcon icon={cat.icon} className="w-4 h-4" />
+              <span>{cat.display}</span>
             </button>
           ))}
         </div>
