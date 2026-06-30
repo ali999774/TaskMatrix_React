@@ -18,6 +18,10 @@ export interface Task {
   recur_interval?: number | null
   recur_days?: number[] | null
   series_id?: string | null
+  // Days before due_date that this task is promoted to the Today view.
+  // Nullable: NULL means "never set" (distinct from an explicit 0). Coalesced
+  // NULL→0 only at read time in src/lib/visibility.ts; never written as 0-for-unset.
+  lead_days?: number | null
   tags?: string[]
   subtasks?: { title: string; done: boolean }[]
   pinned?: boolean

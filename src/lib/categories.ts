@@ -5,6 +5,8 @@ export interface CategoryDef {
   icon: string    // emoji (e.g., "🏥")
 }
 
+export const MAX_CATEGORIES = 7
+
 export const DEFAULT_CATEGORIES: CategoryDef[] = [
   { label: 'work', display: 'Work', color: 'blue', icon: '💼' },
   { label: 'personal', display: 'Personal', color: 'emerald', icon: '👤' },

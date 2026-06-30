@@ -17,6 +17,7 @@ import ProgressHeatmap from './components/ProgressHeatmap'
 import NoteEditModal from './components/NoteEditModal'
 import PomodoroPopup from './components/PomodoroPopup'
 import TodayStrip from './components/TodayStrip'
+import UpcomingStrip from './components/UpcomingStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
@@ -501,7 +502,8 @@ export default function App() {
         addTaskRef.current(p.title, p.importance || 3, p.urgency || 3, p.category || undefined,
           { due_date: dateStr, due_time: p.due_time || undefined, notes: p.notes || undefined,
             pinned: p.pinned || undefined,
-            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
+            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined,
+            lead_days: p.lead_days ?? undefined })
         return
       }
     }
@@ -768,7 +770,8 @@ export default function App() {
             notes: p.notes || undefined,
             reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
             pinned: p.pinned || undefined,
-            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined })
+            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined,
+            lead_days: p.lead_days ?? undefined })
         return
       }
     }
@@ -833,7 +836,8 @@ export default function App() {
           { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined,
             reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
             pinned: p.pinned || undefined,
-            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined }
+            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined,
+            lead_days: p.lead_days ?? undefined }
         )
         setVoiceTaskStatus('task created!')
         setTimeout(() => setVoiceTaskStatus(''), 2500)
@@ -1110,9 +1114,21 @@ export default function App() {
             </div>
           )}
 
-          {/* Today strip + matrix + heatmap — left column */}
+          {/* Today strip + upcoming + matrix + heatmap — left column */}
           <div className="flex flex-col min-w-0 w-full">
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
+            {/* Upcoming — relief valve: due within the horizon but not yet promoted
+                to Today. Real interactive rows so future occurrences are completable. */}
+            <UpcomingStrip
+              tasks={filteredTasks}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDeleteTask}
+              onTaskClick={setSelectedTask}
+              onMove={handleMove}
+              onFlag={handleFlag}
+              onTaskUpdate={updateTask}
+              categories={categories}
+            />
 
             <MatrixScreen
               tasks={filteredTasks}
@@ -1371,6 +1387,9 @@ export default function App() {
             brief={morningBrief}
             loading={morningBriefLoading}
             error={morningBriefError}
+            tasks={filteredTasks}
+            onComplete={(id) => handleStatusChange(id, 'done')}
+            onTaskClick={(task) => { setSheetContent(null); setSelectedTask(task) }}
             onDismiss={() => setSheetContent(null)}
             onPlanDay={() => { setSheetContent('plan'); handlePlanDay() }}
             onRetry={() => {
@@ -1386,6 +1405,9 @@ export default function App() {
             plan={dayPlan}
             loading={dayPlanLoading}
             error={dayPlanError}
+            tasks={filteredTasks}
+            onComplete={(id) => handleStatusChange(id, 'done')}
+            onTaskClick={(task) => { setSheetContent(null); setSelectedTask(task) }}
             onRefresh={() => handlePlanDay(true)}
             onClose={() => {
               setSheetContent(null)

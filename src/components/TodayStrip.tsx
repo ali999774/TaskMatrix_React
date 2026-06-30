@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
+import { isInTodayView } from '../lib/visibility'
 
 interface Props {
   tasks: Task[]
@@ -22,9 +23,13 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
     return t.due_date < todayStr
   })
 
+  // Today = anything that has reached its show_date (due_date − lead_days) but
+  // is not overdue (overdue has its own section above). isInTodayView coalesces
+  // a NULL lead_days to 0, so a plain due-today task still lands here.
   const dueToday = tasks.filter((t) => {
     if (!t.due_date || t.status === 'done') return false
-    return t.due_date === todayStr
+    if (t.due_date < todayStr) return false // overdue → handled by the overdue section
+    return isInTodayView(t, todayStr)
   })
 
   const [collapsed, setCollapsed] = useState<{ today: boolean; overdue: boolean }>(() => {

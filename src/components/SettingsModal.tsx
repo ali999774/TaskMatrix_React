@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
 import type { CategoryDef } from '../lib/categories'
-import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX } from '../lib/categories'
+import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
 import { FONT_SCALES } from '../hooks/useFontScale'
 
@@ -81,6 +81,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   }
 
   const add = () => {
+    if (items.length >= MAX_CATEGORIES) return
     const newItem: CategoryDef = { label: '', display: '', color: 'blue', icon: '📌' }
     setItems([...items, newItem])
     setEditingIdx(items.length)
@@ -481,14 +482,20 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               ))}
             </div>
 
-            <button
-              onClick={add}
-              className="mt-3 w-full text-[0.875rem] text-blue-500 hover:text-blue-600 dark:text-blue-400 
-                font-medium py-2.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-600
-                hover:border-blue-400 dark:hover:border-blue-500 transition-all active:scale-[0.98] min-h-[44px]"
-            >
-              + Add category
-            </button>
+            {items.length < MAX_CATEGORIES ? (
+              <button
+                onClick={add}
+                className="mt-3 w-full text-[0.875rem] text-blue-500 hover:text-blue-600 dark:text-blue-400 
+                  font-medium py-2.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-600
+                  hover:border-blue-400 dark:hover:border-blue-500 transition-all active:scale-[0.98] min-h-[44px]"
+              >
+                + Add category
+              </button>
+            ) : (
+              <p className="mt-3 text-[0.75rem] text-slate-400 dark:text-slate-500 text-center">
+                {MAX_CATEGORIES} categories max
+              </p>
+            )}
           </div>
 
           {/* Siri Shortcut */}

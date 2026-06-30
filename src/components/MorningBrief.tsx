@@ -3,6 +3,10 @@
 
 import { Sparkles, AlertTriangle, Target, Shield, Layers } from 'lucide-react'
 import type { MorningBrief as MorningBriefData } from '../lib/ai-parse'
+import type { Task } from '../types'
+import { localTodayStr } from '../lib/dates'
+import { isInTodayView, isInUpcomingView } from '../lib/visibility'
+import ActionableTaskLine from './ActionableTaskLine'
 
 interface Props {
   brief: MorningBriefData | null
@@ -13,11 +17,15 @@ interface Props {
   onDismiss: () => void
   onPlanDay: () => void
   onRetry: () => void
+  // Real tasks so the (otherwise prose-only) brief exposes completable rows.
+  tasks?: Task[]
+  onComplete?: (id: string) => void
+  onTaskClick?: (task: Task) => void
 }
 
 const iconClass = 'w-4 h-4 flex-shrink-0 mt-0.5'
 
-export default function MorningBrief({ brief, loading, error, collapsed: _c, onToggle: _t, onDismiss: _d, onPlanDay, onRetry }: Props) {
+export default function MorningBrief({ brief, loading, error, collapsed: _c, onToggle: _t, onDismiss: _d, onPlanDay, onRetry, tasks, onComplete, onTaskClick }: Props) {
   if (error) {
     return (
       <div className="p-4 space-y-3">
@@ -50,6 +58,17 @@ export default function MorningBrief({ brief, loading, error, collapsed: _c, onT
   }
 
   if (!brief) return null
+
+  // The brief is judgment prose with no task ids. To keep visibility and
+  // actionability from diverging, surface the real tasks it's reasoning about
+  // (Today + Upcoming, incomplete) as completable rows beneath it.
+  const todayStr = localTodayStr()
+  const actionable =
+    tasks && onComplete && onTaskClick
+      ? tasks
+          .filter((t) => t.status !== 'done' && (isInTodayView(t, todayStr) || isInUpcomingView(t, todayStr)))
+          .sort((a, b) => (a.due_date ?? '').localeCompare(b.due_date ?? ''))
+      : []
 
   return (
     <div className="flex flex-col">
@@ -99,6 +118,25 @@ export default function MorningBrief({ brief, loading, error, collapsed: _c, onT
           </p>
         )}
       </div>
+
+      {/* Actionable tasks — complete or open directly from the brief */}
+      {actionable.length > 0 && onComplete && onTaskClick && (
+        <div className="px-4 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1 mt-2">
+            Act now
+          </p>
+          <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+            {actionable.map((task) => (
+              <ActionableTaskLine
+                key={task.id}
+                task={task}
+                onComplete={onComplete}
+                onClick={onTaskClick}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action button */}
       <div className="px-4 pb-4 pt-0">

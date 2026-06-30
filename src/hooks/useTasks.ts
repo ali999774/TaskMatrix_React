@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
 import { persistOrQueue } from '../lib/persist'
+import { findActiveSeriesClone, hasActiveOccurrenceOnDate, findSpawnedSiblingOnUncomplete, seriesKey } from '../lib/recurrence'
 
 const DEBOUNCE_MS = 400
 
@@ -254,7 +255,7 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     importance: number,
     urgency: number,
     category?: string,
-    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string; pinned?: boolean; recurring?: boolean; recur_frequency?: string | null; recur_days?: number[] | null }
+    opts?: { due_date?: string; due_time?: string; notes?: string; reminder?: string; pinned?: boolean; recurring?: boolean; recur_frequency?: string | null; recur_days?: number[] | null; lead_days?: number | null }
   ) => {
     if (!userId) return
     const isRecurring = opts?.recurring === true && !!opts?.recur_frequency
@@ -273,6 +274,9 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
       recur_frequency: isRecurring ? (opts!.recur_frequency || null) : null,
       recur_days: isRecurring ? (opts!.recur_days || null) : null,
       series_id: isRecurring ? crypto.randomUUID() : null,
+      // Preserve the NULL-vs-explicit-0 distinction: coalesce undefined→null,
+      // but keep an explicit 0. Never write 0-for-unset.
+      lead_days: opts?.lead_days ?? null,
       due_date: opts?.due_date || null,
       due_time: opts?.due_time || null,
       reminder: opts?.reminder || null,
@@ -295,33 +299,38 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
   // Status changes are user-initiated and infrequent — immediate sync is fine.
   // No debounce needed; these aren't continuous events like drag.
   const updateStatus = useCallback(async (id: string, status: string, preventSpawn?: boolean) => {
+    // Set inside the state updater, persisted (soft-delete) afterwards: the
+    // forward occurrence to retract when an early completion is undone.
+    let siblingToRemove: string | null = null
     setTasks((prev) => {
-      const updated = prev.map((t) => (t.id === id ? { ...t, status } : t))
+      const target = prev.find((t) => t.id === id)
+      let updated = prev.map((t) => (t.id === id ? { ...t, status } : t))
 
-      // Recurring task completed → create the next instance
+      // Recurring task completed → spawn the next occurrence.
       if (status === 'done') {
-        const doneTask = prev.find((t) => t.id === id)
+        const doneTask = target
         if (doneTask?.recurring && doneTask.recur_frequency && !preventSpawn) {
-          // Prevent spawn explosion: check if a live clone of this series already exists
-          const targetSeriesId = doneTask.series_id || doneTask.id
-          const hasActiveClone = prev.some((t) => 
-            t.id !== id &&
-            t.status === 'todo' &&
-            !t.deleted_at &&
-            (t.series_id === targetSeriesId || (t.series_id == null && t.title === doneTask.title && t.recurring === true && t.recur_frequency === doneTask.recur_frequency))
+          // Spawn is keyed to the OCCURRENCE'S scheduled date, not "now": the
+          // next due date is computed from doneTask.due_date. Completing
+          // tomorrow's instance today therefore advances from tomorrow, and the
+          // completed slot is consumed — nothing regenerates it.
+          const nextDue = getNextDueDate(
+            doneTask.due_date || null,
+            doneTask.due_time || null,
+            doneTask.recur_frequency,
+            doneTask.recur_days || null
           )
-          
-          if (!hasActiveClone) {
-            const nextDue = getNextDueDate(
-              doneTask.due_date || null,
-              doneTask.due_time || null,
-              doneTask.recur_frequency,
-              doneTask.recur_days || null
-            )
+          // Two guards, both on (series_id, occurrence_date) identity: never run
+          // two live occurrences in a series, and never create a second
+          // occurrence for an already-filled date.
+          const alreadyActive = findActiveSeriesClone(prev, doneTask) != null
+          const dateTaken = nextDue.date != null && hasActiveOccurrenceOnDate(prev, doneTask, nextDue.date)
+
+          if (!alreadyActive && !dateTaken) {
             const nextTask: Task = {
               ...doneTask,
               id: crypto.randomUUID(),
-              series_id: targetSeriesId,
+              series_id: seriesKey(doneTask),
               status: 'todo',
               due_date: nextDue.date,
               due_time: nextDue.time || doneTask.due_time || null,
@@ -341,6 +350,15 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
             updated.push(nextTask)
           }
         }
+      } else if (status === 'todo' && target?.recurring && target.recur_frequency) {
+        // Undo of an (early) completion: retract the occurrence that was spawned
+        // forward when this one was completed, so undo doesn't leave a duplicate
+        // live sibling in the series.
+        const sibling = findSpawnedSiblingOnUncomplete(prev, target)
+        if (sibling) {
+          siblingToRemove = sibling.id
+          updated = updated.filter((t) => t.id !== sibling.id)
+        }
       }
       return updated
     })
@@ -355,6 +373,22 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     } else {
       await persistOrQueue(offlineQueue, 'tasks', 'update', id,
         () => supabase.from('tasks').update(payload).eq('id', id), payload)
+    }
+
+    // Soft-delete the retracted sibling through the same tombstone + offline
+    // path as deleteTask, so realtime can't resurrect it and it stays restorable.
+    if (siblingToRemove) {
+      const sid: string = siblingToRemove
+      locallyDeletedIdsRef.current.add(sid)
+      setTombstoneVersion((v) => v + 1)
+      const deletedAt = new Date().toISOString()
+      if (offlineQueue && !offlineQueue.online) {
+        await offlineQueue.enqueue('tasks', 'update', sid, { deleted_at: deletedAt })
+      } else {
+        await persistOrQueue(offlineQueue, 'tasks', 'update', sid,
+          () => supabase.from('tasks').update({ deleted_at: deletedAt }).eq('id', sid),
+          { deleted_at: deletedAt })
+      }
     }
   }, [offlineQueue])
 

@@ -273,6 +273,27 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors resize-none font-mono min-h-[300px]"
           />
 
+          {/* Pin toggle */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={pinned}
+              onChange={(e) => setPinned(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
+            />
+            <span className="text-[0.875rem] text-slate-600 dark:text-slate-300">📌 Pin to dashboard</span>
+          </label>
+
+          {/* Dates */}
+          <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 space-y-0.5">
+            {note.created_at && (
+              <p>Created: {new Date(note.created_at).toLocaleString()}</p>
+            )}
+            {note.updated_at && (
+              <p>Last edited: {new Date(note.updated_at).toLocaleString()}</p>
+            )}
+          </div>
+
           {/* Delete */}
           <div className="flex items-center justify-end">
             {confirmDelete ? (
@@ -299,27 +320,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
               >
                 <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
               </button>
-            )}
-          </div>
-
-          {/* Pin toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={pinned}
-              onChange={(e) => setPinned(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
-            />
-            <span className="text-[0.875rem] text-slate-600 dark:text-slate-300">📌 Pin to dashboard</span>
-          </label>
-
-          {/* Dates */}
-          <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 space-y-0.5">
-            {note.created_at && (
-              <p>Created: {new Date(note.created_at).toLocaleString()}</p>
-            )}
-            {note.updated_at && (
-              <p>Last edited: {new Date(note.updated_at).toLocaleString()}</p>
             )}
           </div>
         </div>

@@ -1,0 +1,13 @@
+-- Migration: Add nullable lead_days to tasks.
+--
+-- lead_days = how many days BEFORE due_date a task should be promoted to the
+-- user's "Today" view.  show_date = due_date − lead_days (derived, not stored).
+--
+-- NULLABLE, DEFAULT NULL — NOT 0.  NULL means "never set" and is deliberately
+-- distinct from an explicit 0, because a later phase may let a model fill in
+-- inferred lead times for NULL rows.  Visibility logic coalesces NULL→0 at READ
+-- time only (inside the pure predicates in src/lib/visibility.ts); this column
+-- is never written as 0-for-unset.
+--
+-- Additive and idempotent: safe to run repeatedly, safe on the live table.
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS lead_days integer;
