@@ -118,9 +118,8 @@ export default function TodayStrip({ tasks, onTaskClick, onComplete }: Props) {
                 {capped.map((task) => (
                   <div
                     key={task.id}
-                    className={`w-full text-left px-3 py-2 rounded-lg ${config.rowBg} ${config.rowBorder}
-                      text-[0.875rem] text-slate-700 dark:text-slate-300
-                      hover:opacity-80 transition-colors min-h-[44px] flex items-center gap-2`}
+                    className={`w-full text-left pt-2 pb-1 px-2 rounded-xl ${config.rowBg} ${config.rowBorder}
+                      hover:opacity-80 transition-colors min-h-[44px] flex items-center gap-1.5`}
                   >
                     {onComplete && (
                       <CheckCircle
@@ -130,13 +129,17 @@ export default function TodayStrip({ tasks, onTaskClick, onComplete }: Props) {
                     )}
                     <button
                       onClick={() => onTaskClick(task)}
-                      className="flex-1 min-w-0 text-left flex items-baseline gap-2"
+                      className="flex-1 min-w-0 text-left"
                     >
-                      <span className="font-medium truncate">{task.title}</span>
+                      <p className="text-[0.78125rem] sm:text-[0.875rem] font-semibold leading-snug text-slate-800 dark:text-slate-100">
+                        {task.title}
+                      </p>
                       {task.due_date && (
-                        <span className={`text-[0.75rem] ${config.rowDateClassName} flex-shrink-0`}>
-                          {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
+                        <p className="text-[0.65625rem] sm:text-[0.75rem] leading-relaxed mt-0.5">
+                          <span className={config.rowDateClassName}>
+                            {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </p>
                       )}
                     </button>
                   </div>
