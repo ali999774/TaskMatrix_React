@@ -119,7 +119,7 @@ export default function BottomSheet({ open, onClose, children }: Props) {
             aria-hidden="true"
           />
 
-          {/* Sheet panel */}
+          {/* Sheet panel — sits below safe area so rounded top corners are visible */}
           <motion.div
             ref={sheetRef}
             role="dialog"
@@ -132,10 +132,11 @@ export default function BottomSheet({ open, onClose, children }: Props) {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="relative w-full max-w-lg h-full bg-white dark:bg-slate-900
-              rounded-t-2xl shadow-2xl border border-slate-200 dark:border-slate-700
+            className="relative w-full max-w-lg bg-white dark:bg-slate-900
+              rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700
               overflow-hidden flex flex-col
-              pt-[env(safe-area-inset-top)]
+              mt-[calc(env(safe-area-inset-top)+0.25rem)]
+              max-h-[calc(100%-env(safe-area-inset-top)-0.25rem)]
               pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
             {/* Drag handle */}

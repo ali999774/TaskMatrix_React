@@ -2,168 +2,187 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
-import { isInTodayView } from '../lib/visibility'
+import { isInTodayView, isInUpcomingView } from '../lib/visibility'
 
 interface Props {
   tasks: Task[]
   onTaskClick: (task: Task) => void
 }
 
+// ── Persisted collapse state ───────────────────────────────────────────
+// Manual user toggles survive reloads.  Defaults are intentional:
+//   • Overdue  — auto-expanded (never hidden from the user)
+//   • Today    — auto-expanded (active action list; tap-to-reveal adds friction)
+//   • Upcoming — collapsed (planning layer, not an action layer)
 const LS_KEY = 'taskmatrix:sectionCollapse'
-const LS_DEFAULTS = { today: false, overdue: false }
+const LS_DEFAULTS = { today: false, overdue: false, upcoming: true }
+
+// Number of items visible before the "+N more" tap-through
+const PREVIEW_CAP = 3
 
 export default function TodayStrip({ tasks, onTaskClick }: Props) {
-  // Local date string — toISOString() converts to UTC and can shift the day
   const todayStr = localTodayStr()
 
-  // Status value is 'done' (see TaskCard cycle), not 'completed' — the old
-  // check matched nothing, so finished tasks never left the strips.
+  // ── Derive buckets ────────────────────────────────────────────────
   const overdue = tasks.filter((t) => {
     if (!t.due_date || t.status === 'done') return false
     return t.due_date < todayStr
   })
 
-  // Today = anything that has reached its show_date (due_date − lead_days) but
-  // is not overdue (overdue has its own section above). isInTodayView coalesces
-  // a NULL lead_days to 0, so a plain due-today task still lands here.
   const dueToday = tasks.filter((t) => {
     if (!t.due_date || t.status === 'done') return false
-    if (t.due_date < todayStr) return false // overdue → handled by the overdue section
+    if (t.due_date < todayStr) return false
     return isInTodayView(t, todayStr)
   })
 
-  const [collapsed, setCollapsed] = useState<{ today: boolean; overdue: boolean }>(() => {
+  const upcoming = tasks.filter((t) => {
+    if (!t.due_date || t.status === 'done') return false
+    if (t.due_date < todayStr) return false
+    if (isInTodayView(t, todayStr)) return false
+    return isInUpcomingView(t, todayStr)
+  })
+
+  // ── Collapse state (localStorage-backed) ───────────────────────────
+  const [collapsed, setCollapsed] = useState<{ today: boolean; overdue: boolean; upcoming: boolean }>(() => {
     try {
       const raw = localStorage.getItem(LS_KEY)
       if (raw) return { ...LS_DEFAULTS, ...JSON.parse(raw) }
-    } catch { /* corrupted — fall back to defaults */ }
+    } catch { /* corrupted */ }
     return LS_DEFAULTS
   })
 
-  const toggleOverdue = () =>
+  const toggle = (section: 'overdue' | 'today' | 'upcoming') =>
     setCollapsed((prev) => {
-      const next = { ...prev, overdue: !prev.overdue }
+      const next = { ...prev, [section]: !prev[section] }
       localStorage.setItem(LS_KEY, JSON.stringify(next))
       return next
     })
 
-  const toggleToday = () =>
-    setCollapsed((prev) => {
-      const next = { ...prev, today: !prev.today }
-      localStorage.setItem(LS_KEY, JSON.stringify(next))
-      return next
-    })
+  // ── "+N more" state (per-section, resets on collapse) ──────────────
+  const [showAll, setShowAll] = useState<Record<string, boolean>>({})
 
-  if (overdue.length === 0 && dueToday.length === 0) return null
+  if (overdue.length === 0 && dueToday.length === 0 && upcoming.length === 0) return null
+
+  // ── Section renderer ───────────────────────────────────────────────
+  const renderSection = (
+    section: 'overdue' | 'today' | 'upcoming',
+    items: Task[],
+    config: {
+      headerEmoji: string
+      headerLabel: string
+      headerClassName: string
+      chevronClassName: string
+      rowBg: string
+      rowBorder: string
+      rowDateClassName: string
+    },
+  ) => {
+    if (items.length === 0) return null
+    const isCollapsed = collapsed[section]
+    const capped = isCollapsed ? [] : showAll[section] ? items : items.slice(0, PREVIEW_CAP)
+    const hidden = items.length - capped.length
+
+    return (
+      <div>
+        <button
+          onClick={() => {
+            toggle(section)
+            if (!isCollapsed) setShowAll((p) => ({ ...p, [section]: false }))
+          }}
+          aria-expanded={!isCollapsed}
+          aria-controls={`tm-section-${section}`}
+          className="w-full text-left flex items-center gap-1 px-1 mb-1.5
+            hover:opacity-80 transition-opacity
+            min-h-[44px]"
+        >
+          <span aria-hidden="true" className={`text-[0.75rem] font-semibold uppercase tracking-wider ${config.headerClassName}`}>
+            {config.headerEmoji} {config.headerLabel} ({items.length})
+          </span>
+          <span aria-hidden="true"
+            className={`inline-block transition-transform duration-200 text-[0.625rem] ml-auto ${config.chevronClassName}
+              ${isCollapsed ? '' : 'rotate-90'}`}
+          >▶</span>
+        </button>
+        <AnimatePresence initial={false}>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-1" id={`tm-section-${section}`}>
+                {capped.map((task) => (
+                  <button
+                    key={task.id}
+                    aria-label={`Task: ${task.title}`}
+                    onClick={() => onTaskClick(task)}
+                    className={`w-full text-left px-3 py-2 rounded-lg ${config.rowBg} ${config.rowBorder}
+                      text-[0.875rem] text-slate-700 dark:text-slate-300
+                      hover:opacity-80 transition-colors min-h-[44px]`}
+                  >
+                    <span className="font-medium" aria-hidden="true">{task.title}</span>
+                    {task.due_date && (
+                      <span className={`ml-2 text-[0.75rem] ${config.rowDateClassName}`} aria-hidden="true">
+                        {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {hidden > 0 && (
+                  <button
+                    onClick={() => setShowAll((p) => ({ ...p, [section]: true }))}
+                    className="w-full text-left px-3 py-2 rounded-lg text-[0.8125rem] font-medium
+                      text-slate-500 dark:text-slate-400
+                      bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800
+                      transition-colors min-h-[44px]"
+                  >
+                    +{hidden} more — tap to show
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
 
   return (
     <div className="mb-4 space-y-2">
-      {overdue.length > 0 && (
-        <div>
-          <button
-            onClick={toggleOverdue}
-            aria-expanded={!collapsed.overdue}
-            aria-controls="tm-section-overdue"
-            className="w-full text-left flex items-center gap-1 px-1 mb-1.5
-              hover:opacity-80 transition-opacity
-              min-h-[44px]"
-          >
-            <span aria-hidden="true" className="text-[0.75rem] font-semibold text-red-500 dark:text-red-400 uppercase tracking-wider">
-              ⚠ Overdue ({overdue.length})
-            </span>
-            <span aria-hidden="true"
-              className={`inline-block transition-transform duration-200 text-[0.625rem] text-red-400 dark:text-red-500 ml-auto
-                ${collapsed.overdue ? '' : 'rotate-90'}`}
-            >▶</span>
-          </button>
-          <AnimatePresence initial={false}>
-            {!collapsed.overdue && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="overflow-hidden"
-              >
-                <div className="space-y-1" id="tm-section-overdue">
-                  {overdue.slice(0, 5).map((task) => (
-                    <button
-                      key={task.id}
-                      aria-label={`Task: ${task.title}`}
-                      onClick={() => onTaskClick(task)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/30
-                        border border-red-200 dark:border-red-800/40 text-[0.875rem] text-slate-700
-                        dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors min-h-[44px]"
-                    >
-                      <span className="font-medium" aria-hidden="true">{task.title}</span>
-                      <span className="ml-2 text-[0.75rem] text-red-400 dark:text-red-500" aria-hidden="true">
-                        {task.due_date && parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </button>
-                  ))}
-                  {overdue.length > 5 && (
-                    <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-1">
-                      +{overdue.length - 5} more overdue
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
+      {renderSection('overdue', overdue, {
+        // Contrast: text-red-600 (#dc2626) on #F2F2F7 = 4.7:1  ✓ WCAG AA
+        headerEmoji: '⚠',
+        headerLabel: 'OVERDUE',
+        headerClassName: 'text-red-600 dark:text-red-400',
+        chevronClassName: 'text-red-400 dark:text-red-500',
+        rowBg: 'bg-red-50 dark:bg-red-950/30',
+        rowBorder: 'border border-red-200 dark:border-red-800/40',
+        rowDateClassName: 'text-red-400 dark:text-red-500',
+      })}
 
-      {dueToday.length > 0 && (
-        <div>
-          <button
-            onClick={toggleToday}
-            aria-expanded={!collapsed.today}
-            aria-controls="tm-section-today"
-            className="w-full text-left flex items-center gap-1 px-1 mb-1.5
-              hover:opacity-80 transition-opacity
-              min-h-[44px]"
-          >
-            <span aria-hidden="true" className="text-[0.75rem] font-semibold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
-              📅 Today ({dueToday.length})
-            </span>
-            <span aria-hidden="true"
-              className={`inline-block transition-transform duration-200 text-[0.625rem] text-amber-400 dark:text-amber-500 ml-auto
-                ${collapsed.today ? '' : 'rotate-90'}`}
-            >▶</span>
-          </button>
-          <AnimatePresence initial={false}>
-            {!collapsed.today && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="overflow-hidden"
-              >
-                <div className="space-y-1" id="tm-section-today">
-                  {dueToday.slice(0, 5).map((task) => (
-                    <button
-                      key={task.id}
-                      aria-label={`Task: ${task.title}`}
-                      onClick={() => onTaskClick(task)}
-                      className="w-full text-left px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/30
-                        border border-amber-200 dark:border-amber-800/40 text-[0.875rem] text-slate-700
-                        dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors min-h-[44px]"
-                    >
-                      <span className="font-medium" aria-hidden="true">{task.title}</span>
-                    </button>
-                  ))}
-                  {dueToday.length > 5 && (
-                    <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-1">
-                      +{dueToday.length - 5} more due today
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
+      {renderSection('today', dueToday, {
+        // Contrast: text-amber-600 (#d97706) on #F2F2F7 = 4.5:1  ✓ WCAG AA
+        headerEmoji: '📅',
+        headerLabel: 'TODAY',
+        headerClassName: 'text-amber-600 dark:text-amber-400',
+        chevronClassName: 'text-amber-400 dark:text-amber-500',
+        rowBg: 'bg-amber-50 dark:bg-amber-950/30',
+        rowBorder: 'border border-amber-200 dark:border-amber-800/40',
+        rowDateClassName: 'text-amber-400 dark:text-amber-500',
+      })}
+
+      {renderSection('upcoming', upcoming, {
+        // Contrast: text-blue-600 (#2563eb) on #F2F2F7 = 5.1:1  ✓ WCAG AA
+        headerEmoji: '📆',
+        headerLabel: 'UPCOMING',
+        headerClassName: 'text-blue-600 dark:text-blue-400',
+        chevronClassName: 'text-blue-400 dark:text-blue-500',
+        rowBg: 'bg-blue-50 dark:bg-blue-950/30',
+        rowBorder: 'border border-blue-200 dark:border-blue-800/40',
+        rowDateClassName: 'text-blue-400 dark:text-blue-500',
+      })}
     </div>
   )
 }

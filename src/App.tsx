@@ -6,6 +6,7 @@ import { supabase } from './lib/supabase'
 import { useTasks } from './hooks/useTasks'
 import { useStickyNotes } from './hooks/useStickyNotes'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
+import { useRefetchOnFocus } from './hooks/useRefetchOnFocus'
 import { usePushNotifications } from './hooks/usePushNotifications'
 import { useGoogleCalendar } from './hooks/useGoogleCalendar'
 import { useUserSettings } from './hooks/useUserSettings'
@@ -17,7 +18,6 @@ import ProgressHeatmap from './components/ProgressHeatmap'
 import NoteEditModal from './components/NoteEditModal'
 import PomodoroPopup from './components/PomodoroPopup'
 import TodayStrip from './components/TodayStrip'
-import UpcomingStrip from './components/UpcomingStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
@@ -256,11 +256,12 @@ export default function App() {
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
   const { fontScale, setFontScale } = useFontScale()
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted } = useTasks(userId, offlineQueue)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload } = useTasks(userId, offlineQueue)
   const addTaskRef = useRef(addTask)
   addTaskRef.current = addTask  // always current — dodges stale closure in []-dep effects
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, restoreNote, fetchDeletedNotes, permanentlyDeleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
   const { categories, updateCategories } = useUserSettings(userId, offlineQueue)
+  useRefetchOnFocus(reload)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -285,6 +286,7 @@ export default function App() {
   const [dayPlan, setDayPlan] = useState<DayPlanData | null>(null)
   const [dayPlanLoading, setDayPlanLoading] = useState(false)
   const [dayPlanError, setDayPlanError] = useState<string | null>(null)
+  const [dayPlanReplanning, setDayPlanReplanning] = useState(false)
   // Which content the bottom sheet is showing: null = closed
   const [sheetContent, setSheetContent] = useState<'brief' | 'plan' | null>(null)
   const [sessionStartTime] = useState(() => Date.now())
@@ -610,7 +612,7 @@ export default function App() {
     })
   }
 
-  const handlePlanDay = async (forceRefresh = false) => {
+  const handlePlanDay = async (forceRefresh = false, isReplan = false) => {
     // Try cache first (unless forced refresh)
     if (!forceRefresh) {
       try {
@@ -627,7 +629,11 @@ export default function App() {
     }
 
     // Generate fresh
-    setDayPlanLoading(true)
+    if (isReplan) {
+      setDayPlanReplanning(true)
+    } else {
+      setDayPlanLoading(true)
+    }
     setDayPlanError(null)
     const active = filteredTasks.filter(t => t.status !== 'done' && t.status !== 'completed' && t.status !== 'archived').slice(0, 15)
     // Pass morning brief context if available so the day plan respects its triage
@@ -638,6 +644,7 @@ export default function App() {
       : undefined
     const result = await getDayPlan(active, aiSettings.model, getAIBaseUrl(), briefContext)
     setDayPlanLoading(false)
+    setDayPlanReplanning(false)
     if ('error' in result) {
       setDayPlanError(result.error)
     } else {
@@ -1120,18 +1127,6 @@ export default function App() {
           {/* Today strip + upcoming + matrix + heatmap — left column */}
           <div className="flex flex-col min-w-0 w-full">
             <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
-            {/* Upcoming — relief valve: due within the horizon but not yet promoted
-                to Today. Real interactive rows so future occurrences are completable. */}
-            <UpcomingStrip
-              tasks={filteredTasks}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDeleteTask}
-              onTaskClick={setSelectedTask}
-              onMove={handleMove}
-              onFlag={handleFlag}
-              onTaskUpdate={updateTask}
-              categories={categories}
-            />
 
             <MatrixScreen
               tasks={filteredTasks}
@@ -1413,6 +1408,9 @@ export default function App() {
             onComplete={(id) => handleStatusChange(id, 'done')}
             onTaskClick={(task) => { setSheetContent(null); setSelectedTask(task) }}
             onRefresh={() => handlePlanDay(true)}
+            onReplan={() => handlePlanDay(true, true)}
+            replanning={dayPlanReplanning}
+            offline={!offlineQueue.online}
             onClose={() => {
               setSheetContent(null)
               setDayPlan(null)
