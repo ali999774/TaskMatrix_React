@@ -349,7 +349,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
 
       {/* ── Header bar ─────────────────────────────────────────────────── */}
       <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center justify-between px-4 sm:px-5 pt-[calc(1rem+env(safe-area-inset-top))] sm:pt-[calc(1.25rem+env(safe-area-inset-top))] pb-3 sm:pb-4 pl-[4.5rem] sm:pl-[4.5rem]">
+        <div className="flex items-center justify-between px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 pl-[4.5rem] sm:pl-[4.5rem]">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={goToToday}
@@ -407,7 +407,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
         </div>
 
         {/* View toggle — mobile full-width row */}
-        <div className="flex sm:hidden items-center bg-slate-100 dark:bg-slate-800 mx-4 mb-2 rounded-lg p-0.5">
+        <div className="flex sm:hidden items-center bg-slate-100 dark:bg-slate-800 mx-4 mb-2 mt-2 rounded-lg p-0.5">
           {(['day', 'week', 'month', 'schedule'] as const).map(v => (
             <button
               key={v}

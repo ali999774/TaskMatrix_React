@@ -1350,7 +1350,7 @@ export default function App() {
             <button
               onClick={() => setShowCalendar(false)}
               aria-label="Back"
-              className="absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+              className="absolute top-4 left-3 z-10 w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
               <span aria-hidden="true" className="text-[1rem]">←</span>
             </button>
