@@ -354,6 +354,15 @@ export default function App() {
     return () => clearTimeout(t)
   }, [showMenu])
 
+  // Cleanup all timers on unmount (undo, recurring confirm, AI suggestions)
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) { clearTimeout(undoTimerRef.current); undoTimerRef.current = null }
+      if (recurringTimerRef.current) { clearTimeout(recurringTimerRef.current); recurringTimerRef.current = null }
+      if (suggestionTimerRef.current) { clearTimeout(suggestionTimerRef.current); suggestionTimerRef.current = null }
+    }
+  }, [])
+
   // Reset voice-task quick-action flag once recording starts, so it
   // re-arms for the next Siri / force-touch invocation.
   useEffect(() => {
@@ -371,6 +380,7 @@ export default function App() {
   // Recurring stop confirm — replaces ugly window.confirm() with a snackbar
   const recurringResolveRef = useRef<((v: boolean) => void) | null>(null)
   const recurringTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [recurringConfirm, setRecurringConfirm] = useState<{ title: string } | null>(null)
 
   const confirmStopRecurring = (task: Task): Promise<boolean> => {
@@ -542,16 +552,25 @@ export default function App() {
   }, [hasModal])
 
   const handleSuggest = async () => {
+    // Helper: set an auto-clearing suggestion timer (clears any pending one first)
+    const setSuggestionTimer = (fn: () => void, delay: number) => {
+      if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current)
+      suggestionTimerRef.current = setTimeout(() => {
+        suggestionTimerRef.current = null
+        fn()
+      }, delay)
+    }
+
     if (!aiSettings.enabled) {
       setSuggestion('AI disabled — enable in Settings ⚙️')
       setSuggestionIsError(true)
-      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+      setSuggestionTimer(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
       return
     }
     if (filteredTasks.length === 0) {
       setSuggestion('No tasks to suggest from')
       setSuggestionIsError(true)
-      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 3000)
+      setSuggestionTimer(() => { setSuggestion(''); setSuggestionIsError(false) }, 3000)
       return
     }
     setSuggesting(true)
@@ -565,7 +584,7 @@ export default function App() {
       if (result.break_suggestion) parts.push(`| 💡 ${result.break_suggestion}`)
       setSuggestion(parts.join(' '))
       setSuggestionIsError(false)
-      setTimeout(() => setSuggestion(''), 12000)
+      setSuggestionTimer(() => setSuggestion(''), 12000)
     } else {
       // Fallback to old suggestNextTask if new mode fails
       const list = active.map(t => `- [${t.importance},${t.urgency}] ${t.title}${t.due_date ? ` (due ${t.due_date})` : ''}`).join('\n')
@@ -573,11 +592,11 @@ export default function App() {
       if ('suggested' in fallback) {
         setSuggestion(fallback.suggested)
         setSuggestionIsError(false)
-        setTimeout(() => setSuggestion(''), 10000)
+        setSuggestionTimer(() => setSuggestion(''), 10000)
       } else {
         setSuggestion(result.error || fallback.error || 'Could not reach AI')
         setSuggestionIsError(true)
-        setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+        setSuggestionTimer(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
       }
     }
   }
