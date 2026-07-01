@@ -1,5 +1,3 @@
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'

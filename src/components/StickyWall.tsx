@@ -1,7 +1,3 @@
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useState, useRef } from 'react'
 import { Trash2, Pin } from 'lucide-react'
 import type { StickyNote } from '../types'

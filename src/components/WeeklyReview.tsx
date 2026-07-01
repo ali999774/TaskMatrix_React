@@ -1,7 +1,3 @@
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
-chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 // WeeklyReview — end-of-week AI reflection with stats, patterns, and guidance
 
 import { X, Trophy, TrendingUp, Lightbulb, AlertTriangle, Sparkles, BarChart3 } from 'lucide-react'
