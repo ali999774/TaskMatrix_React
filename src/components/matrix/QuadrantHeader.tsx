@@ -1,19 +1,21 @@
 import type { Quadrant } from '../../types'
 
-/** Quadrant-specific accent colors for left borders (used in grid/list) */
+/** Quadrant-specific accent colors for left borders (used in grid/list).
+ *  Sources from CSS custom properties in index.css — light/dark handled by the vars. */
 export const QUADRANT_BORDER_ACCENT: Record<Quadrant, string> = {
-  1: 'border-l-red-400/80 dark:border-l-[#f87171]/70',
-  2: 'border-l-sky-400/80 dark:border-l-[#38bdf8]/70',
-  3: 'border-l-violet-400/80 dark:border-l-[#a78bfa]/70',
-  4: 'border-l-slate-400/80 dark:border-l-[#64748b]/70',
+  1: 'border-l-[var(--color-quad-do-first)]/80',
+  2: 'border-l-[var(--color-quad-invest)]/80',
+  3: 'border-l-[var(--color-quad-delegate)]/80',
+  4: 'border-l-[var(--color-quad-dont-do)]/80',
 }
 
-/** Quadrant-specific accent colors for count badge, icon, and header text. */
+/** Quadrant-specific accent colors for count badge, icon, and header text.
+ *  Sources from CSS custom properties in index.css — light/dark handled by the vars. */
 export const HEADER_ACCENT: Record<Quadrant, string> = {
-  1: 'text-red-400/90 dark:text-[#f87171]/80',
-  2: 'text-sky-400/90 dark:text-[#38bdf8]/80',
-  3: 'text-violet-400/90 dark:text-[#a78bfa]/80',
-  4: 'text-slate-400/90 dark:text-[#64748b]/80',
+  1: 'text-[var(--color-quad-do-first)]/90',
+  2: 'text-[var(--color-quad-invest)]/90',
+  3: 'text-[var(--color-quad-delegate)]/90',
+  4: 'text-[var(--color-quad-dont-do)]/90',
 }
 
 interface QuadrantHeaderProps {
@@ -45,7 +47,7 @@ export default function QuadrantHeader({
       className={`px-2 py-2 flex items-center gap-2 ${className}`}
     >
       {/* Accent dot */}
-      <span className={`w-2 h-2 rounded-full shrink-0 ${HEADER_ACCENT[quadrant]}`} />
+      <span className={`w-2 h-2 rounded-full shrink-0 bg-current ${HEADER_ACCENT[quadrant]}`} />
 
       {/* Label + subtitle + count */}
       <div className="flex-1 min-w-0" aria-hidden="true">

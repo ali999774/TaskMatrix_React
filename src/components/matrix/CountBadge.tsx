@@ -1,11 +1,13 @@
 import type { Quadrant } from '../../types'
 
-/** Quadrant-specific tint classes for the badge background. */
+/** Quadrant-specific tint classes for the badge background.
+ *  Colours derive from CSS custom properties set in index.css,
+ *  so they automatically respect light/dark mode without dark: variants. */
 const BADGE_TINT: Record<Quadrant, string> = {
-  1: 'bg-red-100/80 dark:bg-red-900/30 text-red-600 dark:text-red-400',
-  2: 'bg-amber-100/80 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
-  3: 'bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
-  4: 'bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400',
+  1: 'bg-[var(--color-quad-do-first)]/15 text-[var(--color-quad-do-first)]',
+  2: 'bg-[var(--color-quad-invest)]/15 text-[var(--color-quad-invest)]',
+  3: 'bg-[var(--color-quad-delegate)]/15 text-[var(--color-quad-delegate)]',
+  4: 'bg-[var(--color-quad-dont-do)]/15 text-[var(--color-quad-dont-do)]',
 }
 
 interface CountBadgeProps {
