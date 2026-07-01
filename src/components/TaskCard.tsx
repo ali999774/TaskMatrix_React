@@ -297,6 +297,7 @@ export default function TaskCard({
                     <button
                       key={i}
                       type="button"
+                      aria-label={`Toggle subtask: ${st.title}`}
                       onClick={() => {
                         haptics('light')
                         const newSubtasks = [...task.subtasks!]
@@ -330,6 +331,7 @@ export default function TaskCard({
                   <div className="pt-3 pb-1 flex justify-center">
                     <button
                       type="button"
+                      aria-label="Mark all subtasks complete"
                       onClick={() => {
                         haptics('success')
                         onStatusChange(task.id, 'done')

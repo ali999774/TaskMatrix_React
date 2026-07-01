@@ -68,6 +68,7 @@ export default function UpcomingStrip({
         onClick={toggle}
         aria-expanded={!collapsed}
         aria-controls="tm-section-upcoming"
+        aria-label={collapsed ? 'Show upcoming tasks' : 'Hide upcoming tasks'}
         className="w-full text-left flex items-center gap-1 px-1 mb-1.5
           hover:opacity-80 transition-opacity min-h-[44px]"
       >
