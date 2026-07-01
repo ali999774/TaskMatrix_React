@@ -3,10 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
 import { isInTodayView, isInUpcomingView } from '../lib/visibility'
+import CheckCircle from './matrix/CheckCircle'
 
 interface Props {
   tasks: Task[]
   onTaskClick: (task: Task) => void
+  onComplete?: (id: string) => void
 }
 
 // ── Persisted collapse state ───────────────────────────────────────────
@@ -20,7 +22,7 @@ const LS_DEFAULTS = { today: false, overdue: false, upcoming: true }
 // Number of items visible before the "+N more" tap-through
 const PREVIEW_CAP = 3
 
-export default function TodayStrip({ tasks, onTaskClick }: Props) {
+export default function TodayStrip({ tasks, onTaskClick, onComplete }: Props) {
   const todayStr = localTodayStr()
 
   // ── Derive buckets ────────────────────────────────────────────────
@@ -114,21 +116,30 @@ export default function TodayStrip({ tasks, onTaskClick }: Props) {
             >
               <div className="space-y-1" id={`tm-section-${section}`}>
                 {capped.map((task) => (
-                  <button
+                  <div
                     key={task.id}
-                    aria-label={`Task: ${task.title}`}
-                    onClick={() => onTaskClick(task)}
                     className={`w-full text-left px-3 py-2 rounded-lg ${config.rowBg} ${config.rowBorder}
                       text-[0.875rem] text-slate-700 dark:text-slate-300
-                      hover:opacity-80 transition-colors min-h-[44px]`}
+                      hover:opacity-80 transition-colors min-h-[44px] flex items-center gap-2`}
                   >
-                    <span className="font-medium" aria-hidden="true">{task.title}</span>
-                    {task.due_date && (
-                      <span className={`ml-2 text-[0.75rem] ${config.rowDateClassName}`} aria-hidden="true">
-                        {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
+                    {onComplete && (
+                      <CheckCircle
+                        status={task.status}
+                        onToggle={() => onComplete(task.id)}
+                      />
                     )}
-                  </button>
+                    <button
+                      onClick={() => onTaskClick(task)}
+                      className="flex-1 min-w-0 text-left flex items-baseline gap-2"
+                    >
+                      <span className="font-medium truncate">{task.title}</span>
+                      {task.due_date && (
+                        <span className={`text-[0.75rem] ${config.rowDateClassName} flex-shrink-0`}>
+                          {parseLocalDate(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </button>
+                  </div>
                 ))}
                 {hidden > 0 && (
                   <button

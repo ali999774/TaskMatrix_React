@@ -1126,7 +1126,7 @@ export default function App() {
 
           {/* Today strip + upcoming + matrix + heatmap — left column */}
           <div className="flex flex-col min-w-0 w-full">
-            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} />
+            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} onComplete={(id) => handleStatusChange(id, 'done')} />
 
             <MatrixScreen
               tasks={filteredTasks}
