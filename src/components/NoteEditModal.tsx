@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, EllipsisVertical, Pin } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { useHaptics } from '../hooks/useHaptics'
 
@@ -57,11 +57,38 @@ function insertFormatting(
   })
 }
 
+/** Fades a "Saved" label in/out when updated_at changes */
+function SavedDot({ at }: { at?: string }) {
+  const [visible, setVisible] = useState(false)
+  const prevRef = useRef(at)
+
+  useEffect(() => {
+    if (at && at !== prevRef.current) {
+      prevRef.current = at
+      setVisible(true)
+      const t = setTimeout(() => setVisible(false), 2000)
+      return () => clearTimeout(t)
+    }
+  }, [at])
+
+  return (
+    <span
+      className={`text-[0.6875rem] text-emerald-500 dark:text-emerald-400 transition-opacity duration-300 font-medium ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+      aria-live="polite"
+    >
+      Saved
+    </span>
+  )
+}
+
 export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props) {
   const [title, setTitle] = useState(note.title || '')
   const [content, setContent] = useState(note.content || '')
   const [pinned, setPinned] = useState(!!note.pinned)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const haptics = useHaptics()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -104,11 +131,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     setContent(note.content || '')
     setPinned(!!note.pinned)
   }, [note])
-
-  const handleDelete = () => {
-    haptics('light')
-    setConfirmDelete(true)
-  }
 
   const handleConfirmDelete = () => {
     haptics('medium')
@@ -226,16 +248,65 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
               {note.id ? 'Edit Note' : 'New Note'}
             </h2>
           </div>
+
+          {/* Overﬂow menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(v => !v)}
+              aria-label="More options"
+              className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
+            >
+              <EllipsisVertical size={18} strokeWidth={2} aria-hidden="true" />
+            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[140px]">
+                  {confirmDelete ? (
+                    <div className="px-3 py-2">
+                      <p className="text-[0.75rem] text-slate-500 dark:text-slate-400 mb-2">Delete note?</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setConfirmDelete(false); setShowMenu(false) }}
+                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleConfirmDelete}
+                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-[#FF3B30] text-white"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setConfirmDelete(true)
+                        haptics('light')
+                      }}
+                      className="w-full text-left px-3 py-2 text-[0.8125rem] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 min-h-[44px]"
+                    >
+                      <Trash2 size={16} strokeWidth={2} aria-hidden="true" />
+                      Delete note
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Body */}
         <div className="p-6 space-y-4">
+          {/* Title — borderless, larger, bolder to differentiate from body */}
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="📌 Note title (with emoji)..."
-            className="w-full bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 text-[1rem] text-amber-950 dark:text-amber-100 placeholder-amber-300 dark:placeholder-amber-700 outline-none focus:border-amber-400 dark:focus:border-amber-500 transition-colors"
+            placeholder="Note title…"
+            className="w-full bg-transparent text-[1.25rem] font-bold text-slate-800 dark:text-white placeholder-slate-300 dark:placeholder-slate-600 outline-none"
             style={{ fontFamily: 'ui-rounded, system-ui, sans-serif' }}
           />
 
@@ -259,6 +330,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             ))}
           </div>
 
+          {/* Body — keeps the card treatment for visual distinction */}
           <textarea
             ref={textareaRef}
             value={content}
@@ -277,7 +349,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             }}
           />
 
-          {/* Pin toggle */}
+          {/* Pin toggle — Lucide Pin icon replaces 📌 emoji */}
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -285,7 +357,10 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
               onChange={(e) => setPinned(e.target.checked)}
               className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
             />
-            <span className="text-[0.875rem] text-slate-600 dark:text-slate-300">📌 Pin to dashboard</span>
+            <span className="text-[0.875rem] text-slate-600 dark:text-slate-300 flex items-center gap-1">
+              <Pin size={14} strokeWidth={2} aria-hidden="true" />
+              Pin to dashboard
+            </span>
           </label>
 
           {/* Dates */}
@@ -298,33 +373,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             )}
           </div>
 
-          {/* Delete */}
-          <div className="flex items-center justify-end">
-            {confirmDelete ? (
-              <div className="flex items-center gap-2 shrink-0 self-end">
-                <span className="text-[0.8125rem] font-medium text-slate-700 dark:text-slate-300">Delete note?</span>
-                <button
-                  onClick={() => setConfirmDelete(false)}
-                  className="px-3 py-1.5 text-[0.75rem] font-medium rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors min-h-[36px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="px-3 py-1.5 text-[0.75rem] font-medium rounded-lg bg-[#FF3B30] text-white hover:bg-red-600 active:scale-95 transition-all min-h-[36px]"
-                >
-                  Delete
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleDelete}
-                aria-label="Delete note"
-                className="bg-[#FF3B30] text-white w-11 h-11 rounded-full shadow-md flex items-center justify-center hover:bg-red-600 active:scale-95 transition-all min-h-[44px] min-w-[44px] shrink-0 self-end"
-              >
-                <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
-              </button>
-            )}
+          {/* Saved indicator — ambient, not interruptive */}
+          <div className="h-5 flex items-center justify-end">
+            <SavedDot at={note.updated_at} />
           </div>
         </div>
       </div>
