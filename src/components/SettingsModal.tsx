@@ -17,13 +17,15 @@ interface Props {
   gcalIsConnected: boolean
   gcalConnect: () => Promise<{ success: boolean; error?: string }>
   gcalDisconnect: () => void
+  theme: string
+  onThemeChange: (t: string) => void
 }
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange, gcalIsConnected, gcalConnect, gcalDisconnect }: Props) {
+export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange, gcalIsConnected, gcalConnect, gcalDisconnect, theme, onThemeChange }: Props) {
   const [items, setItems] = useState<CategoryDef[]>(() =>
     categories.map(c => ({ ...c }))
   )
@@ -239,6 +241,45 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mt-2">
               Scales all text across the app. Applies instantly.
             </p>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-slate-200 dark:border-slate-700" />
+
+          {/* Appearance */}
+          <div>
+            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+              Appearance
+            </label>
+            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+              Choose how the app looks. System follows your device settings automatically.
+            </p>
+            <div
+              role="radiogroup"
+              aria-label="Appearance"
+              className="flex gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800"
+            >
+              {(['light', 'dark', 'system'] as const).map((mode) => {
+                const selected = theme === mode
+                const labels: Record<string, string> = { light: '☀ Light', dark: '🌙 Dark', system: '⚙ System' }
+                return (
+                  <button
+                    key={mode}
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={labels[mode]}
+                    onClick={() => onThemeChange(mode)}
+                    className={`flex-1 min-h-[44px] rounded-lg text-[0.8125rem] font-medium transition-all active:scale-95 motion-reduce:scale-100
+                      ${selected
+                        ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                  >
+                    {labels[mode]}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Divider */}

@@ -25,7 +25,8 @@ import CalendarView from './components/CalendarView'
 import CalendarStrip from './components/CalendarStrip'
 import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical, Target, ClipboardList, Settings, RefreshCw, LogOut, X, Undo2 } from 'lucide-react'
+import AddTaskModal from './components/AddTaskModal'
+import { Mic, Timer, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical, Target, Settings, RefreshCw, LogOut, X, Undo2, SquarePen, Sparkles, Zap } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { localTodayStr } from './lib/dates'
 import { speechSupported, formatVoiceNote } from './lib/speech'
@@ -63,35 +64,41 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
   }
 }
 
-function useTheme(): [boolean, () => void] {
-  const hasManuallySet = useRef(false)
-  const [dark, setDark] = useState(() => {
+type ThemeMode = 'light' | 'dark' | 'system'
+
+function useTheme() {
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem('tm-theme')
-    if (stored) { hasManuallySet.current = true; return stored === 'dark' }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
+    if (stored === 'dark' || stored === 'light' || stored === 'system') return stored
+    return 'system'
   })
+
+  // Resolve actual dark boolean from theme mode + system preference
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+  const dark = theme === 'system' ? systemDark : theme === 'dark'
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('tm-theme', dark ? 'dark' : 'light')
-  }, [dark])
+    localStorage.setItem('tm-theme', theme)
+  }, [dark, theme])
 
-  // Listen for system preference changes — only if user hasn't manually set
+  // Always listen for system preference changes (needed for 'system' mode live follow)
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = (e: MediaQueryListEvent) => {
-      if (!hasManuallySet.current) setDark(e.matches)
-    }
+    const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches)
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  const toggle = () => { hasManuallySet.current = true; setDark(d => !d) }
-  return [dark, toggle]
+  const setTheme = (t: ThemeMode) => setThemeState(t)
+
+  return { dark, theme, setTheme }
 }
 
 export default function App() {
-  const [dark, toggleTheme] = useTheme()
+  const { theme, setTheme } = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [authError, setAuthError] = useState<string | null>(null)
@@ -271,8 +278,12 @@ export default function App() {
   const [showPomodoro, setShowPomodoro] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
+  const [showAddTask, setShowAddTask] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
+  // One-time coachmarks for top vs bottom mic disambiguation
+  const [showTopMicCoachmark, setShowTopMicCoachmark] = useState(() => !localStorage.getItem('tm-coachmark-top-mic'))
+  const [showBottomMicCoachmark, setShowBottomMicCoachmark] = useState(() => !localStorage.getItem('tm-coachmark-bottom-mic'))
   const [suggestion, setSuggestion] = useState('')
   const [suggestionIsError, setSuggestionIsError] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
@@ -324,7 +335,7 @@ export default function App() {
   // ── Morning Brief: cache-first, no auto-generate ────────────────
   const BRIEF_CACHE_KEY = 'tm-cached-morning-brief-v3'
   // Counts for the entry chip — populated from cache, even when brief not displayed
-  const [briefChipCounts, setBriefChipCounts] = useState<{ overdue: number; dueToday: number } | null>(null)
+  const [, setBriefChipCounts] = useState<{ overdue: number; dueToday: number } | null>(null)
   // Holds cached brief data (avoids re-parsing localStorage on every tap)
   const cachedBriefRef = useRef<MorningBriefData | null>(null)
 
@@ -555,7 +566,7 @@ export default function App() {
 
   // Lock body scroll when any modal is open (prevents iOS horizontal overscroll).
   // Save/restore scrollY so WKWebView doesn't jump to y=0 when position:fixed is applied.
-  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar || sheetContent)
+  const hasModal = !!(editingNote || showNotesModal || selectedTask || showPomodoro || showSettings || showCalendar || showAddTask || sheetContent)
   const savedScrollY = useRef(0)
   useEffect(() => {
     if (hasModal) {
@@ -867,6 +878,8 @@ export default function App() {
 
   const handleVoiceTask = async (transcript: string) => {
     if (!transcript.trim()) return
+    // Dismiss top mic coachmark on first use
+    if (showTopMicCoachmark) { localStorage.setItem('tm-coachmark-top-mic', '1'); setShowTopMicCoachmark(false) }
     setVoiceTaskStatus('saving')
     setVoiceTaskQuickAction(false)  // consumed
 
@@ -908,6 +921,8 @@ export default function App() {
 
   const handleVoiceNote = async (transcript: string) => {
     if (!transcript.trim()) return
+    // Dismiss bottom mic coachmark on first use
+    if (showBottomMicCoachmark) { localStorage.setItem('tm-coachmark-bottom-mic', '1'); setShowBottomMicCoachmark(false) }
     setVoiceStatus('saving')
     setVoiceNoteQuickAction(false)  // consumed
 
@@ -959,28 +974,56 @@ export default function App() {
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200/60 dark:border-slate-800/40 pt-safe">
         <div className="px-1 sm:px-6 py-2 sm:py-3 flex items-center gap-2 sm:gap-3">
-            <h1 className="text-[1.125rem] font-bold text-blue-600 dark:text-blue-400 tracking-tight whitespace-nowrap shrink-0">
-              TaskMatrix
-            </h1>
+            {/* Compact logo mark — lightning bolt matching app icon identity */}
+            <div className="shrink-0 text-blue-600 dark:text-blue-400" aria-label="TaskMatrix">
+              <Zap size={22} strokeWidth={2.5} aria-hidden="true" />
+            </div>
 
-            {/* Quick-add input */}
+            {/* Quick-add input with mic docked inside — trailing-edge iOS dictation-style */}
             <div className="flex-1 relative max-w-[280px] sm:max-w-sm">
-              <div className="flex items-center gap-1.5">
-                <VoiceButton onTranscript={handleVoiceTask} onStatus={setVoiceTaskStatus} autoStart={voiceTaskQuickAction} />
-                <div className="flex-1 relative">
-                  <label htmlFor="quick-add-input" className="sr-only">Quick add task</label>
-                  <input
-                    id="quick-add-input"
-                    ref={quickAddRef}
-                    type="search"
-                    value={quickAdd}
-                    onChange={(e) => setQuickAdd(e.target.value)}
-                    onKeyDown={handleQuickAddKeyDown}
-                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 
-                      dark:border-slate-700 rounded-lg px-3 text-[1rem] text-slate-700 
-                      dark:text-slate-300 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors h-11"
-                  />
-                  {!quickAdd && (
+              <div className="relative">
+                <label htmlFor="quick-add-input" className="sr-only">Quick add task</label>
+                <input
+                  id="quick-add-input"
+                  ref={quickAddRef}
+                  type="search"
+                  value={quickAdd}
+                  onChange={(e) => setQuickAdd(e.target.value)}
+                  onKeyDown={handleQuickAddKeyDown}
+                  className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 
+                    dark:border-slate-700 rounded-lg pl-3 pr-10 text-[1rem] text-slate-700 
+                    dark:text-slate-300 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors h-11"
+                />
+                {/* Mic docked inside input — trailing edge: voice TASKS */}
+                {speechSupported() && (
+                  <div className="absolute right-0 top-0 bottom-0 flex items-center pr-1">
+                    <VoiceButton
+                      onTranscript={handleVoiceTask}
+                      onStatus={setVoiceTaskStatus}
+                      autoStart={voiceTaskQuickAction}
+                      icon={<Mic size={18} strokeWidth={2} aria-hidden="true" />}
+                      className="w-9 h-9 p-0 bg-transparent border-none rounded-md text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400"
+                    />
+                  </div>
+                )}
+                {!quickAdd && !voiceTaskStatus && (
+                  <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-10" aria-hidden="true">
+                    Quick add task…
+                  </span>
+                )}
+                {voiceTaskStatus && (
+                  <span className="absolute inset-y-0 left-3 flex items-center text-[0.875rem] text-blue-500 dark:text-blue-400 pointer-events-none truncate right-10" aria-hidden="true">
+                    {voiceTaskStatus}
+                  </span>
+                )}
+                {/* Top mic coachmark — one-time tooltip */}
+                {showTopMicCoachmark && speechSupported() && (
+                  <div className="absolute -bottom-8 right-0 z-10 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-[0.6875rem] px-2 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
+                    Dictate a task
+                    <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-800 dark:bg-slate-200 rotate-45" />
+                  </div>
+                )}
+                {!quickAdd && (
                     suggestion ? (
                       <div className="absolute -top-[3rem] left-0 right-0 sm:left-full sm:right-auto sm:top-0 sm:ml-2 sm:w-max z-10">
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2 shadow-md animate-in slide-in-from-bottom-2 fade-in duration-200">
@@ -1006,13 +1049,12 @@ export default function App() {
                         </div>
                       </div>
                     ) : (
-                      <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-3" aria-hidden="true">
+                      <span className="absolute inset-y-0 left-3 flex items-center text-[1rem] text-slate-400 dark:text-slate-600 pointer-events-none truncate right-10" aria-hidden="true">
                         {voiceTaskStatus || 'Quick add task…'}
                       </span>
                     )
                   )}
               </div>
-            </div>
             </div>
 
             {/* Right actions */}
@@ -1033,6 +1075,16 @@ export default function App() {
                     : `${offlineQueue.pendingCount} pending`}
                 </span>
               )}
+
+              {/* ── Morning Brief icon — opens brief at any time ── */}
+              <button
+                onClick={() => { setSheetContent('brief'); handleMorningBrief() }}
+                className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                aria-label="Morning Brief"
+                title="Morning Brief"
+              >
+                <Sparkles size={18} strokeWidth={2} aria-hidden="true" />
+              </button>
 
               {/* ── Pinned: "What next?" — always visible ── */}
               {aiSettings.enabled ? (
@@ -1061,19 +1113,6 @@ export default function App() {
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowOverflowMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[170px]" role="menu" ref={menuRef} onKeyDown={handleMenuKeyDown}>
-                      <button role="menuitem" onClick={() => { setSheetContent('brief'); handleMorningBrief(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        <span aria-hidden="true"><Sun size={16} strokeWidth={2} /></span> Morning Brief
-                      </button>
-                      <button role="menuitem" onClick={() => { setSheetContent('plan'); handlePlanDay(); setShowOverflowMenu(false) }} disabled={dayPlanLoading} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px] disabled:opacity-50">
-                        <span aria-hidden="true"><ClipboardList size={16} strokeWidth={2} /></span> Plan My Day
-                      </button>
-                      <button role="menuitem" onClick={() => { toggleTheme(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        {dark
-                          ? <><Sun size={16} strokeWidth={2} aria-hidden="true" /> Light mode</>
-                          : <><Moon size={16} strokeWidth={2} aria-hidden="true" /> Dark mode</>
-                        }
-                      </button>
-                      <hr className="border-slate-200 dark:border-slate-700 my-1" />
                       <button role="menuitem" onClick={() => { setShowSettings(true); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                         <span aria-hidden="true"><Settings size={16} strokeWidth={2} /></span> Settings
                       </button>
@@ -1167,12 +1206,6 @@ export default function App() {
               tasks={filteredTasks}
               onTaskClick={setSelectedTask}
               onComplete={(id) => handleStatusChange(id, 'done')}
-              aiEnabled={aiSettings.enabled}
-              overdueCount={briefChipCounts?.overdue ?? null}
-              dueTodayCount={briefChipCounts?.dueToday ?? null}
-              briefLoading={morningBriefLoading}
-              briefError={morningBriefError}
-              onBriefTap={() => { setSheetContent('brief'); handleMorningBrief() }}
             />
 
             <MatrixScreen
@@ -1269,6 +1302,16 @@ export default function App() {
 
       <PomodoroPopup show={showPomodoro} onClose={() => setShowPomodoro(false)} />
 
+      {showAddTask && (
+        <AddTaskModal
+          categories={categories}
+          onClose={() => setShowAddTask(false)}
+          onAdd={(title, importance, urgency, category, extras) => {
+            addTask(title, importance, urgency, category, extras)
+          }}
+        />
+      )}
+
       {showSettings && (
         <SettingsModal
           categories={categories}
@@ -1281,6 +1324,8 @@ export default function App() {
           gcalIsConnected={gcal.isConnected}
           gcalConnect={gcal.connect}
           gcalDisconnect={gcal.disconnect}
+          theme={theme}
+          onThemeChange={(t) => setTheme(t as 'light' | 'dark' | 'system')}
         />
       )}
 
@@ -1399,14 +1444,30 @@ export default function App() {
             <CalendarDays size={26} strokeWidth={2} aria-hidden="true" />
           </button>
           <button
-            onClick={toggleTheme}
+            onClick={() => setShowAddTask(true)}
             className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Add task"
           >
-            {dark
-              ? <Sun size={26} strokeWidth={2} aria-hidden="true" />
-              : <Moon size={26} strokeWidth={2} aria-hidden="true" />}
+            <SquarePen size={26} strokeWidth={2} aria-hidden="true" />
           </button>
+          {/* Bottom mic — voice NOTES (with one-time coachmark) */}
+          {speechSupported() && (
+            <div className="relative">
+              {showBottomMicCoachmark && (
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-10 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-[0.6875rem] px-2 py-1 rounded-md shadow-lg whitespace-nowrap pointer-events-none">
+                  Record a voice note
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-200 rotate-45" />
+                </div>
+              )}
+              <VoiceButton
+                onTranscript={handleVoiceNote}
+                onStatus={setVoiceStatus}
+                autoStart={voiceNoteQuickAction}
+                icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
+                className="w-12 h-12 p-0 bg-transparent border-none rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              />
+            </div>
+          )}
           <button
             onClick={() => setShowNotesModal(true)}
             className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"

@@ -10,11 +10,11 @@ import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
 import { isInTodayView, isInUpcomingView } from '../lib/visibility'
 import CheckCircle from './matrix/CheckCircle'
-import { Sparkles, Loader2, AlertTriangle, CalendarDays, Calendar, ChevronRight } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Calendar, ChevronRight } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
-type TabId = 'overdue' | 'today' | 'upcoming' | 'brief'
+type TabId = 'overdue' | 'today' | 'upcoming'
 
 interface TabDef {
   id: TabId
@@ -26,18 +26,11 @@ interface Props {
   tasks: Task[]
   onTaskClick: (task: Task) => void
   onComplete?: (id: string) => void
-  // Morning brief
-  aiEnabled: boolean
-  overdueCount: number | null
-  dueTodayCount: number | null
-  briefLoading: boolean
-  briefError: string | null
-  onBriefTap: () => void
 }
 
 // ── Config per tab ───────────────────────────────────────────────────────
 
-const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
+const TAB_CONFIG: Record<TabId, {
   headerLabel: string
   rowBg: string
   rowBorder: string
@@ -79,12 +72,6 @@ export default function SummaryStrip({
   tasks,
   onTaskClick,
   onComplete,
-  aiEnabled,
-  overdueCount,
-  dueTodayCount,
-  briefLoading,
-  briefError,
-  onBriefTap,
 }: Props) {
   const todayStr = localTodayStr()
   const [selectedTab, setSelectedTab] = useState<TabId | null>(null)
@@ -112,20 +99,16 @@ export default function SummaryStrip({
 
   // ── Build tab definitions with live counts ──────────────────────────
   const tabs: TabDef[] = useMemo(() => {
-    const base: TabDef[] = [
+    return [
       { id: 'overdue', label: 'Overdue', count: buckets.overdue.length },
       { id: 'today', label: 'Today', count: buckets.dueToday.length },
       { id: 'upcoming', label: 'Upcoming', count: buckets.upcoming.length },
     ]
-    if (aiEnabled) {
-      base.push({ id: 'brief', label: 'Morning brief' })
-    }
-    return base
-  }, [buckets, aiEnabled])
+  }, [buckets])
 
   // ── Selected tab's task list ────────────────────────────────────────
   const activeItems = useMemo((): Task[] | null => {
-    if (!selectedTab || selectedTab === 'brief') return null
+    if (!selectedTab) return null
     if (selectedTab === 'overdue') return buckets.overdue
     if (selectedTab === 'today') return buckets.dueToday
     return buckets.upcoming
@@ -193,64 +176,6 @@ export default function SummaryStrip({
     )
   }
 
-  // ── Brief content ───────────────────────────────────────────────────
-  const renderBriefContent = () => {
-    const hasCounts = overdueCount !== null && dueTodayCount !== null
-
-    if (briefError) {
-      return (
-        <button
-          onClick={onBriefTap}
-          className="w-full text-left flex items-center gap-1 px-1 min-h-[44px]
-            hover:opacity-80 transition-opacity"
-        >
-          <span className="text-[0.75rem] font-semibold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
-            <span className="inline-flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              Brief unavailable
-            </span>
-          </span>
-          <span className="text-[0.75rem] text-amber-400 dark:text-amber-500 ml-2">· Retry</span>
-        </button>
-      )
-    }
-
-    if (briefLoading) {
-      return (
-        <div className="w-full text-left flex items-center gap-1 px-1 min-h-[44px]">
-          <span className="text-[0.75rem] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider">
-            <span className="inline-flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Generating…
-            </span>
-          </span>
-        </div>
-      )
-    }
-
-    return (
-      <button
-        onClick={onBriefTap}
-        className="w-full text-left flex items-center gap-1 px-1 min-h-[44px]
-          hover:opacity-80 transition-opacity"
-        aria-label="Open morning brief"
-      >
-        <span className="text-[0.75rem] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider">
-          <span className="inline-flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            Morning brief
-          </span>
-        </span>
-        {hasCounts && (
-          <span className="text-[0.75rem] text-slate-400 dark:text-slate-500 ml-2">
-            · {overdueCount} earlier · {dueTodayCount} today
-          </span>
-        )}
-        <span className="text-[0.625rem] text-slate-400 dark:text-slate-500 ml-auto">›</span>
-      </button>
-    )
-  }
-
   // ── Main render ─────────────────────────────────────────────────────
 
   const isExpanded = selectedTab !== null
@@ -279,11 +204,11 @@ export default function SummaryStrip({
                   : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
             >
-              {t.id !== 'brief' ? (() => {
+              {(() => {
                 const cfg = TAB_CONFIG[t.id]
                 const Icon = cfg.icon
                 return <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              })() : <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
+              })()}
               <span>{t.label}</span>
               {t.count !== undefined && (
                 <span className="tabular-nums">· {t.count}</span>
@@ -295,7 +220,7 @@ export default function SummaryStrip({
 
       {/* ── Inline expand — matching quadrant AnimatePresence pattern ─ */}
       <AnimatePresence initial={false}>
-        {isExpanded && selectedTab !== 'brief' && activeItems && (
+        {isExpanded && activeItems && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -314,14 +239,14 @@ export default function SummaryStrip({
                   min-h-[44px]"
               >
                 {(() => {
-                  const cfg = TAB_CONFIG[selectedTab]
+                  const cfg = TAB_CONFIG[selectedTab!]
                   const Icon = cfg.icon
                   return (
                     <Icon className={`w-4 h-4 shrink-0 ${cfg.tokenClass}`} />
                   )
                 })()}
-                <span className={`text-[0.75rem] font-semibold uppercase tracking-wider flex-1 ${TAB_CONFIG[selectedTab].tokenClass}`}>
-                  {TAB_CONFIG[selectedTab].headerLabel} ({activeItems.length})
+                <span className={`text-[0.75rem] font-semibold uppercase tracking-wider flex-1 ${TAB_CONFIG[selectedTab!].tokenClass}`}>
+                  {TAB_CONFIG[selectedTab!].headerLabel} ({activeItems.length})
                 </span>
                 <span
                   aria-hidden="true"
@@ -331,44 +256,13 @@ export default function SummaryStrip({
 
               <div id={`tm-section-${selectedTab}`}>
                 {activeItems.length > 0 ? (
-                  renderTaskRows(activeItems, TAB_CONFIG[selectedTab])
+                  renderTaskRows(activeItems, TAB_CONFIG[selectedTab!])
                 ) : (
                   <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 px-1 py-2">
-                    No {TAB_CONFIG[selectedTab].headerLabel.toLowerCase()} tasks.
+                    No {TAB_CONFIG[selectedTab!].headerLabel.toLowerCase()} tasks.
                   </p>
                 )}
               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {isExpanded && selectedTab === 'brief' && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
-            <div className="pt-2">
-              {/* Collapse header — chevron-up affordance */}
-              <button
-                onClick={() => setSelectedTab(null)}
-                aria-expanded={true}
-                className="w-full text-left flex items-center gap-1 px-1 mb-1.5
-                  hover:opacity-80 transition-opacity
-                  min-h-[44px]"
-              >
-                <Sparkles className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" />
-                <span className="text-[0.75rem] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider flex-1">
-                  Morning brief
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="inline-block transition-transform duration-200 rotate-90 text-slate-400 dark:text-slate-500"
-                ><ChevronRight className="w-3.5 h-3.5" /></span>
-              </button>
-              {renderBriefContent()}
             </div>
           </motion.div>
         )}
