@@ -93,6 +93,11 @@
   --color-brief-admin-soft:     #f1f5f9;
   --color-brief-admin-border:   #cbd5e1;
 
+  /* ── Date-bucket header text — WCAG AA vs #F2F2F7 light bg ──────── */
+  --color-bucket-overdue-text:  #B02318;   /* 6.07:1 PASS AA */
+  --color-bucket-today-text:    #8F5606;   /* 5.37:1 PASS AA */
+  --color-bucket-upcoming-text: #0059B3;   /* 6.11:1 PASS AA */
+
   /* ── Font family ── iOS system stack ────────────────────────────────────── */
   --font-family-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text",
                       "Helvetica Neue", Arial, sans-serif;
@@ -151,6 +156,11 @@
     --color-brief-admin-soft:     #1a1d23;
     --color-brief-admin-border:   #334155;
 
+    /* Date-bucket header text — dark values (all PASS AA vs #000000) */
+    --color-bucket-overdue-text:  #FF453A;   /* 6.16:1 */
+    --color-bucket-today-text:    #FF9F0A;   /* 10.22:1 */
+    --color-bucket-upcoming-text: #0A84FF;   /* 5.76:1 */
+
     /* Pomodoro dark overrides */
     --color-pomodoro-track:     #48484A;
     --color-pomodoro-work:      #34D399;  /* work arc — emerald green (dark) */
@@ -189,6 +199,11 @@
       --color-brief-admin:          #94a3b8;
       --color-brief-admin-soft:     #1a1d23;
       --color-brief-admin-border:   #334155;
+
+      /* Date-bucket header text — dark values (all PASS AA vs #000000) */
+      --color-bucket-overdue-text:  #FF453A;   /* 6.16:1 */
+      --color-bucket-today-text:    #FF9F0A;   /* 10.22:1 */
+      --color-bucket-upcoming-text: #0A84FF;   /* 5.76:1 */
 
       /* Pomodoro dark overrides */
       --color-pomodoro-track:     #48484A;

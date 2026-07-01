@@ -12,12 +12,10 @@ interface Props {
 }
 
 // ── Persisted collapse state ───────────────────────────────────────────
-// Manual user toggles survive reloads.  Defaults are intentional:
-//   • Overdue  — auto-expanded (never hidden from the user)
-//   • Today    — auto-expanded (active action list; tap-to-reveal adds friction)
-//   • Upcoming — collapsed (planning layer, not an action layer)
+// Manual user toggles survive reloads.  All three start collapsed —
+// counts are visible in the header so nothing is truly hidden.
 const LS_KEY = 'taskmatrix:sectionCollapse'
-const LS_DEFAULTS = { today: false, overdue: false, upcoming: true }
+const LS_DEFAULTS = { today: true, overdue: true, upcoming: true }
 
 // Number of items visible before the "+N more" tap-through
 const PREVIEW_CAP = 3
@@ -166,33 +164,33 @@ export default function TodayStrip({ tasks, onTaskClick, onComplete }: Props) {
   return (
     <div className="mb-4 space-y-2">
       {renderSection('overdue', overdue, {
-        // Contrast: text-red-600 (#dc2626) on #F2F2F7 = 4.7:1  ✓ WCAG AA
+        // --color-bucket-overdue-text: #B02318 (6.07:1) / #FF453A dark
         headerEmoji: '⚠',
         headerLabel: 'OVERDUE',
-        headerClassName: 'text-red-600 dark:text-red-400',
-        chevronClassName: 'text-red-400 dark:text-red-500',
+        headerClassName: 'text-[var(--color-bucket-overdue-text)]',
+        chevronClassName: 'text-[var(--color-bucket-overdue-text)]/60',
         rowBg: 'bg-red-50 dark:bg-red-950/30',
         rowBorder: 'border border-red-200 dark:border-red-800/40',
         rowDateClassName: 'text-red-400 dark:text-red-500',
       })}
 
       {renderSection('today', dueToday, {
-        // Contrast: text-amber-600 (#d97706) on #F2F2F7 = 4.5:1  ✓ WCAG AA
+        // --color-bucket-today-text: #8F5606 (5.37:1) / #FF9F0A dark
         headerEmoji: '📅',
         headerLabel: 'TODAY',
-        headerClassName: 'text-amber-600 dark:text-amber-400',
-        chevronClassName: 'text-amber-400 dark:text-amber-500',
+        headerClassName: 'text-[var(--color-bucket-today-text)]',
+        chevronClassName: 'text-[var(--color-bucket-today-text)]/60',
         rowBg: 'bg-amber-50 dark:bg-amber-950/30',
         rowBorder: 'border border-amber-200 dark:border-amber-800/40',
         rowDateClassName: 'text-amber-400 dark:text-amber-500',
       })}
 
       {renderSection('upcoming', upcoming, {
-        // Contrast: text-blue-600 (#2563eb) on #F2F2F7 = 5.1:1  ✓ WCAG AA
+        // --color-bucket-upcoming-text: #0059B3 (6.11:1) / #0A84FF dark
         headerEmoji: '📆',
         headerLabel: 'UPCOMING',
-        headerClassName: 'text-blue-600 dark:text-blue-400',
-        chevronClassName: 'text-blue-400 dark:text-blue-500',
+        headerClassName: 'text-[var(--color-bucket-upcoming-text)]',
+        chevronClassName: 'text-[var(--color-bucket-upcoming-text)]/60',
         rowBg: 'bg-blue-50 dark:bg-blue-950/30',
         rowBorder: 'border border-blue-200 dark:border-blue-800/40',
         rowDateClassName: 'text-blue-400 dark:text-blue-500',
