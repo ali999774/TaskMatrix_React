@@ -17,13 +17,12 @@ import NotesModal from './components/NotesModal'
 import ProgressHeatmap from './components/ProgressHeatmap'
 import NoteEditModal from './components/NoteEditModal'
 import PomodoroPopup from './components/PomodoroPopup'
-import TodayStrip from './components/TodayStrip'
+import SummaryStrip from './components/SummaryStrip'
 import CompletedSection from './components/CompletedSection'
 import TaskDetail from './components/TaskDetail'
 import SettingsModal from './components/SettingsModal'
 import CalendarView from './components/CalendarView'
 import CalendarStrip from './components/CalendarStrip'
-import BriefEntryChip from './components/BriefEntryChip'
 import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
 import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical } from 'lucide-react'
@@ -1160,22 +1159,21 @@ export default function App() {
             />
           </div>
 
-          {/* ── Brief entry chip ──────────────────────────────── */}
-          {aiSettings.enabled && (
-            <div className="lg:col-span-2">
-              <BriefEntryChip
-                overdueCount={briefChipCounts?.overdue ?? null}
-                dueTodayCount={briefChipCounts?.dueToday ?? null}
-                loading={morningBriefLoading}
-                error={morningBriefError}
-                onTap={() => { setSheetContent('brief'); handleMorningBrief() }}
-              />
-            </div>
-          )}
+          {/* ── Summary strip — consolidated selector + content ── */}
 
-          {/* Today strip + upcoming + matrix + heatmap — left column */}
+          {/* Summary strip + matrix + heatmap — left column */}
           <div className="flex flex-col min-w-0 w-full">
-            <TodayStrip tasks={filteredTasks} onTaskClick={setSelectedTask} onComplete={(id) => handleStatusChange(id, 'done')} />
+            <SummaryStrip
+              tasks={filteredTasks}
+              onTaskClick={setSelectedTask}
+              onComplete={(id) => handleStatusChange(id, 'done')}
+              aiEnabled={aiSettings.enabled}
+              overdueCount={briefChipCounts?.overdue ?? null}
+              dueTodayCount={briefChipCounts?.dueToday ?? null}
+              briefLoading={morningBriefLoading}
+              briefError={morningBriefError}
+              onBriefTap={() => { setSheetContent('brief'); handleMorningBrief() }}
+            />
 
             <MatrixScreen
               tasks={filteredTasks}
