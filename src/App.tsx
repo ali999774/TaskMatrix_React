@@ -948,7 +948,6 @@ export default function App() {
                     value={quickAdd}
                     onChange={(e) => setQuickAdd(e.target.value)}
                     onKeyDown={handleQuickAddKeyDown}
-                    aria-label="Quick add task"
                     className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 
                       dark:border-slate-700 rounded-lg px-3 text-[1rem] text-slate-700 
                       dark:text-slate-300 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors h-11"
@@ -1337,7 +1336,7 @@ export default function App() {
       )}
 
       {/* Mobile bottom action bar */}
-      <nav role="presentation" className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200/60 dark:border-slate-800/40 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-t border-slate-200/60 dark:border-slate-800/40 pb-[env(safe-area-inset-bottom)]">
         {/* Transient voice status floats above the bar so the icon row stays symmetric */}
         {voiceStatus && (
           <span
