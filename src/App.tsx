@@ -26,7 +26,7 @@ import CalendarStrip from './components/CalendarStrip'
 import BriefEntryChip from './components/BriefEntryChip'
 import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays } from 'lucide-react'
+import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { localTodayStr } from './lib/dates'
 import { speechSupported, formatVoiceNote } from './lib/speech'
@@ -277,7 +277,36 @@ export default function App() {
   const [suggestion, setSuggestion] = useState('')
   const [suggestionIsError, setSuggestionIsError] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false)
+  const kebabRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Focus first menu item when overflow menu opens
+  useEffect(() => {
+    if (showOverflowMenu && menuRef.current) {
+      const first = menuRef.current.querySelector<HTMLElement>('[role="menuitem"]')
+      requestAnimationFrame(() => first?.focus())
+    }
+  }, [showOverflowMenu])
+
+  // Keyboard nav for overflow menu
+  const handleMenuKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setShowOverflowMenu(false)
+      kebabRef.current?.focus()
+      return
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const items = menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]')
+      if (!items || items.length === 0) return
+      const current = Array.from(items).indexOf(document.activeElement as HTMLElement)
+      const next = e.key === 'ArrowDown'
+        ? (current + 1) % items.length
+        : (current - 1 + items.length) % items.length
+      items[next]?.focus()
+    }
+  }
 
   // ── AI Briefs ─────────────────────────────────────────────────
   const [morningBrief, setMorningBrief] = useState<MorningBriefData | null>(null)
@@ -347,12 +376,12 @@ export default function App() {
     setBriefChipCounts({ overdue: overdueCount, dueToday: dueTodayCount })
   }, [userId, tasksLoading, aiSettings.enabled, tasks])
 
-  // Auto-close mobile menu after 5s
+  // Auto-close overflow menu after 5s
   useEffect(() => {
-    if (!showMenu) return
-    const t = setTimeout(() => setShowMenu(false), 5000)
+    if (!showOverflowMenu) return
+    const t = setTimeout(() => setShowOverflowMenu(false), 5000)
     return () => clearTimeout(t)
-  }, [showMenu])
+  }, [showOverflowMenu])
 
   // Cleanup all timers on unmount (undo, recurring confirm, AI suggestions)
   useEffect(() => {
@@ -1006,52 +1035,54 @@ export default function App() {
                 </span>
               )}
 
-              {/* Desktop: inline buttons (sm+) */}
-              <div className="hidden sm:flex items-center gap-0.5">
-                <button onClick={() => setShowSettings(true)} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙️</span></button>
-                {aiSettings.enabled ? (
-                  <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
-                    <span aria-hidden="true">🎯 What next?</span>
-                  </button>
-                ) : (
-                  <button onClick={() => setShowSettings(true)} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] shrink-0" title="Enable AI in Settings to use What's Next?">
-                    <span aria-hidden="true">🎯 What next?</span>
-                  </button>
-                )}
-                <button onClick={() => { setSheetContent('brief'); handleMorningBrief() }} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-90 min-h-[44px] shrink-0" title="Morning Brief" aria-label="Morning Brief"><span aria-hidden="true">☀️</span></button>
-                <button onClick={() => { setSheetContent('plan'); handlePlanDay() }} disabled={dayPlanLoading} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] shrink-0 disabled:opacity-50" title="Plan my day" aria-label="Plan my day"><span aria-hidden="true">📋</span></button>
-                <button onClick={() => window.location.reload()} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Refresh" aria-label="Refresh"><span aria-hidden="true">↻</span></button>
-                <button onClick={signOut} className="text-[0.875rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" title="Sign out" aria-label="Sign out"><span aria-hidden="true">⏻</span></button>
-              </div>
+              {/* ── Pinned: "What next?" — always visible ── */}
+              {aiSettings.enabled ? (
+                <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
+                  <span aria-hidden="true">🎯 What next?</span>
+                </button>
+              ) : (
+                <button onClick={() => setShowSettings(true)} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] shrink-0" title="Enable AI in Settings to use What's Next?">
+                  <span aria-hidden="true">🎯 What next?</span>
+                </button>
+              )}
 
-              {/* Mobile: dropdown menu (below sm) */}
-              <div className="sm:hidden relative shrink-0">
-                <button onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }} className="text-[1.125rem] p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500" aria-label="Menu"><span aria-hidden="true">☰</span></button>
-                {showMenu && (
+              {/* ── Overflow menu (kebab) — all breakpoints ── */}
+              <div className="relative shrink-0">
+                <button
+                  ref={kebabRef}
+                  onClick={(e) => { e.stopPropagation(); setShowOverflowMenu(!showOverflowMenu) }}
+                  aria-label="More options"
+                  aria-expanded={showOverflowMenu}
+                  aria-haspopup="menu"
+                  className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 dark:text-slate-500"
+                >
+                  <EllipsisVertical size={18} strokeWidth={2} aria-hidden="true" />
+                </button>
+                {showOverflowMenu && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[160px]">
-                      {aiSettings.enabled && (
-                        <>
-                        <button onClick={() => { handleSuggest(); setShowMenu(false) }} disabled={suggesting} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                          <span aria-hidden="true">🎯 What next?</span>
-                        </button>
-                        <button onClick={() => { setSheetContent('brief'); handleMorningBrief(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                          <span aria-hidden="true">☀️ Morning Brief</span>
-                        </button>
-                        <button onClick={() => { setSheetContent('plan'); handlePlanDay(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                          <span aria-hidden="true">📋 Plan My Day</span>
-                        </button>
-                        </>
-                      )}
-                      <button onClick={() => { setShowSettings(true); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        ⚙️ Settings
+                    <div className="fixed inset-0 z-40" onClick={() => setShowOverflowMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[170px]" role="menu" ref={menuRef} onKeyDown={handleMenuKeyDown}>
+                      <button role="menuitem" onClick={() => { setSheetContent('brief'); handleMorningBrief(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        <span aria-hidden="true">☀️</span> Morning Brief
                       </button>
-                      <button onClick={() => { window.location.reload() }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        ↻ Refresh
+                      <button role="menuitem" onClick={() => { setSheetContent('plan'); handlePlanDay(); setShowOverflowMenu(false) }} disabled={dayPlanLoading} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px] disabled:opacity-50">
+                        <span aria-hidden="true">📋</span> Plan My Day
                       </button>
-                      <button onClick={() => { signOut(); setShowMenu(false) }} className="w-full text-left text-[0.875rem] px-4 py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        ⏻ Sign out
+                      <button role="menuitem" onClick={() => { toggleTheme(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        {dark
+                          ? <><Sun size={16} strokeWidth={2} aria-hidden="true" /> Light mode</>
+                          : <><Moon size={16} strokeWidth={2} aria-hidden="true" /> Dark mode</>
+                        }
+                      </button>
+                      <hr className="border-slate-200 dark:border-slate-700 my-1" />
+                      <button role="menuitem" onClick={() => { setShowSettings(true); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        <span aria-hidden="true">⚙️</span> Settings
+                      </button>
+                      <button role="menuitem" onClick={() => { window.location.reload() }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
+                        <span aria-hidden="true">↻</span> Refresh
+                      </button>
+                      <button role="menuitem" onClick={() => { signOut(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 dark:text-red-400 flex items-center gap-2 min-h-[44px]">
+                        <span aria-hidden="true">⏻</span> Sign out
                       </button>
                     </div>
                   </>
