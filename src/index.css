@@ -13,7 +13,7 @@
   --color-quad-do-first:   #FF3B30;   /* Q1 — Urgent & Important  */
   --color-quad-invest:     #FF9500;   /* Q2 — Important, Not Urgent */
   --color-quad-delegate:   #007AFF;   /* Q3 — Urgent, Not Important */
-  --color-quad-dont-do:    #C7C7CC;   /* Q4 — Neither */
+  --color-quad-dont-do:    #B5B5BA;   /* Q4 — Neither */
 
   /* ── Accent ────────────────────────────────────────────────────────────── */
   --color-accent:          #007AFF;
