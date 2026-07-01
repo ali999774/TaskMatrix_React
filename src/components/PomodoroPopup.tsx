@@ -119,6 +119,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 style={{
                   stroke: arcColor,
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
+                  ...(running ? { filter: `drop-shadow(0 0 10px ${arcColor})` } : {}),
                 }}
               />
             </svg>
@@ -258,6 +259,7 @@ export default function PomodoroPopup({ show, onClose }: Props) {
                 style={{
                   stroke: 'var(--color-pomodoro-work)',
                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease',
+                  ...(running ? { filter: 'drop-shadow(0 0 8px var(--color-pomodoro-work))' } : {}),
                 }}
               />
             </svg>

@@ -1294,19 +1294,23 @@ export default function App() {
         </div>
       )}
 
-      {/* Undo snackbar — sits above the bottom nav */}
+      {/* Undo snackbar — floating pill above bottom nav */}
       {pendingUndo && (
         <div
           role="status"
           aria-live="polite"
           className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50
-            flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
-            rounded-xl shadow-lg pl-4 pr-1 py-1 max-w-[calc(100vw-2rem)]"
+            flex items-center gap-2 bg-slate-800 dark:bg-slate-700 text-white
+            rounded-full shadow-lg shadow-black/20 pl-3 pr-4 py-2.5 max-w-[calc(100vw-2rem)]"
         >
+          <svg aria-hidden="true" className="w-4 h-4 flex-shrink-0 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
           <span className="text-[0.875rem] truncate">{pendingUndo.message}</span>
           <button
             onClick={handleUndo}
-            className="text-[0.875rem] font-semibold text-blue-300 hover:text-blue-200 px-3 rounded-lg min-h-[44px] shrink-0"
+            className="text-[0.875rem] font-semibold text-blue-300 hover:text-blue-200 px-0 ml-1 min-h-[44px] shrink-0"
           >
             Undo
           </button>

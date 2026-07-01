@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Task } from '../types'
 
@@ -15,13 +15,27 @@ interface Props {
   onTaskClick: (task: Task) => void
 }
 
+// ── Day grouping ───────────────────────────────────────────────────────
+
+function getDayLabel(dateStr: string | null): string {
+  if (!dateStr) return 'Earlier'
+  const d = new Date(dateStr)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const taskDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const diffDays = Math.round((today.getTime() - taskDay.getTime()) / 86400000)
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return d.toLocaleDateString('en-US', { weekday: 'long' })
+  return 'Earlier'
+}
+
+// Sort groups: Today → Yesterday → weekday (Mon–Sun) → Earlier
+const GROUP_ORDER = ['Today', 'Yesterday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Earlier']
+
 export default function CompletedSection({
-  userId,
-  context,
-  reloadTrigger,
-  onUncomplete,
-  onClearCompleted,
-  onTaskClick,
+  userId, context, reloadTrigger, onUncomplete, onClearCompleted, onTaskClick,
 }: Props) {
   const [show, setShow] = useState(false)
   const [tasks, setTasks] = useState<Task[]>([])
@@ -30,14 +44,11 @@ export default function CompletedSection({
 
   useEffect(() => {
     if (!show || !userId) return
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async fetch
     setLoading(true)
     let query = supabase
       .from('tasks')
       .select('*')
       .eq('user_id', userId)
-      // status='done' — the only live completion value (phantom 'completed' removed in feat/completed-history)
       .eq('status', 'done')
       .is('deleted_at', null)
       .order('completed_at', { ascending: false, nullsFirst: false })
@@ -51,8 +62,6 @@ export default function CompletedSection({
       if (data) setTasks(data as Task[])
       setLoading(false)
     })
-    // reloadTrigger is intentionally included: it forces a re-fetch when the parent
-    // signals that a task's status changed (done or cleared).
   }, [show, userId, context, reloadTrigger])
 
   const handleClear = async () => {
@@ -66,6 +75,28 @@ export default function CompletedSection({
     onUncomplete(id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
   }
+
+  // ── Group by day ───────────────────────────────────────────────────
+  const groups = useMemo(() => {
+    const map = new Map<string, Task[]>()
+    for (const task of tasks) {
+      const label = getDayLabel(task.completed_at ?? task.updated_at ?? null)
+      if (!map.has(label)) map.set(label, [])
+      map.get(label)!.push(task)
+    }
+    return GROUP_ORDER
+      .filter((label) => map.has(label))
+      .map((label) => ({ label, tasks: map.get(label)! }))
+  }, [tasks])
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set(['Today']))
+
+  const toggleGroup = (label: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label); else next.add(label)
+      return next
+    })
 
   return (
     <div className="mt-6 mb-20 lg:mb-0">
@@ -97,7 +128,7 @@ export default function CompletedSection({
       </div>
 
       {show && (
-        <div className="mt-3 space-y-1">
+        <div className="mt-3 space-y-3">
           {loading ? (
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic py-3 text-center">
               Loading...
@@ -107,34 +138,50 @@ export default function CompletedSection({
               No completed tasks
             </p>
           ) : (
-            tasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-1 group"
-              >
-                <button
-                  onClick={() => onTaskClick(task)}
-                  className="flex-1 text-left px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/50
-                    border border-slate-200 dark:border-slate-700/50 text-[0.875rem] text-slate-500
-                    dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px]
-                    line-through decoration-slate-300 dark:decoration-slate-600"
-                >
-                  {task.title}
-                </button>
-                <button
-                  onClick={() => handleUncomplete(task.id)}
-                  className="shrink-0 w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 
-                    hover:bg-blue-100 dark:hover:bg-blue-900/50 
-                    active:scale-95 transition-all
-                    inline-flex items-center justify-center
-                    min-h-[44px] min-w-[44px]"
-                  title="Move back to active tasks"
-                  aria-label={`Undo completion: ${task.title}`}
-                >
-                  <span aria-hidden="true" className="text-blue-500 dark:text-blue-400 text-[0.875rem]">↩</span>
-                </button>
-              </div>
-            ))
+            groups.map((group) => {
+              const isExpanded = expandedGroups.has(group.label)
+              return (
+                <div key={group.label}>
+                  <button
+                    onClick={() => toggleGroup(group.label)}
+                    className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider hover:text-slate-600 dark:hover:text-slate-300 transition-colors min-h-[36px] w-full text-left"
+                  >
+                    <span className={`transition-transform motion-reduce:transition-none text-[0.5rem] ${isExpanded ? 'rotate-90' : ''}`} aria-hidden="true">▶</span>
+                    {group.label}
+                    <span className="text-slate-300 dark:text-slate-600 font-normal normal-case tracking-normal">· {group.tasks.length}</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="space-y-1 mt-1">
+                      {group.tasks.map((task) => (
+                        <div key={task.id} className="flex items-center gap-1 group">
+                          <button
+                            onClick={() => onTaskClick(task)}
+                            className="flex-1 text-left px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/50
+                              border border-slate-200 dark:border-slate-700/50 text-[0.875rem] text-slate-500
+                              dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px]
+                              line-through decoration-slate-300 dark:decoration-slate-600"
+                          >
+                            {task.title}
+                          </button>
+                          <button
+                            onClick={() => handleUncomplete(task.id)}
+                            className="shrink-0 w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30
+                              hover:bg-blue-100 dark:hover:bg-blue-900/50
+                              active:scale-95 transition-all
+                              inline-flex items-center justify-center
+                              min-h-[44px] min-w-[44px]"
+                            title="Move back to active tasks"
+                            aria-label={`Undo completion: ${task.title}`}
+                          >
+                            <span aria-hidden="true" className="text-blue-500 dark:text-blue-400 text-[0.875rem]">↩</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })
           )}
         </div>
       )}
