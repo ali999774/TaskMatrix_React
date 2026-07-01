@@ -1,5 +1,9 @@
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useState, useRef } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Pin } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { renderMarkdown } from '../lib/markdown'
 import { formatVoiceNote } from '../lib/speech'
@@ -115,7 +119,7 @@ export default function StickyWall({ notes, onDelete, onAdd, onEdit, onShowAll, 
     return (
       <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 w-full">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-[0.875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">📌 Pinned</h2>
+          <h2 className="text-[0.875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide"><Pin className="w-4 h-4 inline mr-1" />Pinned</h2>
           <span className="text-[0.875rem] text-slate-400">{notes.length}</span>
           <button
             onClick={toggleCollapsed}

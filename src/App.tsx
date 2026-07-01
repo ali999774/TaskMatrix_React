@@ -25,7 +25,7 @@ import CalendarView from './components/CalendarView'
 import CalendarStrip from './components/CalendarStrip'
 import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
-import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical } from 'lucide-react'
+import { Mic, Timer, Moon, Sun, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical, Target, ClipboardList, Settings, RefreshCw, LogOut, X, Undo2 } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { localTodayStr } from './lib/dates'
 import { speechSupported, formatVoiceNote } from './lib/speech'
@@ -1001,7 +1001,7 @@ export default function App() {
                             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shrink-0 min-h-[36px] px-0.5"
                             aria-label="Dismiss suggestion"
                           >
-                            ✕
+                            <X size={14} strokeWidth={2} />
                           </button>
                         </div>
                       </div>
@@ -1037,11 +1037,11 @@ export default function App() {
               {/* ── Pinned: "What next?" — always visible ── */}
               {aiSettings.enabled ? (
                 <button onClick={handleSuggest} disabled={suggesting} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all active:scale-90 min-h-[44px] disabled:opacity-50 shrink-0" title="AI suggests the best task to work on right now">
-                  <span aria-hidden="true">🎯 What next?</span>
+                  <span aria-hidden="true"><Target className="w-4 h-4 inline mr-1" />What next?</span>
                 </button>
               ) : (
                 <button onClick={() => setShowSettings(true)} className="text-[0.75rem] px-1.5 sm:px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 min-h-[44px] shrink-0" title="Enable AI in Settings to use What's Next?">
-                  <span aria-hidden="true">🎯 What next?</span>
+                  <span aria-hidden="true"><Target className="w-4 h-4 inline mr-1" />What next?</span>
                 </button>
               )}
 
@@ -1062,10 +1062,10 @@ export default function App() {
                     <div className="fixed inset-0 z-40" onClick={() => setShowOverflowMenu(false)} />
                     <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[170px]" role="menu" ref={menuRef} onKeyDown={handleMenuKeyDown}>
                       <button role="menuitem" onClick={() => { setSheetContent('brief'); handleMorningBrief(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        <span aria-hidden="true">☀️</span> Morning Brief
+                        <span aria-hidden="true"><Sun size={16} strokeWidth={2} /></span> Morning Brief
                       </button>
                       <button role="menuitem" onClick={() => { setSheetContent('plan'); handlePlanDay(); setShowOverflowMenu(false) }} disabled={dayPlanLoading} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px] disabled:opacity-50">
-                        <span aria-hidden="true">📋</span> Plan My Day
+                        <span aria-hidden="true"><ClipboardList size={16} strokeWidth={2} /></span> Plan My Day
                       </button>
                       <button role="menuitem" onClick={() => { toggleTheme(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
                         {dark
@@ -1075,13 +1075,13 @@ export default function App() {
                       </button>
                       <hr className="border-slate-200 dark:border-slate-700 my-1" />
                       <button role="menuitem" onClick={() => { setShowSettings(true); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        <span aria-hidden="true">⚙️</span> Settings
+                        <span aria-hidden="true"><Settings size={16} strokeWidth={2} /></span> Settings
                       </button>
                       <button role="menuitem" onClick={() => { window.location.reload() }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2 min-h-[44px]">
-                        <span aria-hidden="true">↻</span> Refresh
+                        <span aria-hidden="true"><RefreshCw size={16} strokeWidth={2} /></span> Refresh
                       </button>
                       <button role="menuitem" onClick={() => { signOut(); setShowOverflowMenu(false) }} className="w-full text-left px-3 py-2.5 text-[0.8125rem] hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 dark:text-red-400 flex items-center gap-2 min-h-[44px]">
-                        <span aria-hidden="true">⏻</span> Sign out
+                        <span aria-hidden="true"><LogOut size={16} strokeWidth={2} /></span> Sign out
                       </button>
                     </div>
                   </>
@@ -1350,10 +1350,7 @@ export default function App() {
             flex items-center gap-2 bg-slate-800 dark:bg-slate-700 text-white
             rounded-full shadow-lg shadow-black/20 pl-3 pr-4 py-2.5 max-w-[calc(100vw-2rem)]"
         >
-          <svg aria-hidden="true" className="w-4 h-4 flex-shrink-0 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="1 4 1 10 7 10" />
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-          </svg>
+          <Undo2 className="w-4 h-4 flex-shrink-0 text-blue-300" aria-hidden="true" />
           <span className="text-[0.875rem] truncate">{pendingUndo.message}</span>
           <button
             onClick={handleUndo}

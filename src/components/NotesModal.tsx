@@ -1,88 +1,49 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Search, X, Pin, Trash2 } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 import SwipeableRow from './SwipeableRow'
 import type { SwipeAction } from './SwipeableRow'
 
-
-
-// Filled pushpin, fill=currentColor so it inherits the white action-button text
-// color — unlike the 📌 emoji, which renders in its native red and ignores CSS color.
-const PinIcon = (
-  <svg viewBox="0 0 24 24" fill="currentColor" width="1em" height="1em" aria-hidden="true">
-    <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
-  </svg>
-)
-
 interface Props {
   notes: StickyNote[]
   onClose: () => void
   onEdit: (note: StickyNote) => void
-  onPin?: (id: string, pinned: boolean) => void
-  onDelete?: (id: string) => void
+  onDelete: (id: string) => void
+  onPurge: (id: string) => void
   onNewBlank?: () => void
-  /** Lazily fetch soft-deleted notes for the Trash view. */
-  onFetchDeleted?: () => Promise<StickyNote[]>
-  /** Restore a soft-deleted note from Trash. */
-  onRestore?: (note: StickyNote) => void
-  /** Permanently delete a note from Trash (hard delete, no undo). */
-  onPurgeForever?: (id: string) => void
-  /** Open the modal directly on a specific view (default: 'notes'). */
-  initialView?: 'notes' | 'trash'
 }
 
-export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank, onFetchDeleted, onRestore, onPurgeForever, initialView = 'notes' }: Props) {
+export default function NotesModal({ notes, onClose, onEdit, onDelete, onPurge, onNewBlank }: Props) {
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'notes' | 'trash'>(initialView)
+  const [view, setView] = useState<'notes' | 'trash'>('notes')
   const [deleted, setDeleted] = useState<StickyNote[]>([])
-  const [trashLoading, setTrashLoading] = useState(false)
   const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null)
-
-  const loadTrash = useCallback(async () => {
-    if (!onFetchDeleted) return
-    setTrashLoading(true)
-    const rows = await onFetchDeleted()
-    setDeleted(rows)
-    setTrashLoading(false)
-  }, [onFetchDeleted])
-
-  // Pre-fetch deleted count on mount so the "Recently Deleted" row appears
-  useEffect(() => {
-    if (onFetchDeleted) loadTrash()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Fetch (or refetch) the Trash list whenever the user opens that view.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading state before async fetch
-    if (view === 'trash') loadTrash()
-  }, [view, loadTrash])
-
-  const handleRestore = (note: StickyNote) => {
-    onRestore?.(note)
-    setDeleted((prev) => prev.filter((n) => n.id !== note.id))
-  }
-
-  const handlePurge = (id: string) => {
-    onPurgeForever?.(id)
-    setDeleted((prev) => prev.filter((n) => n.id !== id))
-    setConfirmPurgeId(null)
-  }
+  const overlayRef = useRef<HTMLDivElement>(null)
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const scrollerRef = useRef<HTMLDivElement>(null)
 
-  const filtered = search
-    ? notes.filter(
-        (n) =>
-          (n.title || '').toLowerCase().includes(search.toLowerCase()) ||
-          stripMarkdown(n.content).toLowerCase().includes(search.toLowerCase())
-      )
-    : notes
+  const loadTrash = useCallback(() => {
+    try {
+      const raw = localStorage.getItem('tm-deleted-notes')
+      if (raw) setDeleted(JSON.parse(raw))
+    } catch {}
+  }, [])
 
-  const handleOverlay = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) onClose()
+  const purgeForever = useCallback((id: string) => {
+    const next = deleted.filter(d => d.id !== id)
+    setDeleted(next)
+    setConfirmPurgeId(null)
+    try { localStorage.setItem('tm-deleted-notes', JSON.stringify(next)) } catch {}
+    onPurge(id)
+  }, [deleted, onPurge])
+
+  useEffect(() => {
+    loadTrash()
+  }, [loadTrash])
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === overlayRef.current) onClose()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -90,22 +51,18 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Only allow drag-to-dismiss from the header area, not the scrollable grid
-    const target = e.target as HTMLElement
-    if (scrollerRef.current?.contains(target)) return
     touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStart.current) return
     const dy = e.touches[0].clientY - touchStart.current.y
-    if (dy > 0) setDragY(dy) // only track downward swipes
+    if (dy > 0) setDragY(dy)
   }
 
   const handleTouchEnd = () => {
     if (!touchStart.current) return
     const dt = Date.now() - touchStart.current.timestamp
-    // Dismiss if dragged >100px or flicked fast >50px in <200ms
     if (dragY > 100 || (dragY > 50 && dt < 200)) {
       onClose()
     }
@@ -113,42 +70,60 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
     touchStart.current = null
   }
 
+  const term = search === '_' ? '' : search
+  const filtered = term
+    ? notes.filter(n =>
+        (n.title || '').toLowerCase().includes(term.toLowerCase()) ||
+        (n.content || '').toLowerCase().includes(term.toLowerCase())
+      )
+    : notes
+
+  const swipeActions = (note: StickyNote): SwipeAction[] => [
+    {
+      label: 'Delete',
+      icon: <X size={20} />,
+      className: 'bg-[#FF3B30]',
+      onAction: () => onDelete(note.id),
+    },
+  ]
+
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex max-sm:items-start items-center justify-center
-        max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
-      onClick={handleOverlay}
+      ref={overlayRef}
+      onClick={handleOverlayClick}
       onKeyDown={handleKeyDown}
+      className="fixed inset-0 z-50 flex max-sm:items-start items-center justify-center
+        bg-black/50 backdrop-blur-sm max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
     >
       <div
-        ref={sheetRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden
-          max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:animate-modal-sheet
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl
+          border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col
+          max-sm:rounded-b-none max-sm:max-h-[95dvh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-2 pb-0 max-sm:block hidden shrink-0">
+        <div
+          className="flex justify-center pt-2 pb-0 max-sm:block hidden touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
+
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0 relative z-10 bg-white dark:bg-slate-900 rounded-t-2xl">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              aria-label="Back"
-              className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
-            >
-              <span aria-hidden="true" className="text-[1rem]">←</span>
-            </button>
-            <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">
-              {view === 'trash' ? 'Recently Deleted' : 'Notes'}
-            </h2>
-          </div>
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
+          >
+            <span aria-hidden="true" className="text-[1rem]">←</span>
+          </button>
+          <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">
+            {view === 'trash' ? 'Recently Deleted' : 'Notes'}
+          </h2>
           <div className="flex items-center gap-2">
             {view === 'notes' && (
               <button
@@ -156,7 +131,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 aria-label={search ? 'Clear search' : 'Search notes'}
                 className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${search ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span aria-hidden="true">🔍</span>
+                <Search size={18} strokeWidth={2} aria-hidden="true" />
               </button>
             )}
             <span className="text-[0.875rem] text-slate-400">
@@ -165,7 +140,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           </div>
         </div>
 
-        {/* Search bar — toggled by search icon; non-scrolling flex sibling below the header */}
+        {/* Search bar */}
         {view === 'notes' && search && (
           <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 shrink-0">
             <input
@@ -179,167 +154,122 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           </div>
         )}
 
-        {/* Grid — single scroller below the header; clipping (not z-index) keeps motion layers under the header */}
-        <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-20 max-sm:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto bg-slate-100 dark:bg-slate-950">
           {view === 'trash' ? (
-            trashLoading ? (
-              <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">Loading…</p>
-            ) : deleted.length === 0 ? (
+            deleted.length === 0 ? (
               <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
-                Trash is empty
+                No recently deleted notes
               </p>
             ) : (
-              <>
-                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-4">
-                  Deleted notes are kept for 30 days, then removed automatically.
-                </p>
-                <div className="space-y-2">
-                  {deleted.map((note) => (
-                    <div
-                      key={note.id}
-                      className={`flex items-start gap-2 p-3 rounded-lg border bg-white dark:bg-slate-800
-                        border-slate-200 dark:border-slate-700 border-l-[3px] border-l-yellow-300 dark:border-l-yellow-400/80`}
-                    >
+              <div className="px-4 py-3 space-y-2">
+                {deleted.map((note) => (
+                  <div
+                    key={note.id}
+                    className="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 opacity-70"
+                  >
+                    <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         {note.title && (
-                          <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100 truncate">{note.title}</p>
-                        )}
-                        <p className="text-[0.8125rem] sm:text-[0.875rem] line-clamp-2 text-slate-600 dark:text-slate-400">
-                          {stripMarkdown(note.content || 'Empty note')}
-                        </p>
-                        {note.deleted_at && (
-                          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-1">
-                            Deleted {new Date(note.deleted_at).toLocaleDateString()}
+                          <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 text-slate-500 dark:text-slate-400 truncate">
+                            {note.title}
                           </p>
                         )}
+                        <p className="text-[0.8125rem] sm:text-[0.875rem] text-slate-400 dark:text-slate-500 line-clamp-2">
+                          {stripMarkdown(note.content || 'Empty note')}
+                        </p>
                       </div>
-                      <div className="flex flex-col gap-1 shrink-0">
-                        {onRestore && (
+                      <div className="flex items-center">
+                        {confirmPurgeId === note.id ? (
+                          <>
+                            <button
+                              onClick={() => purgeForever(note.id)}
+                              className="text-[0.75rem] px-2 py-1 rounded bg-red-500 text-white font-medium min-h-[36px]"
+                            >
+                              Delete forever
+                            </button>
+                            <button
+                              onClick={() => setConfirmPurgeId(null)}
+                              className="text-[0.75rem] px-2 py-1 ml-1 rounded text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 min-h-[36px]"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
                           <button
-                            onClick={() => handleRestore(note)}
-                            className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px] inline-flex items-center justify-center gap-1"
-                            aria-label={`Restore note ${note.title || ''}`}
+                            onClick={() => setConfirmPurgeId(note.id)}
+                            className="text-[0.75rem] px-3 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px] inline-flex items-center justify-center"
+                            aria-label={`Delete note forever ${note.title || ''}`}
                           >
-                            <span aria-hidden="true">↩</span> Restore
+                            <X size={16} strokeWidth={2} aria-hidden="true" />
                           </button>
-                        )}
-                        {onPurgeForever && (
-                          confirmPurgeId === note.id ? (
-                            <button
-                              onClick={() => handlePurge(note.id)}
-                              className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px] inline-flex items-center justify-center"
-                              aria-label="Confirm permanent delete"
-                            >
-                              Delete?
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setConfirmPurgeId(note.id)}
-                              className="text-[0.75rem] px-3 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-h-[44px] inline-flex items-center justify-center"
-                              aria-label={`Delete note forever ${note.title || ''}`}
-                            >
-                              <span aria-hidden="true">✕</span>
-                            </button>
-                          )
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </>
+                  </div>
+                ))}
+              </div>
             )
           ) : filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
               {search ? 'No notes match your search' : 'No notes yet — add one above'}
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((note) => {
-                const actions: SwipeAction[] = []
-                if (onEdit) {
-                  actions.push({
-                    label: 'Edit',
-                    icon: 'i',
-                    className: 'bg-[#8E8E93]',
-                    onAction: () => onEdit(note),
-                  })
-                }
-                if (onPin) {
-                  actions.push({
-                    label: note.pinned ? 'Unpin' : 'Pin',
-                    icon: PinIcon,
-                    className: 'bg-[#FF9500]',
-                    onAction: () => onPin(note.id, !note.pinned),
-                  })
-                }
-                if (onDelete) {
-                  actions.push({
-                    label: 'Delete',
-                    icon: '✕',
-                    className: 'bg-[#FF3B30]',
-                    onAction: () => onDelete(note.id),
-                  })
-                }
-
-                return (
-                  <SwipeableRow
-                    key={note.id}
-                    actions={actions}
-                    onTap={() => onEdit(note)}
-                    aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
-                    className="bg-white dark:bg-slate-800"
-                    showLabels={false}
-                  >
-                    <div
-                      aria-hidden="true"
-                      className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                        bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
-                        border-l-yellow-300 dark:border-l-yellow-400/80`}
-                    >
-                      {note.title && (
-                        <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100">{note.title}</p>
-                      )}
-                      <p
-                        className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4 text-slate-700 dark:text-slate-300"
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
-                      />
-                      <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
-                        {note.pinned && <span>📌</span>}
-                        {note.created_at && (
-                          <span>{new Date(note.created_at).toLocaleDateString()}</span>
-                        )}
-                      </div>
-                    </div>
-                  </SwipeableRow>
-                )
-              })}
+            <div className="px-4 py-3 space-y-2">
+              {filtered.map((note) => (
+                <SwipeableRow
+                  key={note.id}
+                  actions={swipeActions(note)}
+                  onTap={() => onEdit(note)}
+                  className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
+                    bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
+                    border-l-yellow-300 dark:border-l-yellow-400/80`}
+                >
+                  {note.title && (
+                    <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100">{note.title}</p>
+                  )}
+                  <p
+                    className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4 text-slate-700 dark:text-slate-300"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
+                  />
+                  <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
+                    {note.pinned && <Pin size={14} strokeWidth={2} aria-hidden="true" />}
+                    {note.created_at && (
+                      <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                </SwipeableRow>
+              ))}
             </div>
           )}
-          {view === 'notes' && onFetchDeleted && deleted.length > 0 && (
-            <button
-              onClick={() => { setSearch(''); setView('trash'); loadTrash() }}
-              className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl
-                bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700/50
-                transition-colors min-h-[44px]"
-              aria-label="Recently deleted"
-            >
-              <span className="flex items-center gap-2 text-[0.875rem] text-slate-600 dark:text-slate-400">
-                <span aria-hidden="true">🗑</span>
-                Recently Deleted
-              </span>
-              <span className="text-[0.8125rem] text-slate-400">{deleted.length}</span>
-            </button>
-          )}
         </div>
+
+        {/* Footer — Recently Deleted button */}
+        {view === 'notes' && (
+          <button
+            onClick={() => { setSearch(''); setView('trash'); loadTrash() }}
+            className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl
+              bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700/50
+              transition-colors min-h-[44px]"
+            aria-label="Recently deleted"
+          >
+            <span className="flex items-center gap-2 text-[0.875rem] text-slate-600 dark:text-slate-400">
+              <Trash2 size={16} strokeWidth={2} aria-hidden="true" />
+              Recently Deleted
+            </span>
+            <span className="text-[0.8125rem] text-slate-400">{deleted.length}</span>
+          </button>
+        )}
 
         {/* Floating new note button */}
         {view === 'notes' && onNewBlank && (
           <button
             onClick={onNewBlank}
             aria-label="New note"
-            className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] z-20"
+            className="absolute bottom-16 right-4 w-12 h-12 rounded-full bg-blue-500 text-white shadow-lg
+              hover:bg-blue-600 transition-all active:scale-90 flex items-center justify-center"
           >
-            <span aria-hidden="true" className="text-[1.5rem] leading-none">+</span>
+            <span className="text-[1.5rem]">+</span>
           </button>
         )}
       </div>

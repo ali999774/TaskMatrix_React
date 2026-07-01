@@ -1,6 +1,10 @@
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 // WeeklyReview — end-of-week AI reflection with stats, patterns, and guidance
 
-import { X, Trophy, TrendingUp, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react'
+import { X, Trophy, TrendingUp, Lightbulb, AlertTriangle, Sparkles, BarChart3 } from 'lucide-react'
 import type { WeeklyReview as WeeklyReviewData } from '../lib/ai-parse'
 
 interface Props {
@@ -40,7 +44,7 @@ export default function WeeklyReview({ review, loading, error, onClose }: Props)
     <div className="mx-3 mb-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
-        <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200">📊 Weekly Review</span>
+        <span className="text-[0.875rem] font-semibold text-slate-700 dark:text-slate-200"><BarChart3 className="w-4 h-4 inline mr-1.5 -mt-0.5" />Weekly Review</span>
         <button onClick={onClose} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="Close">
           <X className="w-4 h-4 text-slate-400" />
         </button>

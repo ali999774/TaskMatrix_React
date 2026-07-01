@@ -1,5 +1,7 @@
 export type Quadrant = 1 | 2 | 3 | 4
 
+import { Flame, Calendar, Handshake, Trash2, type LucideIcon } from 'lucide-react'
+
 export interface Task {
   id: string
   user_id: string
@@ -77,11 +79,11 @@ export const QUADRANT_SUBTITLES: Record<Quadrant, string> = {
   4: 'not urgent · not important',
 }
 
-export const QUADRANT_ICONS: Record<Quadrant, string> = {
-  1: '🔥',
-  2: '📅',
-  3: '🤝',
-  4: '🗑️',
+export const QUADRANT_ICONS: Record<Quadrant, LucideIcon> = {
+  1: Flame,
+  2: Calendar,
+  3: Handshake,
+  4: Trash2,
 }
 
 export const QUADRANT_DESCRIPTIONS: Record<Quadrant, string> = {

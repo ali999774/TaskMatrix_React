@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
+import { Mic, Circle } from 'lucide-react'
 import { isNativeSpeech } from '../lib/speech'
 import { registerPlugin } from '@capacitor/core'
 
@@ -17,7 +18,7 @@ interface Props {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SpeechRecognitionLike = any
 
-export default function VoiceButton({ onTranscript, onStatus, className = '', icon = '🎤', autoStart = false }: Props) {
+export default function VoiceButton({ onTranscript, onStatus, className = '', icon = <Mic size={20} />, autoStart = false }: Props) {
   const [listening, setListening] = useState(false)
   const [unsupported, setUnsupported] = useState(false)
   const [recReady, setRecReady] = useState(false)
@@ -166,9 +167,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
     }
   }, [onStatus])
 
-  // --- Web path using Web Speech API ---
-  // Fresh instance per recording (Chrome/Edge get flaky with reuse).
-  // continuous=true for Edge (Azure speech service needs it); retries once on first 'network' error.
+  // --- Web path --- same implementation, just needs Mic/Circle imports now
   const setupWeb = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
@@ -378,7 +377,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       title={listening ? 'Listening... tap to stop' : 'Voice input'}
       aria-label={listening ? 'Stop voice input' : 'Start voice input'}
     >
-      {listening ? '🔴' : icon}
+      {listening ? <Circle size={20} fill="currentColor" stroke="none" /> : icon}
     </button>
   )
 }

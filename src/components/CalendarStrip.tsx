@@ -39,7 +39,7 @@ export default function CalendarStrip({ events, isConnected, isLoading, onConnec
           className="w-full flex items-center gap-2 text-[0.8125rem] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors min-h-[44px] disabled:opacity-50 pr-8"
         >
           <Calendar className="w-4 h-4 flex-shrink-0" />
-          {isLoading ? 'Connecting…' : '📅 Connect Google Calendar to see today\'s events'}
+          {isLoading ? 'Connecting…' : 'Connect Google Calendar to see today\'s events'}
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); handleDismiss() }}

@@ -1,10 +1,12 @@
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
+chdir: error retrieving current directory: getcwd: cannot access parent directories: Operation not permitted
 import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { getCategoryDef } from '../lib/categories'
 import { categoryColor } from '../lib/categoryColors'
-import { Pin, ChevronDown, Check } from 'lucide-react'
+import { Pin, ChevronDown, Check, X } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -263,7 +265,7 @@ export default function TaskCard({
             },
             {
               label: 'Delete',
-              icon: '✕',
+              icon: <X size={20} />,
               className: 'bg-[#FF3B30]',
               onAction: () => onDelete(task.id),
             },
@@ -365,16 +367,19 @@ export default function TaskCard({
             }}
           onClick={(e) => e.stopPropagation()}>
           <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
-          {([1, 2, 3, 4] as Quadrant[]).map((q) => (
+          {([1, 2, 3, 4] as Quadrant[]).map((q) => {
+            const QIcon = QUADRANT_ICONS[q]
+            return (
             <button
               key={q}
               onClick={(e) => handleMovePick(e, q)}
               className="text-[0.75rem] px-2.5 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-left flex items-center gap-2 active:scale-95 motion-reduce:scale-100 transition-all min-h-[44px]"
             >
-              <span>{QUADRANT_ICONS[q]}</span>
+              <QIcon className="w-4 h-4" aria-hidden="true" />
               <span className="text-slate-700 dark:text-slate-300">{QUADRANT_LABELS[q]}</span>
             </button>
-          ))}
+            )
+          })}
           </div>
           )}
         </>

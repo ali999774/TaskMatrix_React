@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, Clock, Bell, Tag, Repeat } from 'lucide-react'
+import { Calendar, Clock, Bell, Tag, Repeat, X, Sparkles } from 'lucide-react'
 import type { Task } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { categoryDisplay } from '../lib/categories'
@@ -92,9 +92,6 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
     save({ due_date: val || null })
   }
 
-  // Toggle gating the existing due_date field (re-presents data we already
-  // hold). On → default to today; off → clear date and its dependents (time +
-  // reminder) so we never leave an orphaned time/reminder with no date.
   const handleDueDateToggle = (on: boolean) => {
     if (on) {
       const today = localTodayStr()
@@ -233,7 +230,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
           transition-transform duration-200"
         style={{ transform: dragY > 0 ? `translateY(${dragY}px)` : undefined }}
       >
-        {/* Drag handle — touch handlers live here only so the scrollable body doesn't trigger dismiss */}
+        {/* Drag handle */}
         <div
           className="flex justify-center pt-2 pb-0 max-sm:block hidden touch-none"
           onTouchStart={handleTouchStart}
@@ -243,9 +240,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
           <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
         </div>
 
-        {/* Header — back-arrow dismiss. Edits auto-save per field (see save()),
-            so there is no explicit commit/discard step; an X/✓ header would
-            imply discard semantics this screen does not have. */}
+        {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-3">
           <button
             onClick={onClose}
@@ -267,7 +262,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
           />
         </div>
 
-        {/* Body — inset grouped-card layout */}
+        {/* Body */}
         <div className="px-4 py-5 space-y-6 max-h-[60vh] overflow-y-auto bg-slate-100 dark:bg-slate-950">
           {/* DATE & TIME */}
           <Section header="Date & Time">
@@ -363,7 +358,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
             </div>
           </Section>
 
-          {/* REPEAT — behavior unchanged; restyled into the grouped card only. */}
+          {/* REPEAT */}
           <Section header="Repeat">
             <Row
               icon={<Repeat />}
@@ -414,7 +409,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
             </Row>
           </Section>
 
-          {/* SUBTASKS — behavior unchanged; restyled into the grouped card only. */}
+          {/* SUBTASKS */}
           <Section header={`Subtasks${subtasks.length > 0 ? ` · ${completed}/${subtasks.length}` : ''}`}>
             {subtasks.length > 0 && (
               <div className="px-4 py-2 space-y-1">
@@ -436,14 +431,13 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                     >
                       {st.title}
                     </span>
-                    {/* Always visible — hover-reveal is unreachable on touch */}
                     <button
                       onClick={() => deleteSubtask(i)}
                       className="text-slate-400 dark:text-slate-500
                         hover:text-red-500 transition-all text-[0.75rem] min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                       aria-label={`Delete subtask: ${st.title}`}
                     >
-                      ✕
+                      <X size={14} strokeWidth={2} />
                     </button>
                   </div>
                 ))}
@@ -468,7 +462,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
                   text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30
                   transition-all active:scale-95 min-h-[44px] disabled:opacity-50"
               >
-                {breakingDown ? '...' : '✨ Break down'}
+                {breakingDown ? '...' : <><Sparkles className="w-3.5 h-3.5 inline mr-1" />Break down</>}
               </button>
             </div>
           </Section>

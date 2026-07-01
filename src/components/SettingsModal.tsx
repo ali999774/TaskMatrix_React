@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
+import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic } from 'lucide-react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
@@ -195,10 +196,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             aria-label="Back"
             className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
           >
-            <span aria-hidden="true" className="text-[1rem]">←</span>
+            <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
           </button>
           <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">
-            ⚙️ Settings
+            <Settings className="w-5 h-5 inline mr-1" />Settings
           </h2>
         </div>
 
@@ -246,7 +247,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           {/* AI Settings */}
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
-              🤖 AI Task Parsing
+              <Sparkles className="w-4 h-4 inline mr-1" />AI Task Parsing
             </label>
             <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
               When enabled, voice transcripts are parsed by AI to create structured
@@ -304,7 +305,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           {/* Google Calendar */}
           <div>
             <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
-              📅 Google Calendar
+              <Calendar className="w-4 h-4 inline mr-1" />Google Calendar
             </label>
             {gcalIsConnected ? (
               <>
@@ -429,7 +430,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                         className="text-[0.75rem] text-slate-400 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                         aria-label={`Delete category ${cat.display || 'new'}`}
                       >
-                        ✕
+                        <X size={14} strokeWidth={2} />
                       </button>
                     )}
                   </div>
@@ -527,8 +528,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                 active:scale-[0.98] min-h-[44px] flex items-center justify-center gap-2"
               aria-label="Add to Siri Shortcut"
             >
-              <span aria-hidden="true" className="text-[1.25rem]">🎙️</span>
-              Add to Siri Shortcut
+              <Mic className="w-5 h-5 inline mr-1" />Add to Siri Shortcut
             </button>
           </div>
         </div>

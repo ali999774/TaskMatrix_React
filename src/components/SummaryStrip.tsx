@@ -10,7 +10,7 @@ import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
 import { isInTodayView, isInUpcomingView } from '../lib/visibility'
 import CheckCircle from './matrix/CheckCircle'
-import { Sparkles, Loader2, AlertTriangle, CalendarDays, Calendar } from 'lucide-react'
+import { Sparkles, Loader2, AlertTriangle, CalendarDays, Calendar, ChevronRight } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -19,7 +19,6 @@ type TabId = 'overdue' | 'today' | 'upcoming' | 'brief'
 interface TabDef {
   id: TabId
   label: string
-  emoji: string
   count?: number
 }
 
@@ -39,7 +38,6 @@ interface Props {
 // ── Config per tab ───────────────────────────────────────────────────────
 
 const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
-  headerEmoji: string
   headerLabel: string
   rowBg: string
   rowBorder: string
@@ -48,7 +46,6 @@ const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
   icon: typeof AlertTriangle
 }> = {
   overdue: {
-    headerEmoji: '⚠',
     headerLabel: 'Overdue',
     rowBg: 'bg-red-50 dark:bg-red-950/30',
     rowBorder: 'border border-red-200 dark:border-red-800/40',
@@ -57,7 +54,6 @@ const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
     icon: AlertTriangle,
   },
   today: {
-    headerEmoji: '📅',
     headerLabel: 'Today',
     rowBg: 'bg-amber-50 dark:bg-amber-950/30',
     rowBorder: 'border border-amber-200 dark:border-amber-800/40',
@@ -66,7 +62,6 @@ const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
     icon: CalendarDays,
   },
   upcoming: {
-    headerEmoji: '📆',
     headerLabel: 'Upcoming',
     rowBg: 'bg-blue-50 dark:bg-blue-950/30',
     rowBorder: 'border border-blue-200 dark:border-blue-800/40',
@@ -118,12 +113,12 @@ export default function SummaryStrip({
   // ── Build tab definitions with live counts ──────────────────────────
   const tabs: TabDef[] = useMemo(() => {
     const base: TabDef[] = [
-      { id: 'overdue', label: 'Overdue', emoji: '⚠', count: buckets.overdue.length },
-      { id: 'today', label: 'Today', emoji: '📅', count: buckets.dueToday.length },
-      { id: 'upcoming', label: 'Upcoming', emoji: '📆', count: buckets.upcoming.length },
+      { id: 'overdue', label: 'Overdue', count: buckets.overdue.length },
+      { id: 'today', label: 'Today', count: buckets.dueToday.length },
+      { id: 'upcoming', label: 'Upcoming', count: buckets.upcoming.length },
     ]
     if (aiEnabled) {
-      base.push({ id: 'brief', label: 'Morning brief', emoji: '✨' })
+      base.push({ id: 'brief', label: 'Morning brief' })
     }
     return base
   }, [buckets, aiEnabled])
@@ -284,7 +279,11 @@ export default function SummaryStrip({
                   : 'bg-transparent text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
             >
-              <span aria-hidden="true">{t.emoji}</span>
+              {t.id !== 'brief' ? (() => {
+                const cfg = TAB_CONFIG[t.id]
+                const Icon = cfg.icon
+                return <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              })() : <Sparkles className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />}
               <span>{t.label}</span>
               {t.count !== undefined && (
                 <span className="tabular-nums">· {t.count}</span>
@@ -322,12 +321,12 @@ export default function SummaryStrip({
                   )
                 })()}
                 <span className={`text-[0.75rem] font-semibold uppercase tracking-wider flex-1 ${TAB_CONFIG[selectedTab].tokenClass}`}>
-                  {TAB_CONFIG[selectedTab].headerEmoji} {TAB_CONFIG[selectedTab].headerLabel} ({activeItems.length})
+                  {TAB_CONFIG[selectedTab].headerLabel} ({activeItems.length})
                 </span>
                 <span
                   aria-hidden="true"
-                  className="inline-block transition-transform duration-200 rotate-90 text-[0.625rem] text-slate-400 dark:text-slate-500"
-                >▶</span>
+                  className="inline-block transition-transform duration-200 rotate-90 text-slate-400 dark:text-slate-500"
+                ><ChevronRight className="w-3.5 h-3.5" /></span>
               </button>
 
               <div id={`tm-section-${selectedTab}`}>
@@ -362,12 +361,12 @@ export default function SummaryStrip({
               >
                 <Sparkles className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400" />
                 <span className="text-[0.75rem] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-wider flex-1">
-                  ✨ Morning brief
+                  Morning brief
                 </span>
                 <span
                   aria-hidden="true"
-                  className="inline-block transition-transform duration-200 rotate-90 text-[0.625rem] text-slate-400 dark:text-slate-500"
-                >▶</span>
+                  className="inline-block transition-transform duration-200 rotate-90 text-slate-400 dark:text-slate-500"
+                ><ChevronRight className="w-3.5 h-3.5" /></span>
               </button>
               {renderBriefContent()}
             </div>
