@@ -5,12 +5,13 @@
 //
 // Default: nothing selected, content area hidden.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import type { Task } from '../types'
 import { parseLocalDate, localTodayStr } from '../lib/dates'
 import { isInTodayView, isInUpcomingView } from '../lib/visibility'
 import CheckCircle from './matrix/CheckCircle'
-import { Sparkles, Loader2, AlertTriangle } from 'lucide-react'
+import BottomSheet from './BottomSheet'
+import { Sparkles, Loader2, AlertTriangle, CalendarDays, Calendar, ChevronDown } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,15 @@ const TAB_CONFIG: Record<Exclude<TabId, 'brief'>, {
 
 const PREVIEW_CAP = 3
 
+// ── Picker option icons + colors per tab ─────────────────────────────────
+
+const PICKER_OPTION: Record<TabId, { icon: typeof AlertTriangle; colorClass: string }> = {
+  overdue:  { icon: AlertTriangle, colorClass: 'text-[var(--color-bucket-overdue-text)]' },
+  today:    { icon: CalendarDays,  colorClass: 'text-[var(--color-bucket-today-text)]' },
+  upcoming: { icon: Calendar,      colorClass: 'text-[var(--color-bucket-upcoming-text)]' },
+  brief:    { icon: Sparkles,      colorClass: 'text-blue-500 dark:text-blue-400' },
+}
+
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function SummaryStrip({
@@ -90,6 +100,7 @@ export default function SummaryStrip({
   const todayStr = localTodayStr()
   const [selectedTab, setSelectedTab] = useState<TabId | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   // ── Derive task buckets ─────────────────────────────────────────────
   const buckets = useMemo(() => {
@@ -143,6 +154,18 @@ export default function SummaryStrip({
       setShowAll(false)
     }
   }
+
+  const handlePickerSelect = useCallback((tabId: TabId) => {
+    setSelectedTab((prev) => prev === tabId ? null : tabId)
+    setShowAll(false)
+    setPickerOpen(false)
+  }, [])
+
+  // ── Trigger button label ──────────────────────────────────────────
+  const selectedDef = tabs.find((t) => t.id === selectedTab)
+  const triggerLabel = selectedDef
+    ? `${selectedDef.emoji} ${selectedDef.label}${selectedDef.count !== undefined ? ` · ${selectedDef.count}` : ''}`
+    : 'Select a view'
 
   // ── Nothing to show if no tasks and no brief capability ─────────────
   // (brief tab always shows even with 0 counts)
@@ -260,32 +283,58 @@ export default function SummaryStrip({
 
   return (
     <div className="mb-4">
-      {/* ── MOBILE: native <select> ──────────────────────────────── */}
+      {/* ── MOBILE: button trigger + BottomSheet picker ────────── */}
       <div className="block sm:hidden mb-2">
-        <select
-          value={selectedTab ?? ''}
-          onChange={(e) => {
-            const v = e.target.value
-            setSelectedTab(v ? v as TabId : null)
-            setShowAll(false)
-          }}
-          aria-label="Select a view"
-          className="w-full text-[0.875rem] px-3 py-2.5 rounded-xl
+        <button
+          onClick={() => setPickerOpen(true)}
+          aria-haspopup="listbox"
+          aria-expanded={pickerOpen}
+          className="w-full text-[0.875rem] px-3 py-2.5 rounded-xl text-left
             bg-white dark:bg-slate-800
             text-slate-700 dark:text-slate-200
             border border-slate-200 dark:border-slate-700
-            appearance-none
-            bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')]
-            bg-no-repeat bg-[right_0.75rem_center] pr-10
-            min-h-[44px]"
+            min-h-[44px] flex items-center gap-2
+            hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
         >
-          <option value="" disabled>Select a view</option>
-          {tabs.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.emoji} {t.label}{t.count !== undefined ? ` · ${t.count}` : ''}
-            </option>
-          ))}
-        </select>
+          <span className="flex-1 truncate">{triggerLabel}</span>
+          <ChevronDown
+            className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${pickerOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        <BottomSheet open={pickerOpen} onClose={() => setPickerOpen(false)}>
+          <div role="listbox" aria-label="Select a view" className="px-2 pb-2">
+            {tabs.map((t) => {
+              const opt = PICKER_OPTION[t.id]
+              const Icon = opt.icon
+              const isSelected = selectedTab === t.id
+              return (
+                <button
+                  key={t.id}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => handlePickerSelect(t.id)}
+                  className={`w-full text-left flex items-center gap-2.5 px-3 py-3 rounded-xl
+                    min-h-[44px] transition-colors
+                    ${isSelected
+                      ? 'bg-slate-100 dark:bg-slate-800'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${opt.colorClass}`} />
+                  <span className="flex-1 text-[0.875rem] font-medium text-slate-700 dark:text-slate-200">
+                    {t.emoji} {t.label}
+                  </span>
+                  {t.count !== undefined && (
+                    <span className="text-[0.8125rem] text-slate-400 dark:text-slate-500 tabular-nums">
+                      {t.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </BottomSheet>
       </div>
 
       {/* ── WEB: horizontal pill tab bar ─────────────────────────── */}
