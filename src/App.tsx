@@ -1187,7 +1187,7 @@ export default function App() {
 
       {/* Body: matrix + sticky notes side by side */}
       {/* pb clears the fixed bottom nav (+ home-indicator safe area) */}
-      <div className="px-1 sm:px-6 pt-4 sm:pt-5 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <div className="px-1 sm:px-6 pt-2 sm:pt-2 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-5 lg:items-start w-full mb-6">
 
           {/* ── AI Briefs: Calendar → Morning Brief → Day Plan ──── */}
