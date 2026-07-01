@@ -1335,7 +1335,7 @@ export default function App() {
       {/* Recurring stop confirm snackbar */}
       {showCalendar && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
+          <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm" onClick={() => setShowCalendar(false)} />
           <div className="fixed inset-x-2 z-50 bg-white dark:bg-slate-950 rounded shadow-2xl flex flex-col max-w-2xl mx-auto overflow-hidden"
             style={{
               // Top: fixed 12px gap + iOS status-bar/notch inset so panel never
