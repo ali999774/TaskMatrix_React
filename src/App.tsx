@@ -999,7 +999,10 @@ export default function App() {
                   <div className="absolute right-0 top-0 bottom-0 flex items-center pr-1">
                     <VoiceButton
                       onTranscript={handleVoiceTask}
-                      onStatus={setVoiceTaskStatus}
+                      onStatus={(s) => {
+                        if (s === 'listening' && showTopMicCoachmark) { localStorage.setItem('tm-coachmark-top-mic', '1'); setShowTopMicCoachmark(false) }
+                        setVoiceTaskStatus(s)
+                      }}
                       autoStart={voiceTaskQuickAction}
                       icon={<Mic size={18} strokeWidth={2} aria-hidden="true" />}
                       className="w-9 h-9 p-0 bg-transparent border-none rounded-md text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400"
@@ -1451,7 +1454,10 @@ export default function App() {
               )}
               <VoiceButton
                 onTranscript={handleVoiceNote}
-                onStatus={setVoiceStatus}
+                onStatus={(s) => {
+                  if (s === 'listening' && showBottomMicCoachmark) { localStorage.setItem('tm-coachmark-bottom-mic', '1'); setShowBottomMicCoachmark(false) }
+                  setVoiceStatus(s)
+                }}
                 autoStart={voiceNoteQuickAction}
                 icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
                 className="w-12 h-12 p-0 bg-transparent border-none rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
