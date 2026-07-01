@@ -14,6 +14,7 @@ interface MatrixScreenProps {
   onDelete: (id: string) => void
   onTaskClick: (task: Task) => void
   categories: CategoryDef[]
+  suggestedTaskId?: string | null
 }
 
 /**
@@ -37,6 +38,7 @@ export default function MatrixScreen({
   onDelete,
   onTaskClick,
   categories,
+  suggestedTaskId = null,
 }: MatrixScreenProps) {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null)
 
@@ -58,6 +60,7 @@ export default function MatrixScreen({
     categories,
     expandedTaskId,
     onToggleExpand: handleToggleExpand,
+    suggestedTaskId,
   }
 
   return (

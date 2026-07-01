@@ -108,12 +108,20 @@ export async function breakDownTask(
 }
 
 export async function suggestNextTask(
-  taskList: string
-): Promise<{ suggested: string } | { error: string }> {
-  if (!taskList.trim()) return { error: 'empty task list' }
-  const result = await callEdgeFn({ transcript: taskList, mode: 'suggest' })
+  tasks: Array<{
+    id: string; title: string; quadrant?: number; importance?: number
+    urgency?: number; status?: string; due_date?: string | null
+    due_time?: string | null; category?: string | null; notes?: string | null
+    subtasks?: { title: string; done: boolean }[]
+  }>
+): Promise<{ suggested: string; id: string | null } | { error: string }> {
+  if (tasks.length === 0) return { error: 'empty task list' }
+  const result = await callEdgeFn({ transcript: formatTaskList(tasks), mode: 'suggest' })
   if ('error' in result) return result
-  return { suggested: (result.data.suggested as string) || 'No suggestion' }
+  return {
+    suggested: (result.data.suggested as string) || 'No suggestion',
+    id: (result.data.id as string) || null,
+  }
 }
 
 export async function formatNoteContent(

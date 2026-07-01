@@ -274,7 +274,7 @@ export default function App() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [voiceStatus, setVoiceStatus] = useState('')
   const [voiceTaskStatus, setVoiceTaskStatus] = useState('')
-  const [suggestion, setSuggestion] = useState('')
+  const [suggestion, setSuggestion] = useState<{ taskId: string | null; text: string } | null>(null)
   const [suggestionIsError, setSuggestionIsError] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -543,15 +543,15 @@ export default function App() {
 
   const handleSuggest = async () => {
     if (!aiSettings.enabled) {
-      setSuggestion('AI disabled — enable in Settings ⚙️')
+      setSuggestion({ taskId: null, text: 'AI disabled — enable in Settings ⚙️' })
       setSuggestionIsError(true)
-      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+      setTimeout(() => { setSuggestion(null); setSuggestionIsError(false) }, 4000)
       return
     }
     if (filteredTasks.length === 0) {
-      setSuggestion('No tasks to suggest from')
+      setSuggestion({ taskId: null, text: 'No tasks to suggest from' })
       setSuggestionIsError(true)
-      setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 3000)
+      setTimeout(() => { setSuggestion(null); setSuggestionIsError(false) }, 3000)
       return
     }
     setSuggesting(true)
@@ -563,21 +563,20 @@ export default function App() {
       const parts: string[] = [result.title]
       if (result.why) parts.push(`— ${result.why}`)
       if (result.break_suggestion) parts.push(`| 💡 ${result.break_suggestion}`)
-      setSuggestion(parts.join(' '))
+      setSuggestion({ taskId: result.id, text: parts.join(' ') })
       setSuggestionIsError(false)
-      setTimeout(() => setSuggestion(''), 12000)
+      setTimeout(() => setSuggestion(null), 12000)
     } else {
       // Fallback to old suggestNextTask if new mode fails
-      const list = active.map(t => `- [${t.importance},${t.urgency}] ${t.title}${t.due_date ? ` (due ${t.due_date})` : ''}`).join('\n')
-      const fallback = await suggestNextTask(list)
+      const fallback = await suggestNextTask(active)
       if ('suggested' in fallback) {
-        setSuggestion(fallback.suggested)
+        setSuggestion({ taskId: fallback.id, text: fallback.suggested })
         setSuggestionIsError(false)
-        setTimeout(() => setSuggestion(''), 10000)
+        setTimeout(() => setSuggestion(null), 10000)
       } else {
-        setSuggestion(result.error || fallback.error || 'Could not reach AI')
+        setSuggestion({ taskId: null, text: result.error || fallback.error || 'Could not reach AI' })
         setSuggestionIsError(true)
-        setTimeout(() => { setSuggestion(''); setSuggestionIsError(false) }, 4000)
+        setTimeout(() => { setSuggestion(null); setSuggestionIsError(false) }, 4000)
       }
     }
   }
@@ -939,11 +938,11 @@ export default function App() {
                       <div className="absolute -top-[3rem] left-0 right-0 sm:left-full sm:right-auto sm:top-0 sm:ml-2 sm:w-max z-10">
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2 shadow-md animate-in slide-in-from-bottom-2 fade-in duration-200">
                           <span className="text-sm shrink-0">✨</span>
-                          <span className="flex-1 text-[0.875rem] font-medium text-blue-800 dark:text-blue-200 truncate max-w-[200px]">{suggestion}</span>
+                          <span className="flex-1 text-[0.875rem] font-medium text-blue-800 dark:text-blue-200 truncate max-w-[200px]">{suggestion.text}</span>
                           {!suggestionIsError && (
                           <button
                             type="button"
-                            onClick={() => { setQuickAdd(suggestion); setSuggestion('') }}
+                            onClick={() => { setQuickAdd(suggestion.text); setSuggestion(null) }}
                             className="text-[0.75rem] font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 shrink-0 min-h-[36px]"
                           >
                             Do it
@@ -951,7 +950,7 @@ export default function App() {
                           )}
                           <button
                             type="button"
-                            onClick={() => setSuggestion('')}
+                            onClick={() => setSuggestion(null)}
                             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shrink-0 min-h-[36px] px-0.5"
                             aria-label="Dismiss suggestion"
                           >
@@ -1137,6 +1136,7 @@ export default function App() {
               onDelete={handleDeleteTask}
               onTaskClick={setSelectedTask}
               categories={categories}
+              suggestedTaskId={suggestion?.taskId ?? null}
             />
 
             {/* Progress heatmap — full-width sibling of MatrixScreen so its edges

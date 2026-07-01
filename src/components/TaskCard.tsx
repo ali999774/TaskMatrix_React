@@ -4,7 +4,7 @@ import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { getCategoryDef } from '../lib/categories'
 import { categoryColor } from '../lib/categoryColors'
-import { Pin, ChevronDown, Check } from 'lucide-react'
+import { Pin, ChevronDown, Check, Sparkles } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -22,6 +22,8 @@ interface Props {
   expanded?: boolean
   onToggleExpand?: (taskId: string) => void
   onTaskUpdate?: (id: string, updates: Partial<Task>) => void
+  /** True when this card is the AI's current "what next" suggestion. */
+  suggested?: boolean
 }
 
 function dueLabel(dateStr: string): { text: string; urgent: boolean } {
@@ -48,6 +50,7 @@ export default function TaskCard({
   expanded,
   onToggleExpand,
   onTaskUpdate,
+  suggested = false,
 }: Props) {
   const dragged = useRef(false)
   const haptics = useHaptics()
@@ -247,6 +250,17 @@ export default function TaskCard({
           ${isDone ? 'opacity-50' : ''}`}
         style={{ borderLeftColor: categoryColor(task.category) }}
       >
+        {suggested && (
+          <span
+            aria-hidden="true"
+            title="AI's suggested next task"
+            className="absolute -top-1.5 -right-1.5 z-[1] flex items-center justify-center w-5 h-5 rounded-full
+              bg-blue-500 dark:bg-blue-400 text-white shadow-sm shadow-blue-500/40 dark:shadow-blue-400/30
+              animate-pulse motion-reduce:animate-none"
+          >
+            <Sparkles size={11} strokeWidth={2.5} />
+          </span>
+        )}
         <SwipeableRow
           actions={[
             {

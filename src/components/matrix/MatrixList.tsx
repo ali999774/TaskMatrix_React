@@ -43,11 +43,12 @@ export interface MatrixLayoutProps {
   expandedTaskId?: string | null
   onToggleExpand?: (taskId: string) => void
   onTaskUpdate: (id: string, updates: Partial<Task>) => void
+  suggestedTaskId?: string | null
 }
 
 export default function MatrixList({
   buckets, onMove, onFlag, onStatusChange, onDelete, onTaskClick,
-  categories, expandedTaskId, onToggleExpand, onTaskUpdate,
+  categories, expandedTaskId, onToggleExpand, onTaskUpdate, suggestedTaskId = null,
 }: MatrixLayoutProps) {
   const orderedBuckets = useMemo(() => {
     const byId = Object.fromEntries(
@@ -65,7 +66,7 @@ export default function MatrixList({
           onMove={onMove} onFlag={onFlag} onStatusChange={onStatusChange}
           onDelete={onDelete} onTaskClick={onTaskClick} categories={categories}
           expandedTaskId={expandedTaskId} onToggleExpand={onToggleExpand}
-          onTaskUpdate={onTaskUpdate} />
+          onTaskUpdate={onTaskUpdate} suggestedTaskId={suggestedTaskId} />
       ))}
     </div>
   )
@@ -73,7 +74,7 @@ export default function MatrixList({
 
 function ListQuadrant({
   bucket, onMove, onFlag, onStatusChange, onDelete, onTaskClick,
-  categories, expandedTaskId, onToggleExpand, onTaskUpdate,
+  categories, expandedTaskId, onToggleExpand, onTaskUpdate, suggestedTaskId,
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
@@ -85,6 +86,7 @@ function ListQuadrant({
   expandedTaskId?: string | null
   onToggleExpand?: (taskId: string) => void
   onTaskUpdate: (id: string, updates: Partial<Task>) => void
+  suggestedTaskId?: string | null
 }) {
   const qId = QUADRANT_ID_MAP[bucket.quadrant]
   const tierCls = TIER_CLASSES[EMPHASIS[qId]]
@@ -140,7 +142,8 @@ function ListQuadrant({
                       onStatusChange={onStatusChange} onDelete={onDelete}
                       onClick={onTaskClick} onMove={onMove} onFlag={onFlag}
                       categories={categories} expanded={task.id === expandedTaskId}
-                      onToggleExpand={onToggleExpand} onTaskUpdate={onTaskUpdate} />
+                      onToggleExpand={onToggleExpand} onTaskUpdate={onTaskUpdate}
+                      suggested={suggestedTaskId === task.id} />
                   ))
                 )}
               </div>

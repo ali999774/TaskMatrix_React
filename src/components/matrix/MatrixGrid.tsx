@@ -39,11 +39,12 @@ export interface MatrixLayoutProps {
   expandedTaskId?: string | null
   onToggleExpand?: (taskId: string) => void
   onTaskUpdate: (id: string, updates: Partial<Task>) => void
+  suggestedTaskId?: string | null
 }
 
 export default function MatrixGrid({
   buckets, onMove, onFlag, onStatusChange, onDelete, onTaskClick,
-  categories, expandedTaskId, onToggleExpand, onTaskUpdate,
+  categories, expandedTaskId, onToggleExpand, onTaskUpdate, suggestedTaskId = null,
 }: MatrixLayoutProps) {
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -60,7 +61,7 @@ export default function MatrixGrid({
                 onMove={onMove} onFlag={onFlag} onStatusChange={onStatusChange}
                 onDelete={onDelete} onTaskClick={onTaskClick} categories={categories}
                 expandedTaskId={expandedTaskId} onToggleExpand={onToggleExpand}
-                onTaskUpdate={onTaskUpdate} />
+                onTaskUpdate={onTaskUpdate} suggestedTaskId={suggestedTaskId} />
             ))}
           </div>
           <div className="flex justify-end pr-1 select-none">
@@ -74,7 +75,7 @@ export default function MatrixGrid({
 
 function GridCell({
   bucket, onMove, onFlag, onStatusChange, onDelete, onTaskClick,
-  categories, expandedTaskId, onToggleExpand, onTaskUpdate,
+  categories, expandedTaskId, onToggleExpand, onTaskUpdate, suggestedTaskId,
 }: {
   bucket: QuadrantBucket
   onMove: (taskId: string, toQuadrant: Quadrant) => void
@@ -86,6 +87,7 @@ function GridCell({
   expandedTaskId?: string | null
   onToggleExpand?: (taskId: string) => void
   onTaskUpdate: (id: string, updates: Partial<Task>) => void
+  suggestedTaskId?: string | null
 }) {
   const [dragOver, setDragOver] = useState(false)
   const [collapsed, setCollapsed] = useState(
@@ -147,7 +149,8 @@ function GridCell({
                     onClick={onTaskClick} onMove={onMove} onFlag={onFlag}
                     onTaskUpdate={onTaskUpdate} categories={categories}
                     expanded={expandedTaskId === task.id}
-                    onToggleExpand={onToggleExpand} />
+                    onToggleExpand={onToggleExpand}
+                    suggested={suggestedTaskId === task.id} />
                 ))
               )}
             </div>

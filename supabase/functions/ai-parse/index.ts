@@ -87,15 +87,22 @@ Rules:
       maxTokens = 1024;
 
     } else if (mode === 'suggest') {
-      responseFormat = {};
-      systemPrompt = `You are a productivity coach. Given a task list, suggest the single best task to work on right now. Reply with ONLY the task title — no explanation, no markdown, no punctuation.
+      systemPrompt = `You are a productivity coach. Given a task list, suggest the single best task to work on right now.
+
+Return ONLY valid JSON — no markdown, no code fences:
+
+{"id": "task-id", "suggested": "task title"}
+
+Rules:
+- id MUST be one of the task IDs from the provided list, copied exactly — never invent one
+- suggested is that task's title, for display
 
 Prioritize:
 1. Urgent + important (high importance, high urgency, soon due)
 2. Important but not urgent (high importance, low urgency)
 3. Quick wins (low effort, high impact)
 
-If nothing stands out, pick the first task. Reply with exactly one line.`;
+If nothing stands out, pick the first task.`;
 
     } else if (mode === 'classify') {
       responseFormat = {};
@@ -326,7 +333,7 @@ Rules:
     ];
 
     if (mode === 'suggest') {
-      messages.push({ role: 'user', content: `Here is my task list:\n\n${transcript}\n\nWhat should I work on right now? Reply with exactly one task title.` });
+      messages.push({ role: 'user', content: `Here is my task list:\n\n${transcript}\n\nWhat should I work on right now?` });
     } else if (mode === 'format') {
       messages.push({ role: 'user', content: `Clean up this voice note transcript:\n\n${transcript}` });
     } else {
@@ -336,11 +343,11 @@ Rules:
     const llmBody: Record<string, unknown> = {
       model: model || 'deepseek-v4-flash',
       messages,
-      temperature: (mode === 'classify' || mode === 'what-next' || mode === 'whatnext') ? 0 : 0.1,
+      temperature: (mode === 'classify' || mode === 'what-next' || mode === 'whatnext' || mode === 'suggest') ? 0 : 0.1,
       max_tokens: maxTokens,
     };
 
-    const wantsJson = mode !== 'suggest' && mode !== 'format' && mode !== 'classify' && mode !== 'what-next';
+    const wantsJson = mode !== 'format' && mode !== 'classify' && mode !== 'what-next';
     if (wantsJson) {
       llmBody.response_format = responseFormat;
     }
@@ -376,10 +383,21 @@ Rules:
     // ── RESPONSE HANDLERS ────────────────────────────────────────
 
     if (mode === 'suggest') {
-      return new Response(JSON.stringify({ suggested: content.trim() }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      try {
+        const parsed = JSON.parse(content);
+        const suggested = typeof parsed.suggested === 'string' ? parsed.suggested : 'No suggestion';
+        const id = typeof parsed.id === 'string' ? parsed.id : null;
+        return new Response(JSON.stringify({ suggested, id }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      } catch {
+        // Fallback: treat as plain text suggestion with no resolvable task id
+        return new Response(JSON.stringify({ suggested: content.trim(), id: null }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        });
+      }
     }
 
     if (mode === 'classify') {
