@@ -1423,13 +1423,6 @@ export default function App() {
         )}
         <div className="flex items-center justify-evenly px-3 pt-2.5 pb-1">
           <button
-            onClick={() => setShowCalendar(true)}
-            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
-            aria-label="Calendar"
-          >
-            <CalendarDays size={26} strokeWidth={2} aria-hidden="true" />
-          </button>
-          <button
             onClick={() => setShowAddTask(true)}
             className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
             aria-label="Add task"
@@ -1442,6 +1435,13 @@ export default function App() {
             aria-label="Pomodoro timer"
           >
             <Timer size={26} strokeWidth={2} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => setShowCalendar(true)}
+            className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
+            aria-label="Calendar"
+          >
+            <CalendarDays size={26} strokeWidth={2} aria-hidden="true" />
           </button>
           {/* Bottom mic — voice NOTES (with one-time coachmark) */}
           {speechSupported() && (
