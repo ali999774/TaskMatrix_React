@@ -877,9 +877,9 @@ export default function App() {
   }
 
   const handleVoiceTask = async (transcript: string) => {
-    if (!transcript.trim()) return
-    // Dismiss top mic coachmark on first use
+    // Dismiss top mic coachmark on first use (any invocation, even empty)
     if (showTopMicCoachmark) { localStorage.setItem('tm-coachmark-top-mic', '1'); setShowTopMicCoachmark(false) }
+    if (!transcript.trim()) return
     setVoiceTaskStatus('saving')
     setVoiceTaskQuickAction(false)  // consumed
 
@@ -920,9 +920,9 @@ export default function App() {
   }
 
   const handleVoiceNote = async (transcript: string) => {
-    if (!transcript.trim()) return
-    // Dismiss bottom mic coachmark on first use
+    // Dismiss bottom mic coachmark on first use (any invocation, even empty)
     if (showBottomMicCoachmark) { localStorage.setItem('tm-coachmark-bottom-mic', '1'); setShowBottomMicCoachmark(false) }
+    if (!transcript.trim()) return
     setVoiceStatus('saving')
     setVoiceNoteQuickAction(false)  // consumed
 
@@ -1419,16 +1419,6 @@ export default function App() {
           </span>
         )}
         <div className="flex items-center justify-evenly px-3 pt-2.5 pb-1">
-          {/* Speech unsupported (e.g. WKWebView) → VoiceButton returns null; the slot drops out */}
-          {speechSupported() && (
-            <VoiceButton
-              onTranscript={handleVoiceNote}
-              onStatus={setVoiceStatus}
-              autoStart={voiceNoteQuickAction}
-              icon={<Mic size={26} strokeWidth={2} aria-hidden="true" />}
-              className="w-12 h-12 p-0 bg-transparent border-none rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            />
-          )}
           <button
             onClick={() => setShowPomodoro(v => !v)}
             className="flex items-center justify-center w-12 h-12 rounded-lg text-slate-500 dark:text-slate-400 active:scale-90 motion-reduce:scale-100 transition-all"
