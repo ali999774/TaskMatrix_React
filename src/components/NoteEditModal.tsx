@@ -142,6 +142,10 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     if (e.target === e.currentTarget) handleClose()
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') handleClose()
+  }
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStart.current = { y: e.touches[0].clientY, timestamp: Date.now() }
   }
@@ -216,6 +220,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex max-sm:items-start items-center justify-center
         max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
       onClick={handleOverlay}
+      onKeyDown={handleKeyDown}
     >
       <div
         ref={sheetRef}

@@ -85,6 +85,10 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
     if (e.target === e.currentTarget) onClose()
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }
+
   const handleTouchStart = (e: React.TouchEvent) => {
     // Only allow drag-to-dismiss from the header area, not the scrollable grid
     const target = e.target as HTMLElement
@@ -114,6 +118,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex max-sm:items-start items-center justify-center
         max-sm:pt-[env(safe-area-inset-top)] max-sm:p-0 animate-modal-backdrop"
       onClick={handleOverlay}
+      onKeyDown={handleKeyDown}
     >
       <div
         ref={sheetRef}
