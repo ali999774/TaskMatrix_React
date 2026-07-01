@@ -1028,7 +1028,7 @@ export default function App() {
                 )}
                 {!quickAdd && (
                     suggestion ? (
-                      <div className="absolute -top-[3rem] left-0 right-0 sm:left-full sm:right-auto sm:top-0 sm:ml-2 sm:w-max z-10">
+                      <div className="fixed top-[calc(env(safe-area-inset-top)+3.75rem)] left-0 right-0 sm:left-full sm:right-auto sm:top-0 sm:ml-2 sm:w-max z-10">
                         <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 rounded-xl px-3 py-2 shadow-md animate-in slide-in-from-bottom-2 fade-in duration-200">
                           <span className="text-sm shrink-0">✨</span>
                           <span className="flex-1 text-[0.875rem] font-medium text-blue-800 dark:text-blue-200 truncate max-w-[200px]">{suggestion}</span>
