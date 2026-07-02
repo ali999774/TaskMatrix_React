@@ -1,0 +1,13 @@
+# PLACEHOLDER — replace this entire file with Apple's generated content.
+#
+# How to get the real content:
+#   1. Go to developer.apple.com → Certificates, Identifiers & Profiles → Identifiers
+#   2. Select your Services ID (the one used for Sign in with Apple)
+#   3. Click "Configure" next to "Sign in with Apple"
+#   4. Under "Domains and Subdomains", add your domain (e.g. milestonepediatrics.ai)
+#   5. Click "Download" next to the domain — Apple generates this file's content
+#   6. Replace this entire file with that downloaded content (it will be a JSON blob, not a comment)
+#   7. Commit and deploy; then click "Verify" in the Apple portal
+#
+# This placeholder confirms the routing path works:
+#   https://milestonepediatrics.ai/.well-known/apple-developer-domain-association.txt
