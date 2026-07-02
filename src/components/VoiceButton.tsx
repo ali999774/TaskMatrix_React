@@ -35,10 +35,17 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const maxDurationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onTranscriptRef = useRef(onTranscript)
+  const onStatusRef = useRef(onStatus)
 
-  // Keep callback ref in sync without triggering re-renders
+  // Keep callback refs in sync without triggering re-renders. Reading
+  // onStatus through a ref (instead of closing over the prop directly)
+  // keeps setupNative/setupWeb's identity stable across renders — an
+  // inline onStatus passed by the parent used to change identity every
+  // render, which tore down and rebuilt the native recognizer mid-session
+  // via the mount effect's cleanup (see useEffect below).
   useEffect(() => {
     onTranscriptRef.current = onTranscript
+    onStatusRef.current = onStatus
   })
 
   // --- Helper: clear all auto-stop timers ---
@@ -67,7 +74,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         // recognitionRef.current is left unset; toggle() retries setup on
         // the next click.
         if (DEBUG_VOICE_ERRORS) setDebugError('native permission: ' + perm.speechRecognition)
-        onStatus?.('mic denied')
+        onStatusRef.current?.('mic denied')
         return
       }
 
@@ -99,11 +106,11 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             const match = event.matches?.[0]
             if (match) {
               partialRef.current = match
-              onStatus?.('hearing: ' + match)
+              onStatusRef.current?.('hearing: ' + match)
               // Reset silence timer on every recognized phrase
               if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
               silenceTimerRef.current = setTimeout(() => {
-                onStatus?.('auto-stop in 1s...')
+                onStatusRef.current?.('auto-stop in 1s...')
                 silenceTimerRef.current = setTimeout(() => {
                   silenceTimerRef.current = null
                   const rec = recognitionRef.current
@@ -149,10 +156,10 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             if (finalText?.trim()) {
               console.log('[Voice][DEBUG] native finalText resolved:', JSON.stringify(finalText.trim()), '— calling onTranscript')
               onTranscriptRef.current(finalText.trim())
-              onStatus?.('saved')
+              onStatusRef.current?.('saved')
             } else {
               console.log('[Voice][DEBUG] native: finalText empty after getLastPartialResult — taking no-speech branch, onTranscript NOT called')
-              onStatus?.('no speech')
+              onStatusRef.current?.('no speech')
             }
           } catch (err) {
             console.log('[Voice][DEBUG] native getLastPartialResult() threw:', err, '— falling back to partialRef.current:', JSON.stringify(partialRef.current))
@@ -161,10 +168,10 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
             if (fallback?.trim()) {
               console.log('[Voice][DEBUG] native fallback resolved:', JSON.stringify(fallback.trim()), '— calling onTranscript')
               onTranscriptRef.current(fallback.trim())
-              onStatus?.('saved')
+              onStatusRef.current?.('saved')
             } else {
               console.log('[Voice][DEBUG] native: fallback also empty — taking no-speech branch, onTranscript NOT called')
-              onStatus?.('no speech')
+              onStatusRef.current?.('no speech')
             }
           }
           // Clean up listener
@@ -188,7 +195,9 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       if (DEBUG_VOICE_ERRORS) setDebugError('native setup threw: ' + (err instanceof Error ? err.message : String(err)))
       setUnsupported(true)
     }
-  }, [onStatus])
+    // No deps: onStatus/onTranscript are read via refs above so this
+    // identity stays stable across renders — see onStatusRef comment.
+  }, [])
 
   // --- Web path --- same implementation, just needs Mic/Circle imports now
   const setupWeb = useCallback(() => {
@@ -220,13 +229,13 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           accumulated += event.results[i][0]?.transcript || ''
         }
         if (accumulated) {
-          onStatus?.('hearing: ' + accumulated)
+          onStatusRef.current?.('hearing: ' + accumulated)
         }
         // Reset silence timer only when new speech is detected
         if (accumulated.length > prevLen) {
           clearSilenceTimer()
           silenceTimer = setTimeout(() => {
-            onStatus?.('auto-stop in 1s...')
+            onStatusRef.current?.('auto-stop in 1s...')
             silenceTimer = setTimeout(() => {
               silenceTimer = null
               if (currentRec === rec) {
@@ -256,13 +265,13 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         if (event.error === 'not-allowed') {
           // Don't permanently hide the button — permission may be granted
           // on a later attempt. Just report it; toggle() will retry setup.
-          onStatus?.('mic denied')
+          onStatusRef.current?.('mic denied')
         } else if (event.error === 'no-speech') {
-          onStatus?.('no speech')
+          onStatusRef.current?.('no speech')
         } else if (event.error === 'language-not-supported') {
-          onStatus?.('unsupported browser')
+          onStatusRef.current?.('unsupported browser')
         } else {
-          onStatus?.('error: ' + event.error)
+          onStatusRef.current?.('error: ' + event.error)
         }
       }
 
@@ -281,9 +290,9 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         setListening(false)
         if (accumulated.trim()) {
           onTranscriptRef.current(accumulated.trim())
-          onStatus?.('saved')
+          onStatusRef.current?.('saved')
         } else if (currentRec) {
-          onStatus?.('no speech')
+          onStatusRef.current?.('no speech')
         }
         accumulated = ''
         currentRec = null
@@ -300,7 +309,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         currentRec.start()
         // Initial timer — auto-stop after 3s if user never speaks
         silenceTimer = setTimeout(() => {
-          onStatus?.('auto-stop in 1s...')
+          onStatusRef.current?.('auto-stop in 1s...')
           silenceTimer = setTimeout(() => {
             silenceTimer = null
             if (currentRec) {
@@ -326,7 +335,9 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       },
     }
     setRecReady(true)
-  }, [onStatus])
+    // No deps: onStatus/onTranscript are read via refs above so this
+    // identity stays stable across renders — see onStatusRef comment.
+  }, [])
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
@@ -375,7 +386,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
       try {
         await rec.start()
         setListening(true)
-        onStatus?.('listening')
+        onStatusRef.current?.('listening')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         // Edge and some browsers throw 'language-not-supported' even though
@@ -384,7 +395,7 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
         const msg = err?.message || String(err)
         if (DEBUG_VOICE_ERRORS) setDebugError('toggle threw: ' + msg)
         if (msg.includes('language-not-supported')) {
-          onStatus?.('unsupported browser')
+          onStatusRef.current?.('unsupported browser')
         } else {
           setUnsupported(true)
         }
