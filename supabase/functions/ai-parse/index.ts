@@ -7,7 +7,8 @@ const ALLOWED_ORIGINS = [
   'taskmatrix://localhost',
 ];
 
-const ALLOWED_CATEGORIES = ['personal', 'dev', 'launch', 'clinic'];
+// Fallback only — used when the caller doesn't send a live category list.
+const DEFAULT_CATEGORIES = ['personal', 'dev', 'practice-launch', 'clinic'];
 
 interface TaskRecord {
   id: string;
@@ -54,6 +55,13 @@ Deno.serve(async (req: Request) => {
     const { transcript, model, baseUrl, mode, briefOutput } = body;
     const targetUrl = `${baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`;
 
+    // Live category list sent by the caller (from their own user_settings).
+    // Falls back to DEFAULT_CATEGORIES only when the caller sends none.
+    const liveCategories: string[] = Array.isArray(body.categories) && body.categories.length > 0
+      ? body.categories.filter((c: unknown): c is string => typeof c === 'string' && c.trim().length > 0)
+      : [];
+    const categoriesForClassify = liveCategories.length > 0 ? liveCategories : DEFAULT_CATEGORIES;
+
     // ── KEY SELECTION ───────────────────────────────────────────
     const isOpenAI = targetUrl.includes('api.openai.com');
     const secretName = isOpenAI ? 'TASKMATRIX_OPENAI_API_KEY' : 'TASKMATRIX_DEEPSEEK_API_KEY';
@@ -99,12 +107,8 @@ If nothing stands out, pick the first task. Reply with exactly one line.`;
 
     } else if (mode === 'classify') {
       responseFormat = {};
-      systemPrompt = `Classify this task into ONE category: personal, dev, launch, or clinic.
-- personal: home, family, errands, health, personal admin
-- dev: coding, software, development, debugging, technical
-- launch: business, startup, marketing, product launch
-- clinic: medical practice, patients, healthcare, clinical ops
-Respond with ONLY the lowercase category name, no punctuation.`;
+      systemPrompt = `Classify this task into ONE of these categories: ${categoriesForClassify.join(', ')}.
+Respond with ONLY the lowercase category name (exactly as given above), no punctuation. If none fit, respond with "none".`;
 
     } else if (mode === 'format') {
       responseFormat = {};
@@ -312,7 +316,7 @@ Rules:
 - title: the main task (required, concise, 1-8 words)
 - due_date: YYYY-MM-DD if a date is mentioned. Today is ${today}. "tomorrow", "next Monday", "Friday" etc should be resolved relative to today.
 - due_time: HH:MM (24h) if a specific time is mentioned
-- category: infer from context. Suggest one of: Work, Personal, Health, Learning, Clinic, Dev, Finance, Errands, Home. Return null if unclear.
+- category: infer from context.${liveCategories.length > 0 ? ` Suggest one of: ${liveCategories.join(', ')}.` : ''} Return null if unclear or if none of the available categories fit.
 - importance: 1-5 (3 = normal). Higher if they say "urgent", "critical", "important", "priority". Lower if "whenever", "no rush", "low priority".
 - urgency: 1-5 (3 = normal). Higher if deadline is soon or they sound pressed. Lower if no deadline mentioned.
 - lead_days: integer number of days BEFORE the due date the user wants to start seeing / be reminded of this task. Extract ONLY when explicitly stated, e.g. "remind me three days before" → 3, "a week ahead" → 7, "the day before" → 1. Do NOT infer or guess a lead time from the task's content or type. If the user says nothing about lead/advance notice, return null. Never default to 0.
@@ -384,7 +388,7 @@ Rules:
 
     if (mode === 'classify') {
       const normalized = content.trim().toLowerCase().replace(/[.,!?;:]+$/, '').trim();
-      const category = ALLOWED_CATEGORIES.includes(normalized) ? normalized : null;
+      const category = categoriesForClassify.find(c => c.toLowerCase() === normalized) || null;
       return new Response(JSON.stringify({ category }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -460,14 +464,26 @@ Rules:
       }
     }
 
-    // default: parse mode — return raw JSON content
-    return new Response(content, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
-    });
+    // default: parse mode — validate category against the caller's live list
+    // before returning. An unrecognized value falls back to null (uncategorized)
+    // rather than writing a label that doesn't exist in user_settings.
+    try {
+      const parsed = JSON.parse(content);
+      if (typeof parsed.category === 'string' && parsed.category.trim()) {
+        const normalized = parsed.category.trim().toLowerCase();
+        const match = liveCategories.find(c => c.toLowerCase() === normalized);
+        parsed.category = match || null;
+      }
+      return new Response(JSON.stringify(parsed), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON from model', raw: content }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
   } catch (err) {
     console.error('Edge function error:', err);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

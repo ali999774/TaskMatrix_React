@@ -128,18 +128,18 @@ export async function formatNoteContent(
 }
 
 export async function suggestCategory(
-  taskTitle: string
+  taskTitle: string,
+  categories?: string[]
 ): Promise<{ category: string } | { error: string }> {
   if (!taskTitle.trim()) return { error: 'empty title' }
 
-  const result = await callEdgeFn({ transcript: taskTitle, mode: 'classify' })
+  const body: Record<string, unknown> = { transcript: taskTitle, mode: 'classify' }
+  if (categories && categories.length > 0) body.categories = categories
+  const result = await callEdgeFn(body)
   if ('error' in result) return result
 
-  const raw = (result.data.category as string)?.trim().toLowerCase()
-  const valid = ['personal', 'dev', 'launch', 'clinic']
-  const category = valid.find(c => raw === c) || valid.find(c => raw?.includes(c))
-
-  return category ? { category } : { error: `unknown category: ${raw}` }
+  const category = (result.data.category as string) || null
+  return category ? { category } : { error: 'no matching category' }
 }
 
 // ── AI BRIEF TYPES ──────────────────────────────────────────────
