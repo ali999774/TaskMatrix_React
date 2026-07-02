@@ -163,7 +163,7 @@ export default function TaskCard({
               <span className="text-slate-300 dark:text-slate-600">·</span>
             )}
             {task.category && (
-              <span className="text-blue-500 dark:text-blue-400">
+              <span style={{ color: categoryColor(task.category) }}>
                 #{catDef?.display || task.category}
               </span>
             )}
