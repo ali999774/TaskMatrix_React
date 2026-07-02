@@ -11,6 +11,7 @@ import { usePushNotifications } from './hooks/usePushNotifications'
 import { useGoogleCalendar } from './hooks/useGoogleCalendar'
 import { useUserSettings } from './hooks/useUserSettings'
 import { useFontScale } from './hooks/useFontScale'
+import AppleSignInButton from './components/AppleSignInButton'
 import MatrixScreen from './components/matrix/MatrixScreen'
 import StickyWall from './components/StickyWall'
 import NotesModal from './components/NotesModal'
@@ -782,6 +783,7 @@ export default function App() {
         >
           Sign in with Google
         </button>
+        {Capacitor.isNativePlatform() && <AppleSignInButton onError={setAuthError} />}
         {authError && <p className="text-red-500 dark:text-red-400 text-[0.875rem]">{authError}</p>}
       </div>
     )
