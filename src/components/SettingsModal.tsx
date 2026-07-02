@@ -5,6 +5,12 @@ import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
 import { FONT_SCALES } from '../hooks/useFontScale'
+import { supabase } from '../lib/supabase'
+
+// Local-only field tracking the label as it exists in the DB (empty for
+// categories that haven't been saved yet). Never persisted directly —
+// used to tell a real rename apart from a no-op display edit.
+type EditableCategory = CategoryDef & { _origLabel: string }
 
 interface Props {
   categories: CategoryDef[]
@@ -26,8 +32,8 @@ function slugify(text: string): string {
 }
 
 export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange, gcalIsConnected, gcalConnect, gcalDisconnect, theme, onThemeChange }: Props) {
-  const [items, setItems] = useState<CategoryDef[]>(() =>
-    categories.map(c => ({ ...c }))
+  const [items, setItems] = useState<EditableCategory[]>(() =>
+    categories.map(c => ({ ...c, _origLabel: c.label }))
   )
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -37,6 +43,11 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null)
+  const [reassignTarget, setReassignTarget] = useState<string>('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Google Calendar connect state (local — resets on modal close)
   const [gcalConnecting, setGcalConnecting] = useState(false)
@@ -85,34 +96,95 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
   const add = () => {
     if (items.length >= MAX_CATEGORIES) return
-    const newItem: CategoryDef = { label: '', display: '', color: 'blue', icon: 'plus' }
+    const newItem: EditableCategory = { label: '', display: '', color: 'blue', icon: 'plus', _origLabel: '' }
     setItems([...items, newItem])
     setEditingIdx(items.length)
   }
 
-  const remove = (idx: number) => {
+  // Categories still present in the last-saved settings — a reassign target
+  // must be one of these (or empty for "uncategorized") to satisfy the
+  // delete_category RPC's live-label check.
+  const otherPersistedCategories = (label: string) => categories.filter(c => c.label !== label)
+
+  const startDelete = (idx: number) => {
+    setEditingIdx(null)
+    setDeleteError(null)
+    const item = items[idx]
+    const options = item._origLabel ? otherPersistedCategories(item._origLabel) : []
+    setReassignTarget(options[0]?.label ?? '')
+    setConfirmDeleteIdx(idx)
+  }
+
+  const cancelDelete = () => {
+    setConfirmDeleteIdx(null)
+    setDeleteError(null)
+  }
+
+  const removeLocal = (idx: number) => {
     setItems(items.filter((_, i) => i !== idx))
     if (editingIdx === idx) setEditingIdx(null)
     else if (editingIdx !== null && editingIdx > idx) setEditingIdx(editingIdx - 1)
+    setConfirmDeleteIdx(null)
+    setDeleteError(null)
+  }
+
+  const confirmDelete = async (idx: number) => {
+    const item = items[idx]
+    // Never-saved category — nothing in the DB references its label, so a
+    // plain local removal is safe.
+    if (!item._origLabel) {
+      removeLocal(idx)
+      return
+    }
+    setDeleting(true)
+    setDeleteError(null)
+    const { error } = await supabase.rpc('delete_category', {
+      p_label: item._origLabel,
+      p_reassign_to: reassignTarget || null,
+    })
+    setDeleting(false)
+    if (error) {
+      setDeleteError(error.message)
+      return
+    }
+    removeLocal(idx)
   }
 
   const update = (idx: number, partial: Partial<CategoryDef>) => {
     setItems(items.map((item, i) => {
       if (i !== idx) return item
       const updated = { ...item, ...partial }
-      // Auto-derive label from display if label is empty or matches old display slug
       if (partial.display !== undefined) {
-        updated.label = slugify(updated.display)
+        const newSlug = slugify(updated.display)
+        // Only re-derive the label when the slug actually diverges from the
+        // stored one — re-saving an unedited display string (or editing it
+        // back to the original) must not rewrite the label and orphan tasks.
+        updated.label = item._origLabel && newSlug === item._origLabel ? item._origLabel : newSlug
       }
       return updated
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Filter out empty entries
     const valid = items.filter(c => c.display.trim() && c.label.trim())
     if (valid.length === 0) return
-    onSave(valid)
+
+    const renames = valid.filter(c => c._origLabel && c._origLabel !== c.label)
+
+    setSaving(true)
+    setSaveError(null)
+    for (const r of renames) {
+      const { error } = await supabase.rpc('rename_category', { p_old: r._origLabel, p_new: r.label })
+      if (error) {
+        setSaving(false)
+        setSaveError(error.message)
+        return
+      }
+    }
+    setSaving(false)
+
+    onSave(valid.map((c): CategoryDef => ({ label: c.label, display: c.display, color: c.color, icon: c.icon })))
     onClose()
   }
 
@@ -403,7 +475,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     onDragStart={(e) => handleDragStart(e, idx)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, idx)}
-                    onClick={() => setEditingIdx(idx === editingIdx ? null : idx)}
+                    onClick={() => { setEditingIdx(idx === editingIdx ? null : idx); setConfirmDeleteIdx(null) }}
                     onKeyDown={(e) => handleCategoryKeyDown(e, idx)}
                     role="button"
                     tabIndex={0}
@@ -447,34 +519,66 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     <span className={`w-3 h-3 rounded-full shrink-0 ${CATEGORY_BADGE[cat.color]?.split(' ')[0] || 'bg-blue-100'}`} />
 
                     {/* Delete */}
-                    {confirmDeleteIdx === idx ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[0.6875rem] text-red-500">Delete?</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startDelete(idx) }}
+                      className="text-[0.75rem] text-slate-400 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                      aria-label={`Delete category ${cat.display || 'new'}`}
+                    >
+                      <X size={14} strokeWidth={2} />
+                    </button>
+                  </div>
+
+                  {/* Delete confirm panel — reassign target must be picked before
+                      a persisted category is deleted, so its tasks don't orphan */}
+                  {confirmDeleteIdx === idx && (
+                    <div className="mt-1.5 ml-8 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg space-y-2.5">
+                      {cat._origLabel ? (
+                        <>
+                          <p className="text-[0.75rem] text-slate-600 dark:text-slate-300">
+                            Delete "{cat.display}"? Existing tasks in this category will move to:
+                          </p>
+                          <select
+                            value={reassignTarget}
+                            onChange={(e) => setReassignTarget(e.target.value)}
+                            aria-label="Reassign existing tasks to"
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-200
+                              dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700
+                              dark:text-slate-300 outline-none focus:border-blue-400 transition-colors
+                              appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')]
+                              bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                          >
+                            <option value="">Uncategorized</option>
+                            {otherPersistedCategories(cat._origLabel).map((c) => (
+                              <option key={c.label} value={c.label}>{c.display}</option>
+                            ))}
+                          </select>
+                        </>
+                      ) : (
+                        <p className="text-[0.75rem] text-slate-600 dark:text-slate-300">
+                          Delete "{cat.display || 'this category'}"?
+                        </p>
+                      )}
+                      {deleteError && (
+                        <p className="text-[0.75rem] text-red-500">{deleteError}</p>
+                      )}
+                      <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={(e) => { e.stopPropagation(); remove(idx); setConfirmDeleteIdx(null) }}
-                          className="text-[0.75rem] text-red-500 font-semibold px-2 min-h-[44px]"
-                          aria-label="Confirm delete"
+                          onClick={cancelDelete}
+                          disabled={deleting}
+                          className="text-[0.8125rem] text-slate-500 dark:text-slate-400 px-3 min-h-[36px] disabled:opacity-50"
                         >
-                          Yes
+                          Cancel
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(null) }}
-                          className="text-[0.75rem] text-slate-400 px-2 min-h-[44px]"
-                          aria-label="Cancel delete"
+                          onClick={() => confirmDelete(idx)}
+                          disabled={deleting}
+                          className="text-[0.8125rem] text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg px-3 min-h-[36px] disabled:opacity-50"
                         >
-                          No
+                          {deleting ? 'Deleting…' : 'Delete'}
                         </button>
                       </div>
-                    ) : (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(idx) }}
-                        className="text-[0.75rem] text-slate-400 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                        aria-label={`Delete category ${cat.display || 'new'}`}
-                      >
-                        <X size={14} strokeWidth={2} />
-                      </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Edit panel */}
                   {editingIdx === idx && (
@@ -575,25 +679,30 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[0.875rem] text-slate-500 dark:text-slate-400 
-              hover:text-slate-700 dark:hover:text-slate-200 transition min-h-[44px]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!isValid}
-            className={`px-4 py-2 text-[0.875rem] font-medium rounded-lg transition-all min-h-[44px]
-              ${isValid
-                ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-              }`}
-          >
-            Save
-          </button>
+        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700">
+          {saveError && (
+            <p className="text-[0.75rem] text-red-500 mb-2">{saveError}</p>
+          )}
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-[0.875rem] text-slate-500 dark:text-slate-400
+                hover:text-slate-700 dark:hover:text-slate-200 transition min-h-[44px]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!isValid || saving}
+              className={`px-4 py-2 text-[0.875rem] font-medium rounded-lg transition-all min-h-[44px]
+                ${isValid && !saving
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                }`}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
