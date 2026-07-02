@@ -242,12 +242,20 @@ How each surface behaves when a task's category isn't in the current 4. All code
 
 `useUserSettings.ts:100` — an INSERT of the settings row from another device isn't received (first-time setup edge case). Refresh covers it. Accept or extend to `event: '*'`.
 
-### 8.5 🖐 The "offline-blocked category action" message — could not find it
+### 8.5 ⚠️ / 🖐 Category saves made offline queue silently — no category-aware feedback exists
 
-- **What I found:** there is **no category-specific offline message** in the codebase. The surfaces that exist: the generic offline banner (`App.tsx:1141-1145`, "You're offline. N changes pending. Changes will sync when you reconnect."), the pending-count chip (`App.tsx:1066-1078`), and DayPlan's "Re-planning needs a connection" (`DayPlan.tsx:186-190`) — the only action-blocked message anywhere, and it isn't category-related. Category saves made offline queue **silently** (SettingsModal gives no offline indication; Save behaves identically).
-- **To verify (🖐):** offline → edit/save categories → confirm the banner's pending count increments and the queued write flushes on reconnect (watch `[TM][QUEUE-REPLAY]` in console). **If a specific "category action can't sync" message was expected to exist, it doesn't — confirm which surface was meant, or treat its absence as the finding.**
+- **What:** saving category edits in SettingsModal while offline is indistinguishable from a successful save. `updateCategories` (`useUserSettings.ts:123-131`) enqueues to the Dexie queue and returns; the modal closes normally. Nothing tells the user their category change hasn't synced. The only signals are generic and indirect: the offline banner (`App.tsx:1141-1145`) and the pending-count chip (`App.tsx:1066-1078`), neither of which identifies the pending change as a category edit. The only action-gated offline message in the app — DayPlan's "Re-planning needs a connection" (`DayPlan.tsx:186-190`) — is unrelated to categories. No category-specific offline message was ever built.
+- **Decision needed:** accept silent queueing (single-user app; generic banner deemed sufficient) or add explicit "saved locally — will sync when online" feedback to SettingsModal.
+- **To verify (🖐):** offline → edit/save categories → pending count increments; reconnect → `[TM][QUEUE-REPLAY]` fires in console and the settings row updates (re-run query 1.2 afterward).
 
-### 8.6 ⚠️ Old app builds have no version gate
+### 8.6 ❌ Server-rejected category writes are silently dropped — data loss, not a messaging gap
+
+- **What:** when a replayed mutation is rejected by the server (anything carrying a PostgREST error code or 4xx status — RLS, constraint violation, malformed payload), `useOfflineQueue.ts:162-171` logs `[TM][QUEUE-DROP]` to the console and **deletes the mutation**. No UI notice, no retry, no revert: React state and localStorage keep the user's version, so the device displays categories (or a task category) the server never accepted, and the divergence persists until a realtime event or reload overwrites it.
+- **Not offline-only — reachable at any connectivity state:** `persistOrQueue` (`persist.ts:38-64`) routes any failed *online* write into the same queue, and the auto-flush effect (`useOfflineQueue.ts:185-189`) fires immediately while online. So a fully-online rejected save is queued → replayed → rejected → dropped within seconds. The user may see the pending chip flash "1 pending" and then clear — which reads as a successful sync. The offline path merely delays the identical outcome to reconnect. Every category write funnels through this: `updateCategories` (settings) and task-category edits via `useTasks.updateTask`.
+- **How to check:** code read (done — confirmed). Manual repro (🖐, optional): on a test user, temporarily add a denying RLS policy on `user_settings` UPDATE, save a category edit while online, watch `[TM][QUEUE-DROP]` in console; UI keeps the edit, DB doesn't.
+- **Pass criteria for merge:** a server rejection surfaces to the user (toast/banner) and/or reverts local state to server truth. Console-only logging is a fail.
+
+### 8.7 ⚠️ Old app builds have no version gate
 
 Nothing prevents a device running a pre-cap build from writing 7 categories or old labels; there's no min-client-version check and no server cap (3.3). Realistically closed by: Ali's devices all updating + optionally the server-side CHECK from 3.3.
 
@@ -264,13 +272,14 @@ Nothing prevents a device running a pre-cap build from writing 7 categories or o
 ## Summary: what blocks merge vs. what's informational
 
 **Confirmed defects (❌) — decide fix-or-accept before merge:**
-1. Delete has no reassign/warn — orphans tasks (4.1).
-2. Rename re-slugifies labels without task migration — orphans tasks; even a no-op name edit of "Launch" does it (5.1).
-3. Client `suggestCategory`: hardcoded list + substring match writes the nonexistent label `launch` (2.2).
-4. Repo edge function is stale vs. deployed — redeploy regresses the drift fix (2.1 / 9).
+1. **Server-rejected category writes are silently dropped — data loss at any connectivity state, the most severe item here (8.6).** A rejected save is queued, replayed once, then deleted with console-only logging; the UI keeps showing the edit the server refused.
+2. Delete has no reassign/warn — orphans tasks (4.1).
+3. Rename re-slugifies labels without task migration — orphans tasks; even a no-op name edit of "Launch" does it (5.1).
+4. Client `suggestCategory`: hardcoded list + substring match writes the nonexistent label `launch` (2.2).
+5. Repo edge function is stale vs. deployed — redeploy regresses the drift fix (2.1 / 9).
 
 **Agent-verified passing (✅) — re-run §1 SQL at merge time:** DB is currently clean (no orphans, no over-cap rows, no dup labels, no case mismatches); 24 h queue expiry closes the pre-cap offline-write concern; orphan rendering degrades gracefully everywhere except discoverability.
 
-**Needs a live build / manual test (🖐):** 3.1 UI cap, 3.2 over-cap round-trip via Save, 3.4 realtime over-cap delivery, 3.5 stale localStorage, 4.3 slot freed after delete, 6.1–6.2 stale filter + quick-add inheritance, 7 (one eyeball pass with a seeded orphan), 8.2 two-device last-write-wins, 8.5 offline save messaging.
+**Needs a live build / manual test (🖐):** 3.1 UI cap, 3.2 over-cap round-trip via Save, 3.4 realtime over-cap delivery, 3.5 stale localStorage, 4.3 slot freed after delete, 6.1–6.2 stale filter + quick-add inheritance, 7 (one eyeball pass with a seeded orphan), 8.2 two-device last-write-wins, 8.5 silent-queueing feedback, 8.6 rejection repro (optional — defect already confirmed by code read).
 
-**Product decisions (⚠️):** server-side cap constraint (3.3), load/save clamp (3.2), wire the RPCs (4.2), offline first-save hole (8.3), INSERT realtime gap (8.4), old-build gate (8.6).
+**Product decisions (⚠️):** server-side cap constraint (3.3), load/save clamp (3.2), wire the RPCs (4.2), offline first-save hole (8.3), INSERT realtime gap (8.4), offline save feedback (8.5), old-build gate (8.7).
