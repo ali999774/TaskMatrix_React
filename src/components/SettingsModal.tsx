@@ -1,10 +1,15 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
-import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic } from 'lucide-react'
+import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic, Sun, Moon, MonitorSmartphone } from 'lucide-react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
 import { FONT_SCALES } from '../hooks/useFontScale'
+import Switch from './ui/Switch'
+
+const SELECT_CHEVRON_CLASSES = `appearance-none
+  bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')]
+  bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8`
 
 interface Props {
   categories: CategoryDef[]
@@ -261,7 +266,12 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             >
               {(['light', 'dark', 'system'] as const).map((mode) => {
                 const selected = theme === mode
-                const labels: Record<string, string> = { light: '☀ Light', dark: '🌙 Dark', system: '⚙ System' }
+                const labels: Record<string, string> = { light: 'Light', dark: 'Dark', system: 'System' }
+                const icons: Record<string, React.ReactNode> = {
+                  light: <Sun size={16} aria-hidden="true" />,
+                  dark: <Moon size={16} aria-hidden="true" />,
+                  system: <MonitorSmartphone size={16} aria-hidden="true" />,
+                }
                 return (
                   <button
                     key={mode}
@@ -270,11 +280,13 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     aria-label={labels[mode]}
                     onClick={() => onThemeChange(mode)}
                     className={`flex-1 min-h-[44px] rounded-lg text-[0.8125rem] font-medium transition-all active:scale-95 motion-reduce:scale-100
+                      flex items-center justify-center gap-1.5
                       ${selected
                         ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                       }`}
                   >
+                    {icons[mode]}
                     {labels[mode]}
                   </button>
                 )
@@ -296,15 +308,14 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             </p>
 
             <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={aiSettings.enabled}
-                  onChange={(e) => onAISettingsChange({ enabled: e.target.checked })}
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
+              <div className="flex items-center justify-between gap-3 min-h-[44px]">
                 <span className="text-[0.875rem] text-slate-700 dark:text-slate-300">Enable AI parsing</span>
-              </label>
+                <Switch
+                  checked={aiSettings.enabled}
+                  onChange={(enabled) => onAISettingsChange({ enabled })}
+                  aria-label="Enable AI parsing"
+                />
+              </div>
 
               {aiSettings.enabled && (
                 <>
@@ -313,7 +324,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     <select
                       value={aiSettings.provider}
                       onChange={(e) => onAISettingsChange({ provider: e.target.value as 'deepseek' | 'openai' })}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none"
+                      className={`w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors ${SELECT_CHEVRON_CLASSES}`}
                     >
                       <option value="deepseek">DeepSeek</option>
                       <option value="openai">OpenAI</option>
@@ -325,9 +336,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     <select
                       value={aiSettings.model}
                       onChange={(e) => onAISettingsChange({ model: e.target.value })}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors appearance-none
-                        bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] 
-                        bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
+                      className={`w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors ${SELECT_CHEVRON_CLASSES}`}
                     >
                       <option value="deepseek-v4-flash">deepseek-v4-flash (fastest)</option>
                       <option value="deepseek-v4-pro">deepseek-v4-pro (reasoning)</option>
