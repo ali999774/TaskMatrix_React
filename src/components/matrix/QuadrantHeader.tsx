@@ -56,7 +56,9 @@ export default function QuadrantHeader({
           <h3 className={`text-[0.71875rem] sm:text-[0.8125rem] font-semibold uppercase tracking-wider ${HEADER_ACCENT[quadrant]}`}>{label}</h3>
           <span className="text-[0.65625rem] sm:text-[0.71875rem] font-medium text-slate-300 dark:text-slate-600">· {count}</span>
         </div>
-        <p className="text-[0.59375rem] sm:text-[0.65625rem] text-slate-400/80 dark:text-slate-500/80 leading-tight">{subtitle}</p>
+        {/* FLAG(design-tokens): no text-subtitle token in src/index.css @theme yet — using a
+            0.6875rem placeholder. Add a `--text-subtitle: 0.6875rem` token and swap this in. */}
+        <p className="text-[0.6875rem] sm:text-[0.75rem] text-slate-400/80 dark:text-slate-500/80 leading-tight">{subtitle}</p>
       </div>
 
       {/* Collapse toggle */}
