@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Search, X, Pin, Trash2, Pencil, EllipsisVertical } from 'lucide-react'
+import { Search, X, Pin, Trash2, Pencil, EllipsisVertical, Plus, Undo2, ArrowLeft } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 import SwipeableRow from './SwipeableRow'
@@ -32,6 +32,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   const [trashLoading, setTrashLoading] = useState(false)
   const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [swipeOpenId, setSwipeOpenId] = useState<string | null>(null)
 
   const loadTrash = useCallback(async () => {
     if (!onFetchDeleted) return
@@ -139,9 +140,9 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
               aria-label="Back"
               className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
-              <span aria-hidden="true" className="text-[1rem]">←</span>
+              <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
             </button>
-            <h2 className="text-[1.25rem] font-bold text-slate-800 dark:text-white">
+            <h2 className="text-title font-title text-slate-800 dark:text-white">
               {view === 'trash' ? 'Recently Deleted' : 'Notes'}
             </h2>
           </div>
@@ -158,9 +159,9 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 <Search size={18} strokeWidth={2} aria-hidden="true" />
               </button>
             )}
-            <span className="text-[0.875rem] text-slate-400">
-              {view === 'trash' ? `${deleted.length} deleted` : `${notes.length} total`}
-            </span>
+            {view === 'trash' && (
+              <span className="text-[0.875rem] text-slate-400">{deleted.length} deleted</span>
+            )}
           </div>
         </div>
 
@@ -179,7 +180,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         )}
 
         {/* Grid — single scroller below the header; clipping (not z-index) keeps motion layers under the header */}
-        <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-20 max-sm:pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto isolate p-6 pb-28 max-sm:pb-[calc(7rem+env(safe-area-inset-bottom))]">
           {view === 'trash' ? (
             trashLoading ? (
               <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">Loading…</p>
@@ -208,7 +209,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                         </p>
                         {note.deleted_at && (
                           <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-1">
-                            Deleted {new Date(note.deleted_at).toLocaleDateString()}
+                            Deleted {new Date(note.deleted_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </p>
                         )}
                       </div>
@@ -219,7 +220,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                             className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors min-h-[44px] inline-flex items-center justify-center gap-1"
                             aria-label={`Restore note ${note.title || ''}`}
                           >
-                            <span aria-hidden="true">↩</span> Restore
+                            <Undo2 size={14} strokeWidth={2} aria-hidden="true" /> Restore
                           </button>
                         )}
                         {onPurgeForever && (
@@ -297,6 +298,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                       aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
                       className="bg-white dark:bg-slate-800"
                       showLabels={false}
+                      onOpenChange={(open) => setSwipeOpenId((prev) => (open ? note.id : prev === note.id ? null : prev))}
                     >
                       <div
                         aria-hidden="true"
@@ -313,7 +315,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                         <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
                           {note.pinned && <Pin size={14} strokeWidth={2} aria-hidden="true" />}
                           {note.created_at && (
-                            <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                            <span>{new Date(note.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                           )}
                         </div>
                       </div>
@@ -390,9 +392,10 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           <button
             onClick={onNewBlank}
             aria-label="New note"
-            className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] z-20"
+            disabled={!!swipeOpenId}
+            className={`absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] z-20 ${swipeOpenId ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
           >
-            <span aria-hidden="true" className="text-[1.5rem] leading-none">+</span>
+            <Plus size={24} strokeWidth={2} aria-hidden="true" />
           </button>
         )}
       </div>

@@ -200,7 +200,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           >
             <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
           </button>
-          <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">
+          <h2 className="flex-1 text-title font-title text-slate-800 dark:text-white">
             <Settings className="w-5 h-5 inline mr-1" />Settings
           </h2>
         </div>

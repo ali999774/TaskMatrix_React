@@ -23,6 +23,8 @@ interface Props {
   'aria-label'?: string
   /** When false, renders iOS-style circular buttons with labels below */
   showLabels?: boolean
+  /** Notified when this row's swipe-open state changes */
+  onOpenChange?: (open: boolean) => void
 }
 
 const SPRING = { type: 'spring' as const, stiffness: 400, damping: 30, mass: 0.8 }
@@ -39,6 +41,7 @@ export default function SwipeableRow({
   className = '',
   'aria-label': ariaLabel,
   showLabels = true,
+  onOpenChange,
 }: Props) {
   const x = useMotionValue(0)
   const openRef = useRef(false)
@@ -59,12 +62,15 @@ export default function SwipeableRow({
     closeRef.current = () => {
       animate(x, 0, SPRING)
       openRef.current = false
+      onOpenChange?.(false)
     }
     return () => {
       if (activeClose === closeRef.current) {
         activeClose = null
+        onOpenChange?.(false)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [x])
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -79,12 +85,14 @@ export default function SwipeableRow({
       animate(x, -maxSwipe, SPRING)
       openRef.current = true
       activeClose = closeRef.current!
+      onOpenChange?.(true)
     } else {
       animate(x, 0, SPRING)
       openRef.current = false
       if (activeClose === closeRef.current) {
         activeClose = null
       }
+      onOpenChange?.(false)
     }
   }
 
@@ -95,6 +103,7 @@ export default function SwipeableRow({
       }
       animate(x, 0, SPRING)
       openRef.current = false
+      onOpenChange?.(false)
     } else {
       onTap?.()
     }
@@ -106,6 +115,7 @@ export default function SwipeableRow({
     }
     animate(x, 0, { ...SPRING, stiffness: 500 })
     openRef.current = false
+    onOpenChange?.(false)
     fn()
   }
 

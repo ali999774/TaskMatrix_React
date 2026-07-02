@@ -256,7 +256,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-            className="flex-1 bg-transparent text-[1.125rem] font-semibold text-slate-800 dark:text-white
+            className="flex-1 bg-transparent text-title font-title text-slate-800 dark:text-white
               outline-none placeholder-slate-400"
             placeholder="Task title"
           />
