@@ -75,13 +75,11 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
       {/* Day-name header row — WHY uppercase + letter-spacing: scaffolding
           should recede; bold labels compete with day numbers */}
       <div className="grid grid-cols-7 border-b border-slate-200/60 dark:border-slate-800/60 shrink-0">
-        {DAYS_SHORT.map((d, i) => (
+        {DAYS_SHORT.map((d) => (
           <div
             key={d}
-            className={`text-center text-[0.625rem] font-medium py-2 uppercase tracking-[0.06em]
-              ${i === 0 || i === 6
-                ? 'text-slate-300 dark:text-slate-600'
-                : 'text-slate-400 dark:text-slate-500'}`}
+            className="text-center text-[0.625rem] font-medium py-2 uppercase tracking-[0.06em]
+              text-slate-400 dark:text-slate-500"
           >
             {d}
           </div>
@@ -164,7 +162,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
                   )
                 })}
                 {dayTasks.length > 3 && (
-                  <span className="text-[0.5625rem] tabular-nums text-slate-400 dark:text-slate-500 px-0.5">
+                  <span className="text-[0.625rem] tabular-nums text-slate-400 dark:text-slate-500 px-0.5">
                     +{dayTasks.length - 3} more
                   </span>
                 )}
