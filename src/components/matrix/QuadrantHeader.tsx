@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react'
 import type { Quadrant } from '../../types'
 
 /** Quadrant-specific accent colors for left borders (used in grid/list).
@@ -67,7 +68,11 @@ export default function QuadrantHeader({
         title={collapsed ? 'Expand' : 'Collapse'}
         aria-label={collapsed ? 'Expand quadrant' : 'Collapse quadrant'}
       >
-        {collapsed ? <span aria-hidden="true" className="inline-block transition-transform duration-200 rotate-0">▶</span> : <span aria-hidden="true" className="inline-block transition-transform duration-200 rotate-90">▶</span>}
+        <ChevronRight
+          size={16}
+          aria-hidden="true"
+          className={`transition-transform duration-200 ${collapsed ? 'rotate-0' : 'rotate-90'}`}
+        />
       </button>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, Clock, Bell, Tag, Repeat, X, Sparkles } from 'lucide-react'
+import { Calendar, Clock, Bell, Tag, Repeat, X, Sparkles, ArrowLeft } from 'lucide-react'
 import type { Task } from '../types'
 import type { CategoryDef } from '../lib/categories'
 import { categoryDisplay } from '../lib/categories'
@@ -247,7 +247,7 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
             aria-label="Back"
             className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0"
           >
-            <span aria-hidden="true" className="text-[1rem]">←</span>
+            <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
           </button>
           <input
             ref={titleRef}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
-import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic, Sun, Moon, MonitorSmartphone } from 'lucide-react'
+import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic, Sun, Moon, MonitorSmartphone, GripVertical } from 'lucide-react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
@@ -426,9 +426,9 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     {/* Drag handle — row itself is draggable; keyboard reorder via handleCategoryKeyDown */}
                     <span
                       aria-hidden="true"
-                      className="text-slate-400 dark:text-slate-500 text-[0.875rem] shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                      className="text-slate-400 dark:text-slate-500 shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                     >
-                      ⋮⋮
+                      <GripVertical size={16} />
                     </span>
 
                     {/* Icon + display */}

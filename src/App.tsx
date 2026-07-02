@@ -26,7 +26,7 @@ import CalendarStrip from './components/CalendarStrip'
 import BottomSheet from './components/BottomSheet'
 import VoiceButton from './components/VoiceButton'
 import AddTaskModal from './components/AddTaskModal'
-import { Mic, Timer, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical, Target, Settings, RefreshCw, LogOut, X, Undo2, SquarePen, Sparkles, Zap } from 'lucide-react'
+import { Mic, Timer, StickyNote as StickyNoteIcon, CalendarDays, EllipsisVertical, Target, Settings, RefreshCw, LogOut, X, Undo2, SquarePen, Sparkles, Zap, ArrowLeft } from 'lucide-react'
 import { stripMarkdown } from './lib/markdown'
 import { localTodayStr } from './lib/dates'
 import { speechSupported, formatVoiceNote } from './lib/speech'
@@ -1352,7 +1352,7 @@ export default function App() {
               aria-label="Back"
               className="absolute top-4 left-3 z-10 w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors flex items-center justify-center min-h-[44px] min-w-[44px]"
             >
-              <span aria-hidden="true" className="text-[1rem]">←</span>
+              <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </>)}
