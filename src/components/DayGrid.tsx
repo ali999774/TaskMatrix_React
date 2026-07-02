@@ -92,12 +92,12 @@ export function RailChip({ task, categoryHex }: { task: Task; categoryHex?: stri
         className="w-2 h-2 rounded-full shrink-0"
         style={{ backgroundColor: color }}
       />
-      <span className="text-[0.75rem] font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]">
+      <span className="text-meta font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px]">
         {task.title}
       </span>
       {/* Show out-of-window time so the user knows why it's in the rail */}
       {t && (
-        <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 tabular-nums ml-0.5 shrink-0">
+        <span className="text-subtitle text-slate-400 dark:text-slate-500 tabular-nums ml-0.5 shrink-0">
           {String(t.hour % 12 || 12).padStart(2, '0')}:{String(t.minute).padStart(2, '0')}{t.hour < 12 ? 'a' : 'p'}
         </span>
       )}
@@ -143,12 +143,12 @@ function GridPill({ timedTask, overlapOffset, categoryHex }: { timedTask: TimedT
         style={{ backgroundColor: color }}
       />
       <div className="flex-1 min-w-0">
-        <p className={`text-[0.8125rem] font-semibold leading-snug
+        <p className={`text-task-title font-semibold leading-snug
           ${task.status === 'done' ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}
         >
           {task.title}
         </p>
-        <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 tabular-nums mt-0.5">
+        <p className="text-subtitle text-slate-400 dark:text-slate-500 tabular-nums mt-0.5">
           {label}
         </p>
       </div>
@@ -261,7 +261,7 @@ export default function DayGrid({ tasks, categories, isToday }: Props) {
       {/* Fixed, non-scrolling. Catches: no-time tasks + out-of-window timed. */}
       <div className="shrink-0 border-b border-slate-200 dark:border-slate-800 px-3 py-2">
         {rail.length === 0 ? (
-          <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic py-1">
+          <p className="text-meta text-slate-400 dark:text-slate-500 italic py-1">
             All tasks are timed
           </p>
         ) : (
@@ -272,7 +272,7 @@ export default function DayGrid({ tasks, categories, isToday }: Props) {
             </span>
             {railChips.map(t => <RailChip key={t.id} task={t} categoryHex={getCategoryHex(categories, t.category)} />)}
             {railExtra > 0 && (
-              <span className="text-[0.75rem] font-medium text-slate-400 dark:text-slate-500
+              <span className="text-meta font-medium text-slate-400 dark:text-slate-500
                 px-2 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full shrink-0">
                 +{railExtra}
               </span>
@@ -340,7 +340,7 @@ export default function DayGrid({ tasks, categories, isToday }: Props) {
 
           {/* Empty state (only shown when no timed tasks) */}
           {timed.length === 0 && (
-            <p className="absolute text-[0.8125rem] text-slate-400 dark:text-slate-500
+            <p className="absolute text-task-title text-slate-400 dark:text-slate-500
               text-center w-full"
               style={{ top: (8 - GRID_START_HOUR) * PX_PER_HOUR + 16 }}
             >
