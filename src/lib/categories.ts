@@ -76,7 +76,11 @@ export const CATEGORY_DEFAULTS: CategoryDef[] = [
 
 export const DEFAULT_CATEGORIES = CATEGORY_DEFAULTS
 
-export const CATEGORY_COLORS = ['slate', 'red', 'amber', 'emerald', 'blue', 'purple', 'pink'] as const
+// 'slate' is intentionally excluded from the selectable palette — a gray
+// category swatch reads as "disabled" rather than as a chosen color.
+// Its hex/badge/border/ring entries below stay defined as a neutral
+// fallback for categories with an unrecognized color value.
+export const CATEGORY_COLORS = ['red', 'amber', 'emerald', 'blue', 'purple', 'pink'] as const
 
 export const CATEGORY_COLOR_HEX: Record<string, string> = {
   slate: '#94a3b8',
