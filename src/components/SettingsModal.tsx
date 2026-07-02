@@ -5,6 +5,15 @@ import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
 import { FONT_SCALES } from '../hooks/useFontScale'
+import { supabase } from '../lib/supabase'
+
+// Local-only field to correlate an edited row back to its original label,
+// so Save can tell a rename/delete apart from a plain color/icon/order edit.
+type EditableCategory = CategoryDef & { _key: string }
+
+function makeKey(): string {
+  return Math.random().toString(36).slice(2)
+}
 
 interface Props {
   categories: CategoryDef[]
@@ -26,10 +35,18 @@ function slugify(text: string): string {
 }
 
 export default function SettingsModal({ categories, onSave, onClose, aiSettings, onAISettingsChange, fontScale, onFontScaleChange, gcalIsConnected, gcalConnect, gcalDisconnect, theme, onThemeChange }: Props) {
-  const [items, setItems] = useState<CategoryDef[]>(() =>
-    categories.map(c => ({ ...c }))
+  const [items, setItems] = useState<EditableCategory[]>(() =>
+    categories.map(c => ({ ...c, _key: makeKey() }))
+  )
+  // _key -> label at the time the modal opened. Only entries present here can
+  // be a rename (label changed) or a delete (item removed) on Save; entries
+  // added during this session (via `add`) have no original label to diff against.
+  const origLabelsRef = useRef<Map<string, string>>(
+    new Map(items.map(c => [c._key, c.label]))
   )
   const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -85,7 +102,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
   const add = () => {
     if (items.length >= MAX_CATEGORIES) return
-    const newItem: CategoryDef = { label: '', display: '', color: 'blue', icon: 'plus' }
+    const newItem: EditableCategory = { label: '', display: '', color: 'blue', icon: 'plus', _key: makeKey() }
     setItems([...items, newItem])
     setEditingIdx(items.length)
   }
@@ -108,11 +125,38 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Filter out empty entries
     const valid = items.filter(c => c.display.trim() && c.label.trim())
     if (valid.length === 0) return
-    onSave(valid)
+
+    setSaving(true)
+    setSaveError(null)
+
+    // Rename/delete are routed through SECURITY DEFINER RPCs so the tasks
+    // that reference these categories get re-labeled/reassigned atomically —
+    // a plain user_settings upsert only ever touched the label, leaving
+    // every task pointing at the old (now-orphaned) category.
+    const validByKey = new Map(valid.map(c => [c._key, c]))
+    for (const [key, origLabel] of origLabelsRef.current) {
+      const current = validByKey.get(key)
+      try {
+        if (!current) {
+          const { error } = await supabase.rpc('delete_category', { p_label: origLabel, p_reassign_to: null })
+          if (error) throw error
+        } else if (current.label !== origLabel) {
+          const { error } = await supabase.rpc('rename_category', { p_old: origLabel, p_new: current.label })
+          if (error) throw error
+        }
+      } catch (err) {
+        setSaving(false)
+        setSaveError(err instanceof Error ? err.message : 'Failed to update category')
+        return
+      }
+    }
+
+    onSave(valid.map((c): CategoryDef => ({ label: c.label, display: c.display, color: c.color, icon: c.icon })))
+    setSaving(false)
     onClose()
   }
 
@@ -575,25 +619,31 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700 flex gap-2 justify-end">
+        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700">
+          {saveError && (
+            <p className="text-[0.75rem] text-red-500 mb-2">{saveError}</p>
+          )}
+          <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[0.875rem] text-slate-500 dark:text-slate-400 
-              hover:text-slate-700 dark:hover:text-slate-200 transition min-h-[44px]"
+            disabled={saving}
+            className="px-4 py-2 text-[0.875rem] text-slate-500 dark:text-slate-400
+              hover:text-slate-700 dark:hover:text-slate-200 transition min-h-[44px] disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!isValid}
+            disabled={!isValid || saving}
             className={`px-4 py-2 text-[0.875rem] font-medium rounded-lg transition-all min-h-[44px]
-              ${isValid
+              ${isValid && !saving
                 ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
               }`}
           >
-            Save
+            {saving ? 'Saving…' : 'Save'}
           </button>
+          </div>
         </div>
       </div>
     </div>
