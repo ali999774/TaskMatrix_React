@@ -4,6 +4,7 @@ import type { Task } from '../types'
 import { scheduleTaskReminder, cancelTaskReminder } from '../lib/notifications'
 import { persistOrQueue } from '../lib/persist'
 import { findActiveSeriesClone, hasActiveOccurrenceOnDate, findSpawnedSiblingOnUncomplete, seriesKey } from '../lib/recurrence'
+import type { QueuedMutation } from './useOfflineQueue'
 
 const DEBOUNCE_MS = 400
 
@@ -47,9 +48,11 @@ function getNextDueDate(
 }
 
 interface OfflineQueue {
-  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
+  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string, previousPayload?: Record<string, unknown>, label?: string) => Promise<void>
   getPendingDeleteIds: () => Promise<Set<string>>
   online: boolean
+  failedMutations?: QueuedMutation[]
+  retryFailed?: (id: number) => Promise<{ ok: boolean; mutation: QueuedMutation } | undefined>
 }
 
 export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
@@ -97,6 +100,10 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
 
   // Dirty-flag + debounce for updateTask (title edits, position changes, etc.)
   const dirtyRef = useRef<Map<string, Partial<Task>>>(new Map())
+  // Pre-edit value + title for each dirty task, captured at the moment of the
+  // FIRST edit in a debounce batch — the true baseline to revert to and a
+  // human-readable label if the write is ultimately rejected.
+  const dirtyMetaRef = useRef<Map<string, { previous: Partial<Task>; title: string }>>(new Map())
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const syncedSnapshotRef = useRef<Map<string, string>>(new Map())
 
@@ -110,13 +117,17 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     for (const [id, updates] of entries) {
       const prevSnapshot = syncedSnapshotRef.current.get(id)
       const nextSnapshot = JSON.stringify(updates)
+      const meta = dirtyMetaRef.current.get(id)
+      dirtyMetaRef.current.delete(id)
       if (prevSnapshot === nextSnapshot) continue
 
+      const label = meta?.title ? `update to "${meta.title}"` : undefined
+
       if (offlineQueue && !offlineQueue.online) {
-        await offlineQueue.enqueue('tasks', 'update', id, updates)
+        await offlineQueue.enqueue('tasks', 'update', id, updates, undefined, meta?.previous, label)
       } else {
         await persistOrQueue(offlineQueue, 'tasks', 'update', id,
-          () => supabase.from('tasks').update(updates).eq('id', id), updates)
+          () => supabase.from('tasks').update(updates).eq('id', id), updates, undefined, meta?.previous, label)
       }
       syncedSnapshotRef.current.set(id, nextSnapshot)
     }
@@ -394,9 +405,17 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
 
   // Debounced sync for title edits, importance/urgency, position changes.
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
-    )
+    setTasks((prev) => {
+      const current = prev.find((t) => t.id === id)
+      if (current && !dirtyMetaRef.current.has(id)) {
+        const previous: Partial<Task> = {}
+        for (const key of Object.keys(updates) as (keyof Task)[]) {
+          (previous as Record<string, unknown>)[key] = current[key]
+        }
+        dirtyMetaRef.current.set(id, { previous, title: current.title })
+      }
+      return prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
+    })
 
     const dirty = dirtyRef.current
     const existing = dirty.get(id) || {}
@@ -404,6 +423,34 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
 
     scheduleFlush()
   }, [scheduleFlush])
+
+  // If a task write is permanently rejected (RLS / constraint), revert the
+  // optimistic local state back to its pre-edit value rather than leaving a
+  // phantom edit that never saved on the server.
+  const revertedFailedIdsRef = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    const failed = offlineQueue?.failedMutations
+    if (!failed) return
+    for (const m of failed) {
+      if (m.table !== 'tasks' || m.id === undefined || revertedFailedIdsRef.current.has(m.id)) continue
+      revertedFailedIdsRef.current.add(m.id)
+      if (m.previousPayload) {
+        const revert = m.previousPayload
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local state to an external queue transition (mutation → failed), not derivable from render
+        setTasks((prev) => prev.map((t) => (t.id === m.recordId ? { ...t, ...revert } : t)))
+      }
+    }
+  }, [offlineQueue?.failedMutations])
+
+  // Re-attempt a failed task update; on success, re-apply the originally
+  // attempted value (kept on the queued mutation) to local state.
+  const retryFailedTaskUpdate = useCallback(async (id: number) => {
+    const result = await offlineQueue?.retryFailed?.(id)
+    if (result?.ok && result.mutation.table === 'tasks' && result.mutation.payload) {
+      const updates = result.mutation.payload as Partial<Task>
+      setTasks((prev) => prev.map((t) => (t.id === result.mutation.recordId ? { ...t, ...updates } : t)))
+    }
+  }, [offlineQueue])
 
   const deleteTask = useCallback(async (id: string) => {
     dirtyRef.current.delete(id)
@@ -477,5 +524,5 @@ export function useTasks(userId: string | null, offlineQueue?: OfflineQueue) {
     }
   }, [userId, offlineQueue])
 
-  return { tasks: displayTasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload: loadTasks }
+  return { tasks: displayTasks, loading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload: loadTasks, retryFailedTaskUpdate }
 }

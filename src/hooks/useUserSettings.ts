@@ -1,14 +1,17 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { CategoryDef } from '../lib/categories'
 import { DEFAULT_CATEGORIES } from '../lib/categories'
 import { persistOrQueue } from '../lib/persist'
+import type { QueuedMutation } from './useOfflineQueue'
 
 const LS_KEY = 'tm-categories'
 
 interface OfflineQueue {
-  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string) => Promise<void>
+  enqueue: (table: 'tasks' | 'sticky_notes' | 'user_settings', op: 'create' | 'update' | 'delete', id: string, payload?: Record<string, unknown>, conflictKey?: string, previousPayload?: Record<string, unknown>, label?: string) => Promise<void>
   online: boolean
+  failedMutations?: QueuedMutation[]
+  retryFailed?: (id: number) => Promise<{ ok: boolean; mutation: QueuedMutation } | undefined>
 }
 
 // Ali's pre-existing categories for the migration path
@@ -115,31 +118,59 @@ export function useUserSettings(userId: string | null, offlineQueue?: OfflineQue
   }, [userId])
 
   const updateCategories = useCallback(async (cats: CategoryDef[]) => {
+    const previousCategories = categories
     setCategories(cats)
     localStorage.setItem(LS_KEY, JSON.stringify(cats))
 
     if (!userId) return
 
+    const payload = { categories: cats as unknown as Record<string, unknown> }
+    const previousPayload = { categories: previousCategories as unknown as Record<string, unknown> }
+    const label = 'category settings'
+
     if (offlineQueue && !offlineQueue.online) {
       // Queue offline — flush will upsert on reconnect using user_id as conflict key
-      await offlineQueue.enqueue(
-        'user_settings',
-        'update',
-        userId,
-        { categories: cats as unknown as Record<string, unknown> },
-        'user_id',
-      )
+      await offlineQueue.enqueue('user_settings', 'update', userId, payload, 'user_id', previousPayload, label)
     } else {
       await persistOrQueue(offlineQueue, 'user_settings', 'update', userId,
         () => supabase
           .from('user_settings')
           .upsert({ user_id: userId, categories: cats as unknown as Record<string, unknown> }, { onConflict: 'user_id' }),
-        { categories: cats as unknown as Record<string, unknown> },
-        'user_id')
+        payload, 'user_id', previousPayload, label)
     }
-  }, [userId, offlineQueue])
+  }, [userId, offlineQueue, categories])
 
-  return { categories, updateCategories, loading }
+  // If a category-settings write is permanently rejected (RLS / constraint),
+  // revert the optimistic local state so the UI reflects what's actually
+  // true server-side rather than a phantom edit that never saved.
+  const revertedFailedIdsRef = useRef<Set<number>>(new Set())
+  useEffect(() => {
+    const failed = offlineQueue?.failedMutations
+    if (!failed) return
+    for (const m of failed) {
+      if (m.table !== 'user_settings' || m.id === undefined || revertedFailedIdsRef.current.has(m.id)) continue
+      revertedFailedIdsRef.current.add(m.id)
+      const prevCats = m.previousPayload?.categories
+      if (Array.isArray(prevCats)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing local state to an external queue transition (mutation → failed), not derivable from render
+        setCategories(prevCats as CategoryDef[])
+        localStorage.setItem(LS_KEY, JSON.stringify(prevCats))
+      }
+    }
+  }, [offlineQueue?.failedMutations])
+
+  // Re-attempt a failed category-settings save; on success, re-apply the
+  // originally-attempted value (kept on the queued mutation) to local state.
+  const retryFailedCategoryUpdate = useCallback(async (id: number) => {
+    const result = await offlineQueue?.retryFailed?.(id)
+    if (result?.ok && Array.isArray(result.mutation.payload?.categories)) {
+      const cats = result.mutation.payload.categories as CategoryDef[]
+      setCategories(cats)
+      localStorage.setItem(LS_KEY, JSON.stringify(cats))
+    }
+  }, [offlineQueue])
+
+  return { categories, updateCategories, loading, retryFailedCategoryUpdate }
 }
 
 // Migrate Ali's existing hardcoded categories on first launch
