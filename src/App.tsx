@@ -262,11 +262,11 @@ export default function App() {
   const { aiSettings, updateAISettings, getAIBaseUrl } = useAISettings()
   const { fontScale, setFontScale } = useFontScale()
 
-  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload } = useTasks(userId, offlineQueue)
+  const { tasks, loading: tasksLoading, addTask, updateStatus, updateTask, deleteTask, restoreTask, clearCompleted, reload, retryFailedTaskUpdate } = useTasks(userId, offlineQueue)
   const addTaskRef = useRef(addTask)
   addTaskRef.current = addTask  // always current — dodges stale closure in []-dep effects
   const { notes, pinnedNotes, addNote, updateNote, deleteNote, restoreNote, fetchDeletedNotes, permanentlyDeleteNote, reorderNote } = useStickyNotes(userId, offlineQueue)
-  const { categories, updateCategories } = useUserSettings(userId, offlineQueue)
+  const { categories, updateCategories, retryFailedCategoryUpdate } = useUserSettings(userId, offlineQueue)
   useRefetchOnFocus(reload)
   const [quickAdd, setQuickAdd] = useState('')
   const [context, setContext] = useState(() => localStorage.getItem('tm-context') || 'all')
@@ -1143,6 +1143,32 @@ export default function App() {
           <span className="text-[0.75rem] font-medium text-amber-700 dark:text-amber-400">
             You're offline.{offlineQueue.pendingCount > 0 ? ` ${offlineQueue.pendingCount} change${offlineQueue.pendingCount !== 1 ? 's' : ''} pending.` : ''} Changes will sync when you reconnect.
           </span>
+        </div>
+      )}
+      {/* Failed-mutation banner — a save that was permanently rejected (RLS /
+          constraint), not a transient offline drop. Local state has already been
+          reverted; this surfaces the failure and offers a retry of the same write. */}
+      {offlineQueue.failedMutations.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-950/50 border-b border-red-200 dark:border-red-800 px-3 sm:px-6 py-2 space-y-1">
+          {offlineQueue.failedMutations.map((m) => (
+            <div key={m.id} className="flex items-center justify-between gap-2">
+              <span className="text-[0.75rem] font-medium text-red-700 dark:text-red-400 truncate">
+                Couldn't save {m.label ?? `${m.table} change`}.
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (m.id === undefined) return
+                  if (m.table === 'tasks') retryFailedTaskUpdate(m.id)
+                  else if (m.table === 'user_settings') retryFailedCategoryUpdate(m.id)
+                  else offlineQueue.retryFailed(m.id)
+                }}
+                className="shrink-0 text-[0.75rem] font-medium px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 min-h-[32px]"
+              >
+                Retry
+              </button>
+            </div>
+          ))}
         </div>
       )}
       {/* Context switcher — single-select category filter.

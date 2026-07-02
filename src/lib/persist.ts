@@ -17,6 +17,8 @@ interface OfflineQueueLike {
     id: string,
     payload?: Record<string, unknown>,
     conflictKey?: string,
+    previousPayload?: Record<string, unknown>,
+    label?: string,
   ) => Promise<void>
   online: boolean
 }
@@ -43,6 +45,8 @@ export async function persistOrQueue(
   runOnline: () => PromiseLike<WriteResult>,
   payload?: Record<string, unknown>,
   conflictKey?: string,
+  previousPayload?: Record<string, unknown>,
+  label?: string,
 ): Promise<{ ok: boolean }> {
   try {
     const { error } = await runOnline()
@@ -55,7 +59,7 @@ export async function persistOrQueue(
 
   if (offlineQueue) {
     try {
-      await offlineQueue.enqueue(table, op, id, payload, conflictKey)
+      await offlineQueue.enqueue(table, op, id, payload, conflictKey, previousPayload, label)
     } catch (e) {
       console.error(`[persist] failed to queue ${op} ${table}:${id}`, e)
     }
