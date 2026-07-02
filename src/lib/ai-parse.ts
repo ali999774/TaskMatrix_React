@@ -4,6 +4,7 @@
 // Supports four modes: parse (task parsing), breakdown (subtask generation), suggest (next task), format (note cleanup).
 
 import { supabase } from './supabase'
+import { importanceUrgencyToQuadrant } from '../types'
 
 interface ParsedTask {
   title: string
@@ -223,9 +224,13 @@ function formatTaskList(tasks: Array<{
   }
 
   for (const t of tasks) {
+    // Tasks don't carry a stored `quadrant` field — it's derived from
+    // importance/urgency (see importanceUrgencyToQuadrant). Compute it here
+    // rather than reading a field that's always undefined.
+    const quadrant = t.quadrant ?? importanceUrgencyToQuadrant(t.importance ?? 3, t.urgency ?? 3)
     const parts: string[] = [
       `[${t.id}] "${t.title}"`,
-      `quadrant: ${qLabel(t.quadrant)}`,
+      `quadrant: ${qLabel(quadrant)}`,
       `importance: ${t.importance ?? '?'}/5`,
       `urgency: ${t.urgency ?? '?'}/5`,
       `status: ${t.status || 'todo'}`,
