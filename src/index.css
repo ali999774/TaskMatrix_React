@@ -27,26 +27,29 @@
   --color-text-muted:      #8E8E93;
 
   /* ── Type scale ─────────────────────────────────────────────────────────── */
-  /* font-size / line-height pairs */
-  --font-size-title:       1.5rem;      /* 24px */
-  --line-height-title:     1.3;
-  --font-weight-title:     800;
+  /* Tailwind 4 `--text-*` namespace → generates the text-title / text-section /
+     text-task-title / text-meta / text-subtitle utilities (size + line-height).
+     Font weights below are the intended pairings; they are applied at call
+     sites via the standard font-* utilities (font-semibold, font-medium, …). */
+  --text-title:                   1.5rem;      /* 24px — page-level headers */
+  --text-title--line-height:      1.3;
+  --font-weight-title:            800;
 
-  --font-size-section:     1.0625rem;   /* 17px */
-  --line-height-section:   1.4;
-  --font-weight-section:   700;
+  --text-section:                 1.0625rem;   /* 17px — section headers */
+  --text-section--line-height:    1.4;
+  --font-weight-section:          700;
 
-  --font-size-task-title:  0.8125rem;  /* 13px — compact Apple-minimal look */
-  --line-height-task-title: 1.4;
-  --font-weight-task-title: 600;
+  --text-task-title:              0.8125rem;   /* 13px — compact Apple-minimal look */
+  --text-task-title--line-height: 1.4;
+  --font-weight-task-title:       600;
 
-  --font-size-meta:        0.75rem;    /* 12px */
-  --line-height-meta:      1.4;
-  --font-weight-meta:      500;
+  --text-meta:                    0.75rem;     /* 12px — due dates, tags, badges */
+  --text-meta--line-height:       1.4;
+  --font-weight-meta:             500;
 
-  --font-size-subtitle:    0.6875rem;  /* 11px */
-  --line-height-subtitle:  1.3;
-  --font-weight-subtitle:  500;
+  --text-subtitle:                0.6875rem;   /* 11px — tab labels, secondary chips */
+  --text-subtitle--line-height:   1.3;
+  --font-weight-subtitle:         500;
 
   /* ── Pomodoro / Focus ───────────────────────────────────────────────────── */
   /* bg is intentionally always dark — immersive "cinema" mode regardless of  */

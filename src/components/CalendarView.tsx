@@ -104,7 +104,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
               key={`lead-${i}`}
               className="flex flex-col items-start border-b border-slate-100/60 dark:border-slate-800/30 p-1.5 min-h-[68px] overflow-hidden"
             >
-              <span className="text-[0.75rem] font-medium tabular-nums w-full text-right text-slate-300 dark:text-slate-700">
+              <span className="text-meta font-medium tabular-nums w-full text-right text-slate-300 dark:text-slate-700">
                 {dayNum}
               </span>
             </div>
@@ -132,7 +132,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
                   the number stays in its normal top-right corner position;
                   the circle is a 24px container around it — no reflow */}
               <span className="self-end mb-1">
-                <span className={`text-[0.75rem] font-medium tabular-nums
+                <span className={`text-meta font-medium tabular-nums
                   ${isToday
                     // WHY bg-blue-600 w-6 h-6 rounded-full: matches Week view's
                     // today circle exactly — single source of truth for today style
@@ -180,7 +180,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
             key={`trail-${i}`}
             className="flex flex-col items-start border-b border-slate-100/60 dark:border-slate-800/30 p-1.5 min-h-[68px] overflow-hidden"
           >
-            <span className="text-[0.75rem] font-medium tabular-nums w-full text-right text-slate-300 dark:text-slate-700">
+            <span className="text-meta font-medium tabular-nums w-full text-right text-slate-300 dark:text-slate-700">
               {i + 1}
             </span>
           </div>
@@ -345,7 +345,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
   return (
     // Outer wrapper: no touch handlers here — Motion owns horizontal gesture
     // on the strip; other views use chevrons only.
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950">
+    <div className="flex flex-col h-full bg-surface">
 
       {/* ── Header bar ─────────────────────────────────────────────────── */}
       <div className="border-b border-slate-200 dark:border-slate-800 shrink-0">
@@ -353,7 +353,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={goToToday}
-              className="text-[0.75rem] sm:text-[0.8125rem] font-medium text-blue-600 dark:text-blue-400
+              className="text-meta font-medium text-blue-600 dark:text-blue-400
                 border border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30
                 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md active:scale-95 transition-all shrink-0"
             >
@@ -381,7 +381,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                 <ChevronRight size={16} />
               </button>
             </div>
-            <h2 className="text-[0.9375rem] sm:text-[1.125rem] font-normal text-slate-800 dark:text-slate-100 truncate">
+            <h2 className="text-section font-normal text-slate-800 dark:text-slate-100 truncate">
               {view === 'week'
                 ? weekLabel
                 : `${MONTHS[currentPanel.month]} ${currentPanel.year}`}
@@ -394,7 +394,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`text-[0.75rem] capitalize px-2.5 py-1 rounded-md transition-all
+                className={`text-meta capitalize px-2.5 py-1 rounded-md transition-all
                   ${view === v
                     ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm font-medium'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -412,7 +412,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`flex-1 text-[0.6875rem] capitalize py-1.5 rounded-md transition-all text-center
+              className={`flex-1 text-subtitle capitalize py-1.5 rounded-md transition-all text-center
                 ${view === v
                   ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm font-medium'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
@@ -622,7 +622,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                         // column on narrow — overflow means "see Day view".
                         <button
                           onClick={() => { setSelectedDate(ds); setView('day') }}
-                          className="text-[0.6875rem] text-slate-400 dark:text-slate-500
+                          className="text-subtitle text-slate-400 dark:text-slate-500
                             hover:text-slate-600 dark:hover:text-slate-300
                             text-left px-1 py-0.5 min-h-[44px] flex items-center"
                         >
@@ -680,7 +680,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
       {view === 'schedule' && (
         <div className="flex-1 overflow-y-auto">
           {scheduleDates.length === 0 ? (
-            <p className="text-[0.8125rem] text-slate-400 dark:text-slate-500 text-center mt-12">No upcoming tasks</p>
+            <p className="text-task-title text-slate-400 dark:text-slate-500 text-center mt-12">No upcoming tasks</p>
           ) : (
             scheduleDates.map(([ds, tasks]) => {
               const date    = new Date(ds + 'T00:00:00')
@@ -690,9 +690,9 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                   {/* Date group header — sticky, clearly separated from items */}
                   <div className={`sticky top-0 z-10 px-5 py-2
                     border-b border-slate-200/60 dark:border-slate-800/60
-                    ${isToday ? 'bg-blue-50/60 dark:bg-blue-900/15' : 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm'}`}
+                    ${isToday ? 'bg-blue-50/60 dark:bg-blue-900/15' : 'bg-surface/90 backdrop-blur-sm'}`}
                   >
-                    <div className={`text-[0.75rem] font-semibold
+                    <div className={`text-meta font-semibold
                       ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
                       {isToday ? 'Today' : DAYS_LONG[date.getDay()]} · {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
                     </div>
@@ -739,7 +739,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                         {/* WHY tabular-nums: time column stays on a fixed grid
                             regardless of digit count (1-digit vs 2-digit hours) */}
                         {t.due_time && (
-                          <span className="text-[0.6875rem] tabular-nums text-slate-400 dark:text-slate-500 shrink-0">
+                          <span className="text-subtitle tabular-nums text-slate-400 dark:text-slate-500 shrink-0">
                             {t.due_time.slice(0, 5)}
                           </span>
                         )}
@@ -756,7 +756,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
       {/* ── Add-task drawer (unchanged) ─────────────────────────────────── */}
       {selectedDate && (
         <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 px-5 py-3 max-h-[30%] overflow-y-auto shrink-0">
-          <div className="text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wide">
+          <div className="text-subtitle font-medium text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wide">
             {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </div>
           <form
@@ -782,15 +782,15 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
             />
           </form>
           {selectedTasks.length === 0 ? (
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 italic">No tasks</p>
+            <p className="text-meta text-slate-400 dark:text-slate-500 italic">No tasks</p>
           ) : (
             <ul className="space-y-1">
               {selectedTasks.map(t => (
-                <li key={t.id} className="text-[0.8125rem] text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <li key={t.id} className="text-task-title text-slate-700 dark:text-slate-300 flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${t.status === 'done' ? 'bg-emerald-400' : 'bg-blue-400'}`} />
                   <span className={t.status === 'done' ? 'line-through opacity-50' : ''}>{t.title}</span>
                   {t.due_time && (
-                    <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 ml-auto tabular-nums">{t.due_time.slice(0, 5)}</span>
+                    <span className="text-subtitle text-slate-400 dark:text-slate-500 ml-auto tabular-nums">{t.due_time.slice(0, 5)}</span>
                   )}
                 </li>
               ))}

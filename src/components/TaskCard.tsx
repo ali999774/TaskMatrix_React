@@ -143,7 +143,7 @@ export default function TaskCard({
       {/* Text block: flex-1 so it absorbs free space and pushes pin to the right */}
       <div className="flex-1 min-w-0">
         <p
-          className={`text-[0.78125rem] sm:text-[0.875rem] font-semibold leading-snug ${
+          className={`text-task-title font-semibold ${
             isDone
               ? 'line-through text-slate-400 dark:text-slate-500'
               : 'text-slate-800 dark:text-slate-100'
@@ -153,7 +153,7 @@ export default function TaskCard({
           {task.title}
         </p>
         {(task.category || dueInfo || hasSubtasks) && (
-          <p className="text-[0.65625rem] sm:text-[0.75rem] leading-relaxed mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
+          <p className="text-meta mt-0.5 flex items-center gap-1.5 flex-wrap" aria-hidden="true">
             {dueInfo && (
               <span className={dueInfo.urgent ? 'text-red-500 dark:text-red-400 font-medium' : 'text-slate-400 dark:text-slate-500'}>
                 {dueInfo.text}
@@ -171,7 +171,7 @@ export default function TaskCard({
               <span className="text-slate-300 dark:text-slate-600">·</span>
             )}
             {hasSubtasks && (
-              <span className="bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-[4px] text-[0.6rem] font-semibold leading-none">
+              <span className="bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-[4px] text-subtitle font-semibold leading-none">
                 {checkedCount}/{totalSubtasks}
               </span>
             )}
@@ -237,7 +237,7 @@ export default function TaskCard({
         onDragEnd={handleDragEnd}
         onContextMenu={handleContextMenu}
         className={`pt-2 pb-1 px-2 transition-all relative
-          bg-white dark:bg-slate-800 rounded-xl
+          bg-surface rounded-xl
           shadow-sm dark:shadow-none
           hover:shadow-md hover:-translate-y-px
           select-none [-webkit-touch-callout:none]
@@ -270,7 +270,7 @@ export default function TaskCard({
           ]}
           onTap={handleClick}
           aria-label={task.title}
-          className="bg-white dark:bg-slate-800"
+          className="bg-surface"
           showLabels={false}
         >
           {cardInner}
@@ -316,7 +316,7 @@ export default function TaskCard({
                         {isChecked && <Check size={12} strokeWidth={3} />}
                       </div>
                       <span
-                        className={`text-[0.78125rem] sm:text-[0.875rem] leading-snug flex-1 ${
+                        className={`text-task-title flex-1 ${
                           isChecked
                             ? 'line-through text-slate-400 dark:text-slate-500'
                             : 'text-slate-700 dark:text-slate-300'
@@ -336,7 +336,7 @@ export default function TaskCard({
                         haptics('success')
                         onStatusChange(task.id, 'done')
                       }}
-                      className="text-[0.75rem] font-semibold text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 px-4 py-2 rounded-full transition-colors active:scale-95 shadow-sm"
+                      className="text-meta font-semibold text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 px-4 py-2 rounded-full transition-colors active:scale-95 shadow-sm"
                     >
                       Mark task done?
                     </button>
@@ -358,20 +358,20 @@ export default function TaskCard({
           />
           {menuPos && (
           <div
-            className="fixed z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px] max-h-[50vh] overflow-y-auto"
+            className="fixed z-50 bg-surface border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 min-w-[130px] max-h-[50vh] overflow-y-auto"
             style={{
               top: menuPos.top,
               left: Math.max(8, menuPos.left),
             }}
           onClick={(e) => e.stopPropagation()}>
-          <div className="text-[0.75rem] text-slate-400 dark:text-slate-500 px-2 pb-0.5">Move to…</div>
+          <div className="text-meta text-text-muted px-2 pb-0.5">Move to…</div>
           {([1, 2, 3, 4] as Quadrant[]).map((q) => {
             const QIcon = QUADRANT_ICONS[q]
             return (
             <button
               key={q}
               onClick={(e) => handleMovePick(e, q)}
-              className="text-[0.75rem] px-2.5 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-left flex items-center gap-2 active:scale-95 motion-reduce:scale-100 transition-all min-h-[44px]"
+              className="text-meta px-2.5 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 text-left flex items-center gap-2 active:scale-95 motion-reduce:scale-100 transition-all min-h-[44px]"
             >
               <QIcon className="w-4 h-4" aria-hidden="true" />
               <span className="text-slate-700 dark:text-slate-300">{QUADRANT_LABELS[q]}</span>

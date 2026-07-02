@@ -181,7 +181,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl 
+        className="w-full max-w-md bg-surface rounded-2xl shadow-2xl
           border border-slate-200 dark:border-slate-700 overflow-hidden
           max-sm:rounded-b-none max-sm:max-h-[85vh] max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-sm:animate-modal-sheet
           transition-transform duration-200"
@@ -200,7 +200,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           >
             <ArrowLeft size={18} strokeWidth={2} aria-hidden="true" />
           </button>
-          <h2 className="flex-1 text-[1.125rem] font-semibold text-slate-800 dark:text-white">
+          <h2 className="flex-1 text-section font-semibold text-slate-800 dark:text-white">
             <Settings className="w-5 h-5 inline mr-1" />Settings
           </h2>
         </div>
@@ -209,7 +209,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
         <div ref={scrollerRef} className="px-5 py-4 space-y-4 max-h-[65vh] overflow-y-auto max-sm:pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {/* Text size */}
           <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-medium text-slate-500 dark:text-slate-400 mb-2">
               Text size
             </label>
             <div
@@ -238,7 +238,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                 )
               })}
             </div>
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mt-2">
+            <p className="text-meta text-slate-400 dark:text-slate-500 mt-2">
               Scales all text across the app. Applies instantly.
             </p>
           </div>
@@ -248,10 +248,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
           {/* Appearance */}
           <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-medium text-slate-500 dark:text-slate-400 mb-2">
               Appearance
             </label>
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+            <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
               Choose how the app looks. System follows your device settings automatically.
             </p>
             <div
@@ -269,7 +269,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     aria-checked={selected}
                     aria-label={labels[mode]}
                     onClick={() => onThemeChange(mode)}
-                    className={`flex-1 min-h-[44px] rounded-lg text-[0.8125rem] font-medium transition-all active:scale-95 motion-reduce:scale-100
+                    className={`flex-1 min-h-[44px] rounded-lg text-task-title font-medium transition-all active:scale-95 motion-reduce:scale-100
                       ${selected
                         ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -287,10 +287,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
           {/* AI Settings */}
           <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-medium text-slate-500 dark:text-slate-400 mb-2">
               <Sparkles className="w-4 h-4 inline mr-1" />AI Task Parsing
             </label>
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+            <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
               When enabled, voice transcripts are parsed by AI to create structured
               tasks with dates, categories, and priority.
             </p>
@@ -309,11 +309,11 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               {aiSettings.enabled && (
                 <>
                   <div>
-                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Provider</label>
+                    <label className="block text-meta text-slate-400 dark:text-slate-500 mb-1">Provider</label>
                     <select
                       value={aiSettings.provider}
                       onChange={(e) => onAISettingsChange({ provider: e.target.value as 'deepseek' | 'openai' })}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none"
+                      className="w-full bg-surface border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none"
                     >
                       <option value="deepseek">DeepSeek</option>
                       <option value="openai">OpenAI</option>
@@ -321,11 +321,11 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                   </div>
 
                   <div>
-                    <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Model</label>
+                    <label className="block text-meta text-slate-400 dark:text-slate-500 mb-1">Model</label>
                     <select
                       value={aiSettings.model}
                       onChange={(e) => onAISettingsChange({ model: e.target.value })}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors appearance-none
+                      className="w-full bg-surface border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 dark:text-slate-300 outline-none focus:border-blue-400 transition-colors appearance-none
                         bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2394a3b8%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.22%208.22a.75.75%200%200%201%201.06%200L10%2011.94l3.72-3.72a.75.75%200%201%201%201.06%201.06l-4.25%204.25a.75.75%200%200%201-1.06%200L5.22%209.28a.75.75%200%200%201%200-1.06Z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] 
                         bg-[length:1rem] bg-[right_0.5rem_center] bg-no-repeat pr-8"
                     >
@@ -345,12 +345,12 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
           {/* Google Calendar */}
           <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-medium text-slate-500 dark:text-slate-400 mb-2">
               <Calendar className="w-4 h-4 inline mr-1" />Google Calendar
             </label>
             {gcalIsConnected ? (
               <>
-                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+                <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
                   Connected. Today's events appear on the home screen.
                 </p>
                 <button
@@ -365,7 +365,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
               </>
             ) : (
               <>
-                <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+                <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
                   Connect to see today's events on the home screen.
                 </p>
                 <button
@@ -379,7 +379,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                   {gcalConnecting ? 'Connecting…' : 'Connect Google Calendar'}
                 </button>
                 {gcalError && (
-                  <p className="text-[0.75rem] text-red-500 mt-2">{gcalError}</p>
+                  <p className="text-meta text-red-500 mt-2">{gcalError}</p>
                 )}
               </>
             )}
@@ -388,10 +388,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
           {/* Divider */}
           <hr className="border-slate-200 dark:border-slate-700" />
           <div>
-            <label className="block text-[0.75rem] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-medium text-slate-500 dark:text-slate-400 mb-2">
               Categories
             </label>
-            <p className="text-[0.75rem] text-slate-400 dark:text-slate-500 mb-3">
+            <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
               Drag to reorder. Tap a category to edit its name, color, or icon.
             </p>
 
@@ -449,17 +449,17 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     {/* Delete */}
                     {confirmDeleteIdx === idx ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-[0.6875rem] text-red-500">Delete?</span>
+                        <span className="text-subtitle text-red-500">Delete?</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); remove(idx); setConfirmDeleteIdx(null) }}
-                          className="text-[0.75rem] text-red-500 font-semibold px-2 min-h-[44px]"
+                          className="text-meta text-red-500 font-semibold px-2 min-h-[44px]"
                           aria-label="Confirm delete"
                         >
                           Yes
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(null) }}
-                          className="text-[0.75rem] text-slate-400 px-2 min-h-[44px]"
+                          className="text-meta text-slate-400 px-2 min-h-[44px]"
                           aria-label="Cancel delete"
                         >
                           No
@@ -468,7 +468,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     ) : (
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfirmDeleteIdx(idx) }}
-                        className="text-[0.75rem] text-slate-400 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                        className="text-meta text-slate-400 dark:text-slate-400 hover:text-red-500 p-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
                         aria-label={`Delete category ${cat.display || 'new'}`}
                       >
                         <X size={14} strokeWidth={2} />
@@ -484,12 +484,12 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                         value={cat.display}
                         onChange={(e) => update(idx, { display: e.target.value })}
                         placeholder="Category name"
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 
+                        className="w-full bg-surface border border-slate-200 
                           dark:border-slate-700 rounded-lg px-3 py-2 text-[0.875rem] text-slate-700 
                           dark:text-slate-300 outline-none focus:border-blue-400 transition-colors"
                       />
                       <div>
-                        <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Color</label>
+                        <label className="block text-meta text-slate-400 dark:text-slate-500 mb-1">Color</label>
                         <div className="flex gap-1.5 flex-wrap">
                           {CATEGORY_COLORS.map((color) => (
                             <button
@@ -507,7 +507,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[0.75rem] text-slate-400 dark:text-slate-500 mb-1">Icon</label>
+                        <label className="block text-meta text-slate-400 dark:text-slate-500 mb-1">Icon</label>
                         <div className="grid grid-cols-5 gap-1.5">
                           {CATEGORY_ICON_NAMES.map((name) => (
                             <button
@@ -541,7 +541,7 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                 + Add category
               </button>
             ) : (
-              <p className="mt-3 text-[0.75rem] text-slate-400 dark:text-slate-500 text-center">
+              <p className="mt-3 text-meta text-slate-400 dark:text-slate-500 text-center">
                 {MAX_CATEGORIES} categories max
               </p>
             )}
@@ -549,10 +549,10 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
 
           {/* Siri Shortcut */}
           <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-[0.75rem] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            <p className="text-meta font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
               Siri Shortcut
             </p>
-            <p className="text-[0.8125rem] text-slate-500 dark:text-slate-400 mb-3">
+            <p className="text-task-title text-slate-500 dark:text-slate-400 mb-3">
               Add the shortcut, then say "Hey Siri, Add Task" to dictate a task — works even when locked.
             </p>
             <button
