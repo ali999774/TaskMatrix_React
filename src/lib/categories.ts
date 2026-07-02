@@ -78,6 +78,10 @@ export const DEFAULT_CATEGORIES = CATEGORY_DEFAULTS
 
 export const CATEGORY_COLORS = ['slate', 'red', 'amber', 'emerald', 'blue', 'purple', 'pink'] as const
 
+/** Red reserved EXCLUSIVELY for the Q1 urgency ring/dot overlay on calendar/schedule
+ *  views (where position doesn't encode priority). Never use as a base fill. */
+export const URGENCY_COLOR = '#ef4444'
+
 export const CATEGORY_COLOR_HEX: Record<string, string> = {
   slate: '#94a3b8',
   red: '#f87171',
@@ -126,4 +130,12 @@ export function getCategoryDef(categories: CategoryDef[], label: string | null |
 export function categoryDisplay(categories: CategoryDef[], label: string | null | undefined): string {
   const def = getCategoryDef(categories, label)
   return def ? def.display : (label || 'None')
+}
+
+/** Resolve a task's category label to its user-picked hex — the single color
+ *  path for every view (matrix stripe, calendar chip, schedule dot).
+ *  Unknown/absent categories fall back to neutral slate. */
+export function getCategoryHex(categories: CategoryDef[], label: string | null | undefined): string {
+  const def = getCategoryDef(categories, label)
+  return (def && CATEGORY_COLOR_HEX[def.color]) || CATEGORY_COLOR_HEX.slate
 }

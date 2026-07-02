@@ -2,8 +2,7 @@ import { useRef, useState, useCallback } from 'react'
 import type { Task, Quadrant } from '../types'
 import { QUADRANT_LABELS, QUADRANT_ICONS } from '../types'
 import type { CategoryDef } from '../lib/categories'
-import { getCategoryDef } from '../lib/categories'
-import { categoryColor } from '../lib/categoryColors'
+import { getCategoryDef, CATEGORY_COLOR_HEX } from '../lib/categories'
 import { Pin, ChevronDown, Check, X } from 'lucide-react'
 import { useHaptics } from '../hooks/useHaptics'
 import { parseLocalDate } from '../lib/dates'
@@ -245,7 +244,7 @@ export default function TaskCard({
           group cursor-grab active:cursor-grabbing
           border-l-[3px]
           ${isDone ? 'opacity-50' : ''}`}
-        style={{ borderLeftColor: categoryColor(task.category) }}
+        style={{ borderLeftColor: (catDef && CATEGORY_COLOR_HEX[catDef.color]) || CATEGORY_COLOR_HEX.slate }}
       >
         <SwipeableRow
           actions={[

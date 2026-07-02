@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, useMotionValue, animate } from 'framer-motion'
 import type { Task } from '../types'
 import { importanceUrgencyToQuadrant } from '../types'
-import { categoryColor, URGENCY_COLOR } from '../lib/categoryColors'
+import { getCategoryHex, URGENCY_COLOR, type CategoryDef } from '../lib/categories'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DayGrid, { RailChip, parseTime } from './DayGrid'
 
@@ -28,6 +28,7 @@ const DAYS_LONG  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday',
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface Props {
   tasks: Task[]
+  categories: CategoryDef[]
   getTasksOnDate: (dateStr: string) => Task[]
   onAddTask: (title: string, dateStr: string) => void
 }
@@ -45,13 +46,14 @@ interface MonthPanelProps {
   meta: PanelMeta
   todayStr: string
   selectedDate: string | null
+  categories: CategoryDef[]
   getTasksOnDate: (ds: string) => Task[]
   onSelect: (ds: string) => void
   pageWidth: number
 }
 
 
-function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pageWidth }: MonthPanelProps) {
+function MonthPanel({ meta, todayStr, selectedDate, categories, getTasksOnDate, onSelect, pageWidth }: MonthPanelProps) {
   const { year, month } = meta
   const firstDay     = new Date(year, month, 1).getDay()
   const daysInMonth  = new Date(year, month + 1, 0).getDate()
@@ -145,7 +147,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
               {/* Chip stack — capped at 3 + "+N more" */}
               <div className="flex flex-col gap-[2px] w-full overflow-hidden">
                 {dayTasks.slice(0, 3).map((t) => {
-                  const catHex = categoryColor(t.category)
+                  const catHex = getCategoryHex(categories, t.category)
                   return (
                     // WHY category hex for chip color: consistent with matrix stripe
                     // and schedule dot — same category always reads the same color
@@ -191,7 +193,7 @@ function MonthPanel({ meta, todayStr, selectedDate, getTasksOnDate, onSelect, pa
 }
 
 // ─── CalendarView ─────────────────────────────────────────────────────────────────
-export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
+export default function CalendarView({ categories, getTasksOnDate, onAddTask }: Props) {
   const today = useMemo(() => new Date(), [])
   const todayStr = useMemo(
     () => `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,
@@ -463,6 +465,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                   meta={meta}
                   todayStr={todayStr}
                   selectedDate={selectedDate}
+                  categories={categories}
                   getTasksOnDate={getTasksOnDate}
                   onSelect={(ds) => setSelectedDate(prev => prev === ds ? null : ds)}
                   pageWidth={pageWidth}
@@ -586,7 +589,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                     >
                       <div className="flex flex-wrap justify-center gap-[3px]">
                         {sorted.slice(0, 5).map(t => {
-                          const catHex = categoryColor(t.category)
+                          const catHex = getCategoryHex(categories, t.category)
                           return (
                             <span
                               key={t.id}
@@ -614,7 +617,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                           onClick={() => { setSelectedDate(ds); setView('day') }}
                           className="text-left min-h-[44px] w-full"
                         >
-                          <RailChip task={t} categoryHex={categoryColor(t.category)} />
+                          <RailChip task={t} categoryHex={getCategoryHex(categories, t.category)} />
                         </button>
                       ))}
                       {extra > 0 && (
@@ -670,7 +673,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
               </button>
             </div>
             {/* DayGrid: untimed rail + scrollable hour grid */}
-            <DayGrid tasks={dayTasks} isToday={isToday} />
+            <DayGrid tasks={dayTasks} categories={categories} isToday={isToday} />
           </div>
         )
       })()}
@@ -705,7 +708,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                     const q      = importanceUrgencyToQuadrant(t.importance, t.urgency)
                     const isDone = t.status === 'done'
                     // Category hex is the base color; done tasks get a muted neutral.
-                    const catHex = isDone ? 'var(--color-quad-dont-do)' : categoryColor(t.category)
+                    const catHex = isDone ? 'var(--color-quad-dont-do)' : getCategoryHex(categories, t.category)
                     // Q1 (urgent+important): red ring overlaid ON TOP of category dot.
                     // Only shown where position stops carrying priority (schedule has no
                     // spatial quadrant grouping). NOT shown in the matrix — redundant there.

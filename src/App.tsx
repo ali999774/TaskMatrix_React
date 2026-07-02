@@ -1346,7 +1346,7 @@ export default function App() {
               bottom: 'calc(var(--navbar-height) + env(safe-area-inset-bottom, 0px))',
             }}
           >
-            <CalendarView tasks={tasks} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
+            <CalendarView tasks={tasks} categories={categories} getTasksOnDate={getTasksOnDate} onAddTask={handleCalendarAddTask} />
             <button
               onClick={() => setShowCalendar(false)}
               aria-label="Back"
