@@ -128,18 +128,25 @@ export async function formatNoteContent(
 }
 
 export async function suggestCategory(
-  taskTitle: string
+  taskTitle: string,
+  categories: { label: string; display: string }[]
 ): Promise<{ category: string } | { error: string }> {
   if (!taskTitle.trim()) return { error: 'empty title' }
+  if (categories.length === 0) return { error: 'no categories configured' }
 
   const result = await callEdgeFn({ transcript: taskTitle, mode: 'classify' })
   if ('error' in result) return result
 
   const raw = (result.data.category as string)?.trim().toLowerCase()
-  const valid = ['personal', 'dev', 'launch', 'clinic']
-  const category = valid.find(c => raw === c) || valid.find(c => raw?.includes(c))
+  if (!raw) return { error: `unknown category: ${raw}` }
 
-  return category ? { category } : { error: `unknown category: ${raw}` }
+  // Match against the user's live categories only — never a hardcoded list —
+  // so a suggestion can never name a label that doesn't actually exist.
+  const exact = categories.find(c => c.label.toLowerCase() === raw || c.display.toLowerCase() === raw)
+  const fuzzy = categories.find(c => raw.includes(c.label.toLowerCase()) || raw.includes(c.display.toLowerCase()))
+  const match = exact || fuzzy
+
+  return match ? { category: match.label } : { error: `unknown category: ${raw}` }
 }
 
 // ── AI BRIEF TYPES ──────────────────────────────────────────────
