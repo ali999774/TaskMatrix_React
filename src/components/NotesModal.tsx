@@ -196,8 +196,8 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   {deleted.map((note) => (
                     <div
                       key={note.id}
-                      className={`flex items-start gap-2 p-3 rounded-lg border bg-white dark:bg-slate-800
-                        border-slate-200 dark:border-slate-700 border-l-[3px] border-l-yellow-300 dark:border-l-yellow-400/80`}
+                      className="flex items-start gap-2 p-3 rounded-lg border bg-white dark:bg-slate-800
+                        border-slate-200 dark:border-slate-700"
                     >
                       <div className="flex-1 min-w-0">
                         {note.title && (
@@ -224,13 +224,22 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                         )}
                         {onPurgeForever && (
                           confirmPurgeId === note.id ? (
-                            <button
-                              onClick={() => handlePurge(note.id)}
-                              className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px] inline-flex items-center justify-center"
-                              aria-label="Confirm permanent delete"
-                            >
-                              Delete?
-                            </button>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => setConfirmPurgeId(null)}
+                                className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors min-h-[44px] inline-flex items-center justify-center"
+                                aria-label="Cancel permanent delete"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handlePurge(note.id)}
+                                className="text-[0.75rem] px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors min-h-[44px] inline-flex items-center justify-center"
+                                aria-label="Confirm permanent delete"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           ) : (
                             <button
                               onClick={() => setConfirmPurgeId(note.id)}
@@ -291,9 +300,8 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                     >
                       <div
                         aria-hidden="true"
-                        className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                          bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
-                          border-l-yellow-300 dark:border-l-yellow-400/80`}
+                        className="p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
+                          bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                       >
                         {note.title && (
                           <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100 pr-10">{note.title}</p>

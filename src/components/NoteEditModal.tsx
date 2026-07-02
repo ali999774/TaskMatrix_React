@@ -280,6 +280,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             <h2 className="text-[1.125rem] font-bold text-slate-800 dark:text-white">
               {note.id ? 'Edit Note' : 'New Note'}
             </h2>
+            <SavedDot at={note.updated_at} />
           </div>
 
           {/* Overﬂow menu */}
@@ -301,13 +302,13 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
                       <div className="flex gap-2">
                         <button
                           onClick={() => { setConfirmDelete(false); setShowMenu(false) }}
-                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                          className="flex-1 min-h-[44px] px-2 text-[0.75rem] font-medium rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleConfirmDelete}
-                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-[var(--color-quad-do-first)] text-white"
+                          className="flex-1 min-h-[44px] px-2 text-[0.75rem] font-medium rounded bg-[var(--color-quad-do-first)] text-white flex items-center justify-center"
                         >
                           Delete
                         </button>
@@ -383,7 +384,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
           />
 
           {/* Pin toggle — Lucide Pin icon replaces 📌 emoji */}
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
             <input
               type="checkbox"
               checked={pinned}
@@ -406,10 +407,6 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
             )}
           </div>
 
-          {/* Saved indicator — ambient, not interruptive */}
-          <div className="h-5 flex items-center justify-end">
-            <SavedDot at={note.updated_at} />
-          </div>
         </div>
       </div>
     </div>
