@@ -877,49 +877,61 @@ export default function App() {
   }
 
   const handleVoiceTask = async (transcript: string) => {
+    // TEMP DEBUG: exactly what handleVoiceTask received as input. Remove
+    // once the transcript chain is confirmed.
+    console.log('[Voice][DEBUG] handleVoiceTask received transcript:', JSON.stringify(transcript))
     // Dismiss top mic coachmark on first use (any invocation, even empty)
     if (showTopMicCoachmark) { localStorage.setItem('tm-coachmark-top-mic', '1'); setShowTopMicCoachmark(false) }
     if (!transcript.trim()) return
     setVoiceTaskStatus('saving')
     setVoiceTaskQuickAction(false)  // consumed
 
-    // AI path: parse transcript into structured task
-    if (aiSettings.enabled) {
-      setVoiceTaskStatus('parsing...')
-      const result = await parseVoiceTranscript(
-        transcript,
-        aiSettings.model,
-        getAIBaseUrl(),
-        categories.map(c => c.label)
-      )
-      if ('error' in result) {
-        setVoiceTaskStatus(result.error)
-        return
-      } else {
-        const p = result.parsed
-        await addTask(
-          p.title,
-          p.importance || 3,
-          p.urgency || 3,
-          p.category || undefined,
-          { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined,
-            reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
-            pinned: p.pinned || undefined,
-            recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined,
-            lead_days: p.lead_days ?? undefined }
+    try {
+      // AI path: parse transcript into structured task
+      if (aiSettings.enabled) {
+        setVoiceTaskStatus('parsing...')
+        const result = await parseVoiceTranscript(
+          transcript,
+          aiSettings.model,
+          getAIBaseUrl(),
+          categories.map(c => c.label)
         )
-        setVoiceTaskStatus('task created!')
-        setTimeout(() => setVoiceTaskStatus(''), 2500)
-        return
+        if ('error' in result) {
+          setVoiceTaskStatus(result.error)
+          return
+        } else {
+          const p = result.parsed
+          await addTask(
+            p.title,
+            p.importance || 3,
+            p.urgency || 3,
+            p.category || undefined,
+            { due_date: p.due_date || undefined, due_time: p.due_time || undefined, notes: p.notes || undefined,
+              reminder: defaultReminder({ due_date: p.due_date, due_time: p.due_time }) || undefined,
+              pinned: p.pinned || undefined,
+              recurring: p.recurring || undefined, recur_frequency: p.recur_frequency || undefined, recur_days: p.recur_days || undefined,
+              lead_days: p.lead_days ?? undefined }
+          )
+          setVoiceTaskStatus('task created!')
+          setTimeout(() => setVoiceTaskStatus(''), 2500)
+          return
+        }
       }
-    }
 
-    // Fallback: fill quick-add input with raw transcript
-    setQuickAdd(transcript.trim())
-    setVoiceTaskStatus('')
+      // Fallback: fill quick-add input with raw transcript
+      setQuickAdd(transcript.trim())
+      setVoiceTaskStatus('')
+    } catch (err) {
+      console.error('[Voice] handleVoiceTask failed:', err)
+      setVoiceTaskStatus('save failed')
+      setTimeout(() => setVoiceTaskStatus(''), 2000)
+    }
   }
 
   const handleVoiceNote = async (transcript: string) => {
+    // TEMP DEBUG: exactly what handleVoiceNote received as input. Remove
+    // once the transcript chain is confirmed.
+    console.log('[Voice][DEBUG] handleVoiceNote received transcript:', JSON.stringify(transcript))
     // Dismiss bottom mic coachmark on first use (any invocation, even empty)
     if (showBottomMicCoachmark) { localStorage.setItem('tm-coachmark-bottom-mic', '1'); setShowBottomMicCoachmark(false) }
     if (!transcript.trim()) return
@@ -928,22 +940,22 @@ export default function App() {
 
     let content = transcript.trim()
 
-    // AI formatting pass — clean up speech artifacts, structure the note
-    if (aiSettings.enabled) {
-      setVoiceStatus('formatting...')
-      const result = await formatNoteContent(
-        transcript,
-        aiSettings.model,
-        getAIBaseUrl()
-      )
-      if (!('error' in result)) {
-        content = result.formatted
-      }
-      // On error, fall through with raw transcript
-    }
-
-    // Save as sticky note
     try {
+      // AI formatting pass — clean up speech artifacts, structure the note
+      if (aiSettings.enabled) {
+        setVoiceStatus('formatting...')
+        const result = await formatNoteContent(
+          transcript,
+          aiSettings.model,
+          getAIBaseUrl()
+        )
+        if (!('error' in result)) {
+          content = result.formatted
+        }
+        // On error, fall through with raw transcript
+      }
+
+      // Save as sticky note
       const shouldPin = /\bpin\b/i.test(transcript)
       if (shouldPin) {
         content = transcript

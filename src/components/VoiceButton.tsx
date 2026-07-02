@@ -93,6 +93,9 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           // Register partial results listener
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const handlePartial = (event: any) => {
+            // TEMP DEBUG: raw partialResults payload from the native plugin,
+            // before any processing. Remove once the transcript chain is confirmed.
+            console.log('[Voice][DEBUG] native partialResults event:', JSON.stringify(event))
             const match = event.matches?.[0]
             if (match) {
               partialRef.current = match
@@ -138,21 +141,29 @@ export default function VoiceButton({ onTranscript, onStatus, className = '', ic
           // Get final result
           try {
             const result = await SpeechRecognition.getLastPartialResult()
+            // TEMP DEBUG: raw getLastPartialResult() payload, and what we fall
+            // back to from the partialResults listener. Remove once confirmed.
+            console.log('[Voice][DEBUG] native getLastPartialResult raw:', JSON.stringify(result), 'partialRef.current:', JSON.stringify(partialRef.current))
             const finalText = result?.matches?.[0] || partialRef.current
             partialRef.current = ''
             if (finalText?.trim()) {
+              console.log('[Voice][DEBUG] native finalText resolved:', JSON.stringify(finalText.trim()), '— calling onTranscript')
               onTranscriptRef.current(finalText.trim())
               onStatus?.('saved')
             } else {
+              console.log('[Voice][DEBUG] native: finalText empty after getLastPartialResult — taking no-speech branch, onTranscript NOT called')
               onStatus?.('no speech')
             }
-          } catch {
+          } catch (err) {
+            console.log('[Voice][DEBUG] native getLastPartialResult() threw:', err, '— falling back to partialRef.current:', JSON.stringify(partialRef.current))
             const fallback = partialRef.current
             partialRef.current = ''
             if (fallback?.trim()) {
+              console.log('[Voice][DEBUG] native fallback resolved:', JSON.stringify(fallback.trim()), '— calling onTranscript')
               onTranscriptRef.current(fallback.trim())
               onStatus?.('saved')
             } else {
+              console.log('[Voice][DEBUG] native: fallback also empty — taking no-speech branch, onTranscript NOT called')
               onStatus?.('no speech')
             }
           }
