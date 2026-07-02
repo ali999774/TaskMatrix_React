@@ -1361,7 +1361,7 @@ export default function App() {
         <div
           role="alertdialog"
           aria-label="Stop recurring task"
-          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(8rem+env(safe-area-inset-bottom))] z-50
+          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(var(--navbar-height)+0.5rem+env(safe-area-inset-bottom))] z-50
             flex items-center gap-1 bg-slate-800 dark:bg-slate-700 text-white
             rounded-xl shadow-lg pl-3 pr-1 py-1 max-w-[calc(100vw-2rem)]"
         >
@@ -1394,9 +1394,9 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50
+          className="fixed left-1/2 -translate-x-1/2 bottom-[calc(var(--navbar-height)+0.5rem+env(safe-area-inset-bottom))] z-50
             flex items-center gap-2 bg-slate-800 dark:bg-slate-700 text-white
-            rounded-full shadow-lg shadow-black/20 pl-3 pr-4 py-2.5 max-w-[calc(100vw-2rem)]"
+            rounded-xl shadow-lg shadow-black/20 pl-3 pr-4 py-2.5 max-w-[calc(100vw-2rem)]"
         >
           <Undo2 className="w-4 h-4 flex-shrink-0 text-blue-300" aria-hidden="true" />
           <span className="text-[0.875rem] truncate">{pendingUndo.message}</span>
