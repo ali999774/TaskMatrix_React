@@ -40,7 +40,7 @@ import { listenForReminderTaps, defaultReminder } from './lib/notifications'
 import { useAISettings } from './hooks/useAISettings'
 import { QUADRANT_DEFAULTS } from './types'
 import type { Quadrant, Task, StickyNote } from './types'
-import { CategoryIcon } from './lib/categories'
+import { CategoryIcon, MAX_CATEGORIES } from './lib/categories'
 
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
@@ -1152,7 +1152,23 @@ export default function App() {
           give each selected pill its category colour identity via CATEGORY_BADGE/CATEGORY_RING.
           Visual styling is eyeball-gated; not implemented here. */}
       <div className="sticky top-[calc(env(safe-area-inset-top)+3.75rem)] sm:top-[calc(env(safe-area-inset-top)+4.25rem)] z-30 px-3 sm:px-6 py-2 border-b border-slate-200/60 dark:border-slate-800/40 bg-white/80 dark:bg-slate-950/80 backdrop-blur">
+        {/* relative wrapper carries the right-edge fade (SPEC-category-ux.md scroll
+            affordance) so it stays pinned while the pill row scrolls under it */}
+        <div className="relative after:absolute after:right-0 after:top-0 after:bottom-0 after:w-6
+          after:bg-linear-to-l after:from-white dark:after:from-slate-950 after:pointer-events-none">
         <div className="flex gap-1.5 overflow-x-auto">
+          {categories.length > MAX_CATEGORIES && (
+            // Over-cap migration chip — first in the row so it can't hide behind the scroll edge
+            <span
+              className="shrink-0 self-center inline-flex items-center text-subtitle font-semibold tabular-nums
+                px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400
+                border border-amber-300 dark:border-amber-700"
+              title={`${categories.length} categories — the limit is ${MAX_CATEGORIES}. Remove ${categories.length - MAX_CATEGORIES} in Settings.`}
+              aria-label={`${categories.length} of ${MAX_CATEGORIES} categories — over the limit`}
+            >
+              {categories.length}/{MAX_CATEGORIES}
+            </span>
+          )}
           <button
             key="all"
             aria-label="Show all categories"
@@ -1182,6 +1198,7 @@ export default function App() {
               <span>{cat.display}</span>
             </button>
           ))}
+        </div>
         </div>
       </div>
 

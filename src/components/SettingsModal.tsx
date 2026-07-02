@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { AppLauncher } from '@capacitor/app-launcher'
-import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic } from 'lucide-react'
+import { ArrowLeft, Settings, Sparkles, Calendar, X, Mic, TriangleAlert } from 'lucide-react'
 import type { CategoryDef } from '../lib/categories'
 import { CATEGORY_COLORS, CATEGORY_BADGE, CATEGORY_COLOR_HEX, CATEGORY_ICON_NAMES, CategoryIcon, MAX_CATEGORIES } from '../lib/categories'
 import type { AISettings } from '../hooks/useAISettings'
@@ -411,7 +411,11 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                     className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-grab active:cursor-grabbing transition-all
                       ${idx === editingIdx
                         ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-400/30'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                        : idx >= MAX_CATEGORIES
+                          // Over-cap rows (beyond the limit) — amber flags what must go;
+                          // drag a row above the line to keep it instead
+                          ? 'border-amber-400 dark:border-amber-500 hover:border-amber-500 dark:hover:border-amber-400'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                       }`}
                   >
                     {/* Drag handle */}
@@ -534,16 +538,28 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
             {items.length < MAX_CATEGORIES ? (
               <button
                 onClick={add}
-                className="mt-3 w-full text-[0.875rem] text-blue-500 hover:text-blue-600 dark:text-blue-400 
+                className="mt-3 w-full text-[0.875rem] text-blue-500 hover:text-blue-600 dark:text-blue-400
                   font-medium py-2.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-600
                   hover:border-blue-400 dark:hover:border-blue-500 transition-all active:scale-[0.98] min-h-[44px]"
               >
                 + Add category
               </button>
-            ) : (
+            ) : items.length === MAX_CATEGORIES ? (
               <p className="mt-3 text-meta text-slate-400 dark:text-slate-500 text-center">
                 {MAX_CATEGORIES} categories max
               </p>
+            ) : (
+              <div
+                role="alert"
+                className="mt-3 flex items-start gap-2 p-3 rounded-lg
+                  border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40"
+              >
+                <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <p className="text-meta text-amber-800 dark:text-amber-300">
+                  You have {items.length} categories — the new limit is {MAX_CATEGORIES}.
+                  Remove {items.length - MAX_CATEGORIES} to finish migrating.
+                </p>
+              </div>
             )}
           </div>
 
