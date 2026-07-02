@@ -415,13 +415,15 @@ export default function TaskDetail({ task, onUpdate, onClose, categories = [] }:
               <div className="px-4 py-2 space-y-1">
                 {subtasks.map((st, i) => (
                   <div key={i} className="flex items-center gap-2 group">
-                    <input
-                      type="checkbox"
-                      checked={st.done}
-                      onChange={() => toggleSubtask(i)}
-                      className="rounded border-slate-300 dark:border-slate-600
-                        text-blue-500 focus:ring-blue-500"
-                    />
+                    <label className="flex items-center justify-center min-h-[44px] min-w-[44px] shrink-0 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={st.done}
+                        onChange={() => toggleSubtask(i)}
+                        className="rounded border-slate-300 dark:border-slate-600
+                          text-blue-500 focus:ring-blue-500"
+                      />
+                    </label>
                     <span
                       className={`flex-1 text-[0.9375rem] ${
                         st.done

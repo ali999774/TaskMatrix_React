@@ -414,28 +414,13 @@ export default function SettingsModal({ categories, onSave, onClose, aiSettings,
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                       }`}
                   >
-                    {/* Drag handle */}
-                    <span className="text-slate-400 dark:text-slate-500 text-[0.875rem] shrink-0">⋮⋮</span>
-
-                    {/* Up/down arrows for touch reorder */}
-                    <div className="flex flex-col gap-0 shrink-0">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (idx > 0) { const copy = [...items]; [copy[idx], copy[idx-1]] = [copy[idx-1], copy[idx]]; setItems(copy) } }}
-                        disabled={idx === 0}
-                        className="text-[0.5rem] text-slate-400 dark:text-slate-400 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
-                        aria-label="Move up"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (idx < items.length - 1) { const copy = [...items]; [copy[idx], copy[idx+1]] = [copy[idx+1], copy[idx]]; setItems(copy) } }}
-                        disabled={idx === items.length - 1}
-                        className="text-[0.5rem] text-slate-400 dark:text-slate-400 hover:text-slate-500 disabled:opacity-20 leading-none px-0.5 min-h-[22px] min-w-[22px] inline-flex items-center justify-center"
-                        aria-label="Move down"
-                      >
-                        ▼
-                      </button>
-                    </div>
+                    {/* Drag handle — row itself is draggable; keyboard reorder via handleCategoryKeyDown */}
+                    <span
+                      aria-hidden="true"
+                      className="text-slate-400 dark:text-slate-500 text-[0.875rem] shrink-0 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                    >
+                      ⋮⋮
+                    </span>
 
                     {/* Icon + display */}
                     <CategoryIcon icon={cat.icon || 'plus'} className="w-4 h-4 shrink-0" />

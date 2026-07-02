@@ -412,7 +412,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`flex-1 text-[0.6875rem] capitalize py-1.5 rounded-md transition-all text-center
+              className={`flex-1 min-h-[44px] text-[0.8125rem] capitalize rounded-md transition-all text-center
                 ${view === v
                   ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm font-medium'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'

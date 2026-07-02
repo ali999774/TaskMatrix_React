@@ -191,7 +191,7 @@ export default function TaskCard({
           onFlag(task.id)
         }}
         onTouchEnd={(e) => e.stopPropagation()}
-        className={`shrink-0 flex items-center justify-center w-[30px] h-[44px] rounded
+        className={`shrink-0 flex items-center justify-center w-11 h-11 -mr-1 rounded
           transition-colors
           ${task.pinned
             ? 'text-amber-500 dark:text-amber-400'
@@ -215,7 +215,7 @@ export default function TaskCard({
           }}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
-          className="shrink-0 flex items-center justify-center w-[30px] h-[44px] rounded transition-colors text-slate-300 hover:text-slate-400 dark:text-slate-600 dark:hover:text-slate-500"
+          className="shrink-0 flex items-center justify-center w-11 h-11 rounded transition-colors text-slate-300 hover:text-slate-400 dark:text-slate-600 dark:hover:text-slate-500"
         >
           <ChevronDown
             size={18}
