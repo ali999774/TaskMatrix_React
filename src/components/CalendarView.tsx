@@ -379,7 +379,7 @@ export default function CalendarView({ getTasksOnDate, onAddTask }: Props) {
                 <ChevronRight size={16} />
               </button>
             </div>
-            <h2 className="text-[0.9375rem] sm:text-[1.125rem] font-normal text-slate-800 dark:text-slate-100 truncate">
+            <h2 className="text-[0.9375rem] sm:text-[1.125rem] font-semibold text-slate-800 dark:text-slate-100 truncate">
               {view === 'week'
                 ? weekLabel
                 : `${MONTHS[currentPanel.month]} ${currentPanel.year}`}
