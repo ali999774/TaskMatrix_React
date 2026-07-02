@@ -94,6 +94,10 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const hasChangesRef = useRef(false)
   const noteRef = useRef(note)
+  // Latest not-yet-saved form values while a debounce timer is pending.
+  // Cleared once the timer fires and actually saves. Lets the unmount
+  // effect below flush a save that a fast dismiss would otherwise drop.
+  const pendingSaveRef = useRef<{ title: string; content: string; pinned: boolean } | null>(null)
 
   // Track latest note to avoid stale closures in debounce timer
   useEffect(() => { noteRef.current = note }, [note])
@@ -106,7 +110,9 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
       return
     }
     clearTimeout(saveTimerRef.current)
+    pendingSaveRef.current = { title, content, pinned }
     saveTimerRef.current = setTimeout(() => {
+      pendingSaveRef.current = null
       if (!title.trim() && !content.trim()) return
       onSave(noteRef.current.id, {
         title: title.trim() || null,
@@ -116,6 +122,23 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
     }, 600)
     return () => clearTimeout(saveTimerRef.current)
   }, [title, content, pinned])
+
+  // Flush a pending debounced save on unmount — a dismiss within 600ms of the
+  // last keystroke would otherwise cancel the timer above and lose the edit.
+  useEffect(() => {
+    return () => {
+      const pending = pendingSaveRef.current
+      if (!pending) return
+      pendingSaveRef.current = null
+      if (!pending.title.trim() && !pending.content.trim()) return
+      onSave(noteRef.current.id, {
+        title: pending.title.trim() || null,
+        content: pending.content.trim(),
+        pinned: pending.pinned,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount-only flush; reads latest via refs
+  }, [])
 
   const [dragY, setDragY] = useState(0)
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
