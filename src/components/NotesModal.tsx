@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Search, X, Pin, Trash2 } from 'lucide-react'
+import { Search, X, Pin, Trash2, Pencil, EllipsisVertical } from 'lucide-react'
 import type { StickyNote } from '../types'
 import { renderMarkdown, stripMarkdown } from '../lib/markdown'
 import SwipeableRow from './SwipeableRow'
@@ -26,10 +26,12 @@ interface Props {
 
 export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, onNewBlank, onFetchDeleted, onRestore, onPurgeForever, initialView = 'notes' }: Props) {
   const [search, setSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   const [view, setView] = useState<'notes' | 'trash'>(initialView)
   const [deleted, setDeleted] = useState<StickyNote[]>([])
   const [trashLoading, setTrashLoading] = useState(false)
   const [confirmPurgeId, setConfirmPurgeId] = useState<string | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const loadTrash = useCallback(async () => {
     if (!onFetchDeleted) return
@@ -66,11 +68,12 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
   const sheetRef = useRef<HTMLDivElement>(null)
   const scrollerRef = useRef<HTMLDivElement>(null)
 
-  const filtered = search
+  const trimmedSearch = search.trim()
+  const filtered = trimmedSearch
     ? notes.filter(
         (n) =>
-          (n.title || '').toLowerCase().includes(search.toLowerCase()) ||
-          stripMarkdown(n.content).toLowerCase().includes(search.toLowerCase())
+          (n.title || '').toLowerCase().includes(trimmedSearch.toLowerCase()) ||
+          stripMarkdown(n.content).toLowerCase().includes(trimmedSearch.toLowerCase())
       )
     : notes
 
@@ -145,9 +148,12 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
           <div className="flex items-center gap-2">
             {view === 'notes' && (
               <button
-                onClick={() => setSearch(search ? '' : '_')}
-                aria-label={search ? 'Clear search' : 'Search notes'}
-                className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${search ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
+                onClick={() => {
+                  if (searchOpen) setSearch('')
+                  setSearchOpen((v) => !v)
+                }}
+                aria-label={searchOpen ? 'Close search' : 'Search notes'}
+                className={`text-[1rem] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${searchOpen ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 <Search size={18} strokeWidth={2} aria-hidden="true" />
               </button>
@@ -159,12 +165,12 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
         </div>
 
         {/* Search bar — toggled by search icon; non-scrolling flex sibling below the header */}
-        {view === 'notes' && search && (
+        {view === 'notes' && searchOpen && (
           <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 shrink-0">
             <input
               type="text"
-              value={search === '_' ? '' : search}
-              onChange={(e) => setSearch(e.target.value || '_')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search notes..."
               autoFocus
               className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[1rem] text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
@@ -243,7 +249,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
             )
           ) : filtered.length === 0 ? (
             <p className="text-center text-slate-300 dark:text-slate-600 italic py-12">
-              {search ? 'No notes match your search' : 'No notes yet — add one above'}
+              {trimmedSearch ? 'No notes match your search' : 'No notes yet — add one above'}
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -252,8 +258,8 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                 if (onEdit) {
                   actions.push({
                     label: 'Edit',
-                    icon: 'i',
-                    className: 'bg-[#8E8E93]',
+                    icon: <Pencil size={20} />,
+                    className: 'bg-[var(--color-quad-dont-do)]',
                     onAction: () => onEdit(note),
                   })
                 }
@@ -261,7 +267,7 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: note.pinned ? 'Unpin' : 'Pin',
                     icon: <Pin size={20} />,
-                    className: 'bg-[#FF9500]',
+                    className: 'bg-[var(--color-quad-invest)]',
                     onAction: () => onPin(note.id, !note.pinned),
                   })
                 }
@@ -269,48 +275,94 @@ export default function NotesModal({ notes, onClose, onEdit, onPin, onDelete, on
                   actions.push({
                     label: 'Delete',
                     icon: <X size={20} />,
-                    className: 'bg-[#FF3B30]',
+                    className: 'bg-[var(--color-quad-do-first)]',
                     onAction: () => onDelete(note.id),
                   })
                 }
 
                 return (
-                  <SwipeableRow
-                    key={note.id}
-                    actions={actions}
-                    onTap={() => onEdit(note)}
-                    aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
-                    className="bg-white dark:bg-slate-800"
-                    showLabels={false}
-                  >
-                    <div
-                      aria-hidden="true"
-                      className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
-                        bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
-                        border-l-yellow-300 dark:border-l-yellow-400/80`}
+                  <div key={note.id} className="relative">
+                    <SwipeableRow
+                      actions={actions}
+                      onTap={() => onEdit(note)}
+                      aria-label={note.title || stripMarkdown(note.content || 'Empty note')}
+                      className="bg-white dark:bg-slate-800"
+                      showLabels={false}
                     >
-                      {note.title && (
-                        <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100">{note.title}</p>
-                      )}
-                      <p
-                        className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4 text-slate-700 dark:text-slate-300"
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
-                      />
-                      <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
-                        {note.pinned && <Pin size={14} strokeWidth={2} aria-hidden="true" />}
-                        {note.created_at && (
-                          <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                      <div
+                        aria-hidden="true"
+                        className={`p-4 border cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5
+                          bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-l-[3px]
+                          border-l-yellow-300 dark:border-l-yellow-400/80`}
+                      >
+                        {note.title && (
+                          <p className="font-semibold text-[0.8125rem] sm:text-[0.875rem] mb-1 opacity-80 text-slate-800 dark:text-slate-100 pr-10">{note.title}</p>
                         )}
+                        <p
+                          className="text-[0.8125rem] sm:text-[0.875rem] whitespace-pre-wrap leading-relaxed line-clamp-4 text-slate-700 dark:text-slate-300"
+                          dangerouslySetInnerHTML={{ __html: renderMarkdown(note.content || 'Empty note') }}
+                        />
+                        <div className="flex items-center gap-2 mt-2 text-[0.75rem] opacity-60">
+                          {note.pinned && <Pin size={14} strokeWidth={2} aria-hidden="true" />}
+                          {note.created_at && (
+                            <span>{new Date(note.created_at).toLocaleDateString()}</span>
+                          )}
+                        </div>
                       </div>
+                    </SwipeableRow>
+
+                    {/* Persistent kebab — visible path to Edit/Pin/Delete for pointer/desktop users */}
+                    <div className="absolute top-2 right-2 z-20">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === note.id ? null : note.id) }}
+                        aria-label="Note actions"
+                        className="w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
+                      >
+                        <EllipsisVertical size={18} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                      {openMenuId === note.id && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                          <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 min-w-[140px]">
+                            {onEdit && (
+                              <button
+                                onClick={() => { setOpenMenuId(null); onEdit(note) }}
+                                className="w-full text-left px-3 py-2 text-[0.8125rem] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2 min-h-[44px]"
+                              >
+                                <Pencil size={16} strokeWidth={2} aria-hidden="true" />
+                                Edit
+                              </button>
+                            )}
+                            {onPin && (
+                              <button
+                                onClick={() => { setOpenMenuId(null); onPin(note.id, !note.pinned) }}
+                                className="w-full text-left px-3 py-2 text-[0.8125rem] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2 min-h-[44px]"
+                              >
+                                <Pin size={16} strokeWidth={2} aria-hidden="true" />
+                                {note.pinned ? 'Unpin' : 'Pin'}
+                              </button>
+                            )}
+                            {onDelete && (
+                              <button
+                                onClick={() => { setOpenMenuId(null); onDelete(note.id) }}
+                                className="w-full text-left px-3 py-2 text-[0.8125rem] text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 min-h-[44px]"
+                              >
+                                <Trash2 size={16} strokeWidth={2} aria-hidden="true" />
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </SwipeableRow>
+                  </div>
                 )
               })}
             </div>
           )}
           {view === 'notes' && onFetchDeleted && deleted.length > 0 && (
             <button
-              onClick={() => { setSearch(''); setView('trash'); loadTrash() }}
+              onClick={() => { setSearch(''); setSearchOpen(false); setView('trash'); loadTrash() }}
               className="mt-4 w-full flex items-center justify-between px-4 py-3 rounded-xl
                 bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700/50
                 transition-colors min-h-[44px]"

@@ -121,9 +121,37 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
   const touchStart = useRef<{ y: number; timestamp: number } | null>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
 
+  // Flush any pending debounced autosave immediately, so a fast dismiss
+  // (close within 600ms of typing) never silently drops keystrokes.
+  const flushPendingSave = () => {
+    clearTimeout(saveTimerRef.current)
+    const trimmedTitle = title.trim() || null
+    const trimmedContent = content.trim()
+    const current = noteRef.current
+    const changed =
+      trimmedTitle !== (current.title || null) ||
+      trimmedContent !== (current.content || '') ||
+      pinned !== !!current.pinned
+    if (changed && (trimmedTitle || trimmedContent)) {
+      onSave(current.id, { title: trimmedTitle, content: trimmedContent, pinned })
+    }
+  }
+
   const handleClose = () => {
+    flushPendingSave()
     onClose()
   }
+
+  // Flush on backgrounding too — the WebView can be suspended mid-edit
+  // before the debounce timer fires and before unmount runs.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushPendingSave()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, content, pinned])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing form fields from prop
@@ -279,7 +307,7 @@ export default function NoteEditModal({ note, onSave, onDelete, onClose }: Props
                         </button>
                         <button
                           onClick={handleConfirmDelete}
-                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-[#FF3B30] text-white"
+                          className="flex-1 px-2 py-1 text-[0.75rem] font-medium rounded bg-[var(--color-quad-do-first)] text-white"
                         >
                           Delete
                         </button>
